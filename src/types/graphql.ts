@@ -36,3 +36,14 @@ export interface Agent {
   export interface GetHorariosQuery {
     allocations: Allocation[];
   } 
+
+  export interface BundleType {
+    name: string;
+    price: number;
+  }
+
+  export interface GetBundleQuery {
+    bundleTypes: BundleType[];
+  }
+  
+  

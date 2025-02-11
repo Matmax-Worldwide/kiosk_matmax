@@ -7,7 +7,6 @@ export const GET_HORARIOS = gql`
       status
       currentReservations
       timeSlot {
-        id
         cron
         duration
         agent {
@@ -15,8 +14,18 @@ export const GET_HORARIOS = gql`
         }
         sessionType {
           name
+          maxConsumers
         }
       }
+    }
+  }
+`;
+
+export const GET_BUNDLE = gql`
+  query BundleTypes {
+    bundleTypes {
+      name
+      price
     }
   }
 `;

@@ -2,19 +2,23 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, User2, Ticket } from 'lucide-react';
+import { Calendar, Clock, User2, Ticket, Info } from 'lucide-react';
 import { format, parse, isAfter } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useLanguageContext } from '@/contexts/LanguageContext';
 import { useQuery } from "@apollo/client";
-import { GET_HORARIOS } from "@/lib/graphql/queries";
-import type { Allocation, GetHorariosQuery } from "@/types/graphql";
+import { GET_BUNDLE, GET_HORARIOS } from "@/lib/graphql/queries";
+import type { Allocation, GetBundleQuery, GetHorariosQuery } from "@/types/graphql";
 
 interface ScheduleItem {
   time: string;
   duration: string;
   activity: string;
   instructor: string;
+  status: string;
+  currentReservations: number;
+  cron: string;
+  maxConsumers: number;
 }
 
 interface DaySchedule {
@@ -22,18 +26,9 @@ interface DaySchedule {
   items: ScheduleItem[];
 }
 
-// interface MatPassType {
-//   id: string;
-//   name: string;
-//   numberOfClasses: number;
-//   price: number;
-// }
-
 export default function ClassPassPage() {
   const router = useRouter();
   const { language } = useLanguageContext();
-//   const [matPassTypes, setMatPassTypes] = useState<MatPassType[]>([]);
-//   const [loadingMatPass, setLoadingMatPass] = useState(true);
   const [fetchedSchedule, setFetchedSchedule] = useState<DaySchedule[]>([]);
 
   const { data: scheduleData, loading: scheduleLoading, error: scheduleError } = useQuery<GetHorariosQuery>(GET_HORARIOS, { variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} });
@@ -53,6 +48,10 @@ export default function ClassPassPage() {
           duration: alloc.timeSlot.duration.toString(),
           activity: alloc.timeSlot.sessionType?.name || 'Unknown',
           instructor: alloc.timeSlot.agent?.name || 'Unknown',
+          status: alloc.status || 'Unknown',
+          currentReservations: alloc.currentReservations,
+          cron: alloc.timeSlot.cron || 'Unknown',
+          maxConsumers: (alloc.timeSlot.sessionType as { maxConsumers?: number })?.maxConsumers || 0
         });
       });
 
@@ -125,9 +124,21 @@ export default function ClassPassPage() {
     return null;
   };
 
-  const nextClass = getNextAvailableClass();
-//   const singleClassPass = matPassTypes.find(pass => pass.numberOfClasses === 1);
+  const { data: bundleData } = useQuery<GetBundleQuery>(GET_BUNDLE, { variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} });
+  const bundleTypes = bundleData?.bundleTypes;
+  console.log(bundleTypes);
 
+
+  const nextClass = getNextAvailableClass();
+  const singleClassPass = bundleTypes?.find(bundle => {
+    if (nextClass && nextClass.activity.toLowerCase().includes("acro")) {
+      return bundle.name.toLowerCase().includes("acro");
+    } else {
+      return bundle.name.toLowerCase().startsWith("1 ");
+    }
+  });
+
+  console.log(singleClassPass);
   const handleClassSelection = () => {
     if (nextClass) {
       router.push(`/class-pass/user-selection?classId=next&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}`);
@@ -159,14 +170,6 @@ export default function ClassPassPage() {
       <h1 className="text-3xl font-bold mb-2 text-center">
         {language === 'en' ? 'Next Available Class' : 'Próxima Clase Disponible'}
       </h1>
-      {/* <div className="flex items-center justify-center mb-8 text-gray-600">
-        <Ticket className="w-5 h-5 mr-2" />
-        <span>
-          {language === 'en'
-            ? `All classes cost 1 MatPass (PEN ${singleClassPass ? Number(singleClassPass.price).toFixed(2) : ''})`
-            : `Todas las clases cuestan 1 MatPass (PEN ${singleClassPass ? Number(singleClassPass.price).toFixed(2) : ''})`}
-        </span>
-      </div> */}
 
       {nextClass && (
         <motion.div
@@ -175,10 +178,10 @@ export default function ClassPassPage() {
           className="bg-white rounded-xl shadow-lg overflow-hidden mb-8"
         >
           <div className="relative">
-            <div className="absolute top-4 right-4">
+            <div className="absolute top-4 right-4 flex items-center space-x-4">
               <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium flex items-center">
                 <Ticket className="w-4 h-4 mr-2" />
-                <span>1 MatPass</span>
+                <span>{singleClassPass ? singleClassPass.name : "No hay clases disponibles"}</span>
               </div>
             </div>
             
@@ -199,11 +202,25 @@ export default function ClassPassPage() {
                 <div className="flex items-center text-gray-600">
                   <Clock className="w-5 h-5 mr-3" />
                   <span className="font-medium">
-                    {nextClass.time} ({nextClass.duration})
+                    {nextClass.time} ({nextClass.duration === '60' ? '1 hr' : nextClass.duration === '120' ? '2 hrs' : `${nextClass.duration} min`})
+                  </span>
+                </div>
+                <div className="flex items-center text-gray-600">
+                  <Info className="w-5 h-5 mr-3" />
+                  <span className="font-medium">
+                    Estado: {nextClass.status} | Reservas actuales: {nextClass.currentReservations} | Cron: {nextClass.cron} | Máx. Consumidores: {nextClass.maxConsumers}
                   </span>
                 </div>
               </div>
-
+              
+              <div className="flex items-center justify-center mb-8 text-gray-600">
+                
+              { singleClassPass && (
+                <div className="text-5xl font-bold text-gray-800">
+                  PEN {Number(singleClassPass.price).toFixed(2)}
+                </div>
+              )}
+              </div>
               <button
                 onClick={handleClassSelection}
                 className="w-full py-4 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors duration-200 mb-4"
@@ -211,6 +228,7 @@ export default function ClassPassPage() {
                 {language === 'en' ? 'Book This Class' : 'Reservar Esta Clase'}
               </button>
             </div>
+            
           </div>
         </motion.div>
       )}
