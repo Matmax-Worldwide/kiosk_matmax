@@ -3,9 +3,21 @@ export interface Agent {
   }
   
   export interface SessionType {
+    id: string;
     name: string;
     agent?: Agent;
     maxConsumers: number;
+    defaultDuration: number;
+    description?: {
+      en: string;
+      es: string;
+    };
+    expertiseLevel?: string;
+  }
+  
+  export interface Room {
+    name: string;
+    capacity: number;
   }
   
   export interface TimeSlot {
@@ -18,6 +30,7 @@ export interface Agent {
     agentId?: string;
     agent?: Agent;
     sessionType: SessionType;
+    room?: Room;
   }
   
   export interface Allocation {
@@ -49,6 +62,10 @@ export interface Agent {
 
   export interface GetBundleQuery {
     bundleTypes: BundleType[];
+  }
+
+  export interface GetPossibleAllocationsQuery {
+    possibleAllocations: Allocation[];
   }
   
   

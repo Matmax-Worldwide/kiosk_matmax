@@ -7,9 +7,11 @@ import { useLanguageContext } from '@/contexts/LanguageContext';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useApolloClient } from '@apollo/client';
-import { GET_HORARIOS } from '@/lib/graphql/queries';
-import { Allocation, GetHorariosQuery } from '@/types/graphql';
+import { GET_POSSIBLE_ALLOCATIONS } from '@/lib/graphql/queries';
+import { Allocation, GetPossibleAllocationsQuery } from '@/types/graphql';
 import { Header } from '@/components/header';
+import { Spinner } from '@/components/spinner';
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ClassInstance {
   id: string;
@@ -83,24 +85,37 @@ export default function SchedulePage() {
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const res = await client.query<GetHorariosQuery>({
-          query: GET_HORARIOS,
-          variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c" }
+        setLoading(true);
+        setError(null);
+        
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(startDate.getDate() + 14);
+
+        const res = await client.query<GetPossibleAllocationsQuery>({
+          query: GET_POSSIBLE_ALLOCATIONS,
+          variables: { 
+            contextId: "ec966559-0580-4adb-bc6b-b150c56f935c", 
+            startDate, 
+            endDate
+          },
+          fetchPolicy: 'network-only', // Don't use cache for this query
         });
 
-        if (res.errors && res.errors.length > 0) {
+        if (res.errors?.length) {
           throw new Error(res.errors[0].message);
         }
 
-        if (!res.data.allocations) {
-          throw new Error('No schedule data found');
+        if (!res.data?.possibleAllocations?.length) {
+          setSchedule({});
+          return;
         }
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         const groupedSchedule: GroupedClasses = {};
-        res.data.allocations
+        res.data.possibleAllocations
           .filter((allocation: Allocation) => {
             const allocationDate = new Date(allocation.startTime);
             return allocationDate >= today;
@@ -116,42 +131,48 @@ export default function SchedulePage() {
               groupedSchedule[dayKey] = [];
             }
 
+            const sessionType = allocation.sessionType;
+            const timeSlot = allocation.timeSlot;
+
             groupedSchedule[dayKey].push({
               id: allocation.id,
               startDateTime: allocation.startTime,
-              endDateTime: allocation.endTime,
-              enrolled: allocation.currentReservations,
-              status: allocation.status,
+              endDateTime: new Date(new Date(allocation.startTime).getTime() + (timeSlot?.duration || sessionType?.defaultDuration || 60) * 60000).toISOString(),
+              enrolled: allocation.currentReservations || 0,
+              status: allocation.status || 'AVAILABLE',
               schedule: {
-                id: allocation.timeSlot.id,
-                name: allocation.timeSlot.sessionType.name,
-                description: { en: '', es: '' }, // Add descriptions if available
-                duration: allocation.timeSlot.duration,
-                matpassRequirement: 1, // Add if available
-                expertiseLevel: 'all' // Add if available
+                id: timeSlot?.id || '',
+                name: sessionType?.name || 'Class',
+                description: { 
+                  en: sessionType?.description?.en || '', 
+                  es: sessionType?.description?.es || '' 
+                },
+                duration: timeSlot?.duration || sessionType?.defaultDuration || 60,
+                matpassRequirement: 1,
+                expertiseLevel: sessionType?.expertiseLevel || 'all'
               },
               primaryTeacher: {
                 user: {
-                  firstName: allocation.timeSlot.agent?.name?.split(' ')[0] || '',
-                  lastName: allocation.timeSlot.agent?.name?.split(' ')[1] || ''
+                  firstName: timeSlot?.agent?.name?.split(' ')[0] || '',
+                  lastName: timeSlot?.agent?.name?.split(' ')[1] || ''
                 }
               },
               room: {
-                name: 'Main Studio', // Add if available
-                capacity: allocation.timeSlot.sessionType.maxConsumers
+                name: timeSlot?.room?.name || 'Main Studio',
+                capacity: sessionType?.maxConsumers || 20
               }
             });
           });
 
         setSchedule(groupedSchedule);
-        // Set the first available day as default selected day
-        const sortedDays = Object.keys(groupedSchedule).sort();
-        if (sortedDays.length > 0 && !selectedDay) {
-          setSelectedDay(sortedDays[0]);
+        
+        // Set the first available day as selected if none is selected
+        if (!selectedDay && Object.keys(groupedSchedule).length > 0) {
+          setSelectedDay(Object.keys(groupedSchedule)[0]);
         }
       } catch (err) {
         console.error('Error fetching schedule:', err);
-        setError(err instanceof Error ? err.message : 'Error desconocido');
+        setError(err instanceof Error ? err.message : 'An unexpected error occurred');
       } finally {
         setLoading(false);
       }
@@ -166,21 +187,32 @@ export default function SchedulePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">
-          {language === 'en' ? 'Loading schedule...' : 'Cargando horario...'}
-        </span>
-      </div>
+      <>
+        <Header title={{ en: "Schedule", es: "Horario" }} />
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <Spinner size="lg" />
+          <p className="mt-4 text-gray-600">
+            {language === 'en' ? 'Loading schedule...' : 'Cargando horario...'}
+          </p>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center py-8 text-red-500">
-        <AlertCircle className="w-5 h-5 mr-2" />
-        <span>{error}</span>
-      </div>
+      <>
+        <Header title={{ en: "Schedule", es: "Horario" }} />
+        <div className="container mx-auto px-4 py-8 max-w-4xl">
+          <Alert variant="destructive">
+            <AlertDescription>
+              {language === 'en' 
+                ? 'Error loading schedule: ' 
+                : 'Error al cargar el horario: '}{error}
+            </AlertDescription>
+          </Alert>
+        </div>
+      </>
     );
   }
 

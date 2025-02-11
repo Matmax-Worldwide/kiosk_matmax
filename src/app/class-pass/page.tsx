@@ -3,12 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, User2, Ticket, Info } from 'lucide-react';
-import { format, parse, isAfter } from 'date-fns';
+import { format, parse, isAfter, startOfDay, addDays } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useLanguageContext } from '@/contexts/LanguageContext';
 import { useQuery } from "@apollo/client";
-import { GET_BUNDLE_TYPES, GET_HORARIOS } from "@/lib/graphql/queries";
-import type { Allocation, GetBundleQuery, GetHorariosQuery } from "@/types/graphql";
+import { GET_BUNDLE_TYPES, GET_POSSIBLE_ALLOCATIONS } from "@/lib/graphql/queries";
+import type { Allocation, GetBundleQuery, GetPossibleAllocationsQuery } from "@/types/graphql";
 import { Header } from '@/components/header';
 
 interface ScheduleItem {
@@ -32,11 +32,23 @@ export default function ClassPassPage() {
   const { language } = useLanguageContext();
   const [fetchedSchedule, setFetchedSchedule] = useState<DaySchedule[]>([]);
 
-  const { data: scheduleData, loading: scheduleLoading, error: scheduleError } = useQuery<GetHorariosQuery>(GET_HORARIOS, { variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} });
+  const startDate = startOfDay(new Date());
+  const endDate = addDays(startDate, 7);
+
+  const { data: scheduleData, loading: scheduleLoading, error: scheduleError } = useQuery<GetPossibleAllocationsQuery>(
+    GET_POSSIBLE_ALLOCATIONS, 
+    { 
+      variables: { 
+        contextId: "ec966559-0580-4adb-bc6b-b150c56f935c",
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString()
+      }
+    }
+  );
 
   useEffect(() => {
-    if (scheduleData && scheduleData.allocations) {
-      const allocations: Allocation[] = scheduleData.allocations;
+    if (scheduleData && scheduleData.possibleAllocations) {
+      const allocations: Allocation[] = scheduleData.possibleAllocations;
       const groups: { [day: string]: ScheduleItem[] } = {};
 
       allocations.forEach((alloc: Allocation) => {
@@ -46,13 +58,13 @@ export default function ClassPassPage() {
         const time = format(start, 'h:mm a');
         groups[dayEn].push({
           time,
-          duration: alloc.timeSlot.duration.toString(),
-          activity: alloc.timeSlot.sessionType?.name || 'Unknown',
+          duration: alloc.duration.toString(),
+          activity: alloc.sessionType?.name || 'Unknown',
           instructor: alloc.timeSlot.agent?.name || 'Unknown',
           status: alloc.status || 'Unknown',
           currentReservations: alloc.currentReservations,
           cron: alloc.timeSlot.cron || 'Unknown',
-          maxConsumers: (alloc.timeSlot.sessionType as { maxConsumers?: number })?.maxConsumers || 0
+          maxConsumers: (alloc.sessionType as { maxConsumers?: number })?.maxConsumers || 0
         });
       });
 
@@ -211,7 +223,7 @@ export default function ClassPassPage() {
                 <div className="flex items-center text-gray-600">
                   <Info className="w-5 h-5 mr-3" />
                   <span className="font-medium">
-                    Estado: {nextClass.status} | Reservas actuales: {nextClass.currentReservations} | Cron: {nextClass.cron} | Máx. Consumidores: {nextClass.maxConsumers}
+                    Estado: {nextClass.status} | Reservas actuales: {nextClass.currentReservations} | Máx. Consumidores: {nextClass.maxConsumers}
                   </span>
                 </div>
               </div>

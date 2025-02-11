@@ -50,7 +50,7 @@ export default function BuyBundleTypesPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header title={{ en: "Buy Packages", es: "Comprar Paquetes" }} />
-      <PageTransition>
+      <PageTransition key="buy-packages">
         <div className="flex-1 p-6">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">

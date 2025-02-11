@@ -1,9 +1,8 @@
 "use client";
 import React from "react";
-// import { AnimatedLayout } from "@/components/ui/animated-layout";
-// import { LanguageProvider } from "@/contexts/LanguageContext";
-// import { NotificationProvider } from "@/contexts/NotificationContext";
-// import { NotificationList } from "@/components/ui/notification-list";
+import { AnimatedLayout } from "@/components/animated-layout";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { NotificationList } from "@/components/notification-list";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ApolloProvider } from "@apollo/client";
@@ -22,12 +21,12 @@ export default function RootLayout({
       <body>
         <ApolloProvider client={client}>
           <LanguageProvider>
-            {/* <NotificationProvider>
-              <AnimatedLayout> */}
+            <NotificationProvider>
+              <AnimatedLayout> 
                 {children}
-              {/* </AnimatedLayout>
+              </AnimatedLayout>
               <NotificationList />
-            </NotificationProvider>*/}
+            </NotificationProvider>
           </LanguageProvider>
         </ApolloProvider>
       </body>
