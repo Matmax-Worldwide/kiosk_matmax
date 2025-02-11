@@ -5,6 +5,7 @@ export interface Agent {
   export interface SessionType {
     name: string;
     agent?: Agent;
+    maxConsumers: number;
   }
   
   export interface TimeSlot {
@@ -38,8 +39,12 @@ export interface Agent {
   } 
 
   export interface BundleType {
+    id: string;
     name: string;
     price: number;
+    currency: string;
+    numberOfClasses: number;
+    usagePeriod: number;
   }
 
   export interface GetBundleQuery {

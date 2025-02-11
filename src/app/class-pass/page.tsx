@@ -7,8 +7,9 @@ import { format, parse, isAfter } from 'date-fns';
 import { es, enUS } from 'date-fns/locale';
 import { useLanguageContext } from '@/contexts/LanguageContext';
 import { useQuery } from "@apollo/client";
-import { GET_BUNDLE, GET_HORARIOS } from "@/lib/graphql/queries";
+import { GET_BUNDLE_TYPES, GET_HORARIOS } from "@/lib/graphql/queries";
 import type { Allocation, GetBundleQuery, GetHorariosQuery } from "@/types/graphql";
+import { Header } from '@/components/header';
 
 interface ScheduleItem {
   time: string;
@@ -124,7 +125,7 @@ export default function ClassPassPage() {
     return null;
   };
 
-  const { data: bundleData } = useQuery<GetBundleQuery>(GET_BUNDLE, { variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} });
+  const { data: bundleData } = useQuery<GetBundleQuery>(GET_BUNDLE_TYPES, { variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} });
   const bundleTypes = bundleData?.bundleTypes;
   console.log(bundleTypes);
 
@@ -162,6 +163,8 @@ export default function ClassPassPage() {
   }
 
   return (
+    <>
+    <Header title={{ en: "Buy a Pass", es: "Comprar un Pase" }} />
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -240,5 +243,6 @@ export default function ClassPassPage() {
         {language === 'en' ? 'View Other Classes' : 'Ver Otras Clases'}
       </button>
     </motion.div>
+    </>
   );
 } 
