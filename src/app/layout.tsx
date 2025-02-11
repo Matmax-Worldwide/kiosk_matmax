@@ -6,6 +6,8 @@ import React from "react";
 // import { NotificationList } from "@/components/ui/notification-list";
 import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ApolloProvider } from "@apollo/client";
+import { client } from "@/lib/apolloClient";
 
 export default function RootLayout({
   children,
@@ -14,15 +16,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body>
-        <LanguageProvider>
-          {/* <NotificationProvider>
-            <AnimatedLayout> */}
-              {children}
-            {/* </AnimatedLayout>
-            <NotificationList />
-          </NotificationProvider>*/}
-        </LanguageProvider> 
+        <ApolloProvider client={client}>
+          <LanguageProvider>
+            {/* <NotificationProvider>
+              <AnimatedLayout> */}
+                {children}
+              {/* </AnimatedLayout>
+              <NotificationList />
+            </NotificationProvider>*/}
+          </LanguageProvider>
+        </ApolloProvider>
       </body>
     </html>
   );

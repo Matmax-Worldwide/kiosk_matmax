@@ -1,0 +1,501 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// generator erd {
+//   provider = "prisma-erd-generator"
+// }
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL") // uses connection pooling
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+  url  String
+
+  agencies Agency[]
+}
+
+model Agency {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status AgencyStatus @default(ACTIVE)
+
+  name     String
+  address  String
+  timezone String
+
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
+  contexts                Context[]
+  agentSessionTypeAgencys AgentSessionTypeAgency[]
+}
+
+enum AgencyStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model Agent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+
+  status      AgentStatus  @default(ACTIVE)
+
+  timeSlots               TimeSlot[]
+  agentSessionTypeAgencys AgentSessionTypeAgency[]
+  sessions                Session[]
+  altSessionAgents        AltSessionAgent[]
+}
+
+enum AgentStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model AgentSessionTypeAgency {
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id])
+
+  sessionTypeId String
+  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id])
+
+  // unique compound index
+  @@id([agentId, sessionTypeId, agencyId])
+}
+
+model Context {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+
+  defaultMaxCapacity Int
+  defaultBufferTime  Int
+
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id])
+
+  // Circular reference
+  parentContextId String?
+  parentContext   Context?  @relation("ParentContextRelation", fields: [parentContextId], references: [id])
+  children        Context[] @relation("ParentContextRelation")
+
+  timeSlots TimeSlot[]
+}
+
+model TimeSlot {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // scheduleusing cron syntax
+  cron        String
+  startYear   Int
+  endYear     Int
+  isRecurring Boolean
+
+  duration Int? // Override for this specific time slot, if needed
+
+  agentId String?
+  agent   Agent?  @relation(fields: [agentId], references: [id])
+
+  contextId String
+  context   Context @relation(fields: [contextId], references: [id])
+
+  sessionTypeId String
+  sessionType   SessionType @relation(fields: [sessionTypeId], references: [id])
+
+  allocations Allocation[]
+}
+
+model Allocation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  startTime DateTime
+  endTime   DateTime
+
+  version             Int @default(0)
+  currentReservations Int @default(0)
+
+  status AllocationStatus @default(AVAILABLE)
+  note   String?
+
+  sessionTypeId String?
+  sessionType   SessionType? @relation(fields: [sessionTypeId], references: [id])
+
+  timeSlotId String?
+  timeSlot   TimeSlot? @relation(fields: [timeSlotId], references: [id])
+
+  sessions          Session[]
+  reservations      Reservation[]
+  groupReservations GroupReservation[]
+
+  @@unique([timeSlotId, startTime])
+  @@index([timeSlotId, startTime], name: "timeSlotId_startTime")
+}
+
+enum AllocationStatus {
+  AVAILABLE
+  UNAVAILABLE
+  CANCELLED
+}
+
+model SessionType {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String
+
+  minAgents    Int
+  maxAgents    Int
+  minConsumers Int
+  maxConsumers Int
+
+  defaultDuration Int
+
+  timeSlots               TimeSlot[]
+  agentSessionTypeAgencys AgentSessionTypeAgency[]
+  bundleItems             BundleItem[]
+  allocations             Allocation[]
+  defaultBundleItems      DefaultBundleItem[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status SessionStatus @default(ONGOING)
+
+  agentId String
+  agent   Agent  @relation(fields: [agentId], references: [id])
+
+  allocationId     String?
+  allocation       Allocation?        @relation(fields: [allocationId], references: [id], onDelete: Cascade)
+  AltSessionAgent  AltSessionAgent[]
+  sessionConsumers SessionConsumer[]
+}
+
+enum SessionStatus {
+  CANCELLED
+  ONGOING
+  FINISHED
+}
+
+model AltSessionAgent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  type      String
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id])
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id])
+}
+
+model SessionConsumer {
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  sessionId  String
+  session    Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  consumerId String
+  consumer   Consumer  @relation(fields: [consumerId], references: [id])
+
+  @@id([sessionId, consumerId])
+}
+
+
+model Consumer {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status ConsumerStatus @default(ACTIVE)
+
+  firstName   String
+  lastName    String
+  email       String
+  phoneNumber String?
+  dateOfBirth DateTime?
+  address     Address?
+
+  tags Tag[]
+
+  isDeleted Boolean   @default(false)
+  deletedAt DateTime?
+
+  sessionConsumers SessionConsumer[]
+  bundles          Bundle[]
+  reservations     Reservation[]
+}
+
+enum ConsumerStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model Tag {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique
+
+  consumers Consumer[]
+}
+
+model Address {
+  id         String @id @default(uuid())
+  street     String
+  city       String
+  state      String
+  postalCode String
+  country    String
+
+  consumer   Consumer @relation(fields: [consumerId], references: [id])
+  consumerId String   @unique
+}
+
+model Bundle {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status BundleStatus @default(ACTIVE)
+
+  // Validity
+  validFrom DateTime
+  validTo   DateTime
+
+  isExtended Boolean @default(false)
+
+  // Anotation
+  note String?
+
+  // Owner
+  consumerId String
+  consumer   Consumer @relation(fields: [consumerId], references: [id])
+
+  // Circular reference
+  parentBundleId String?
+  parentBundle   Bundle?  @relation("ParentBundleRelation", fields: [parentBundleId], references: [id])
+  children       Bundle[] @relation("ParentBundleRelation")
+
+  // Type
+  bundleType   BundleType? @relation(fields: [bundleTypeId], references: [id])
+  bundleTypeId String?
+
+  reservations      Reservation[]
+  bundleUsageEvents BundleUsageEvent[]
+  bundleItems       BundleItem[]
+}
+
+// New model to define default items for each BundleType
+model DefaultBundleItem {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quantity Int
+  type     BundleItemType
+
+  bundleTypeId String
+  bundleType   BundleType @relation(fields: [bundleTypeId], references: [id])
+
+  sessionTypes SessionType[]
+
+  creditAmount Float?
+}
+
+model BundleItem {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quantity Int
+  type     BundleItemType
+
+  bundleId String
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  sessionTypes SessionType[]
+
+  creditAmount Float?
+}
+
+enum BundleItemType {
+  SESSION
+  CREDIT
+}
+
+model BundleType {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name String @unique
+
+  bundles           Bundle[]
+  defaultBundleItem DefaultBundleItem[]
+  price             Int                 @default(0)
+}
+
+model BundleUsageEvent {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  bundleId String
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  reservationId String?
+  reservation   Reservation? @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+
+  type     BundleUsageEventType
+  quantity Int
+}
+
+enum BundleUsageEventType {
+  USE
+  REFUND
+  EXPIRE
+  CANCEL
+}
+
+enum BundleStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+model Reservation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Generic way to track the status of the reservation
+  // The status is set to CONFIRMED by default, except in special cases
+  status ReservationStatus
+
+  bundleId String
+  bundle   Bundle @relation(fields: [bundleId], references: [id])
+
+  allocationId String?
+  allocation   Allocation? @relation(fields: [allocationId], references: [id])
+
+  forConsumerId String?
+  forConsumer   Consumer? @relation(fields: [forConsumerId], references: [id])
+
+  // For reservations made for non-users
+  onBehalfOfName String?
+
+  groupReservationId String?
+  groupReservation   GroupReservation? @relation(fields: [groupReservationId], references: [id])
+
+  bundleUsageEvents BundleUsageEvent[]
+}
+
+enum ReservationStatus {
+  // The reservation is initiated but not yet confirmed; it is pending due to payment processing
+  PENDING
+  // The reservation has been confirmed and is active, for example, when a user successfully books a session.
+  CONFIRMED
+  // The reservation has been successfully attended and marked as complete
+  VALIDATED
+  // The reservation has been cancelled and is no longer active
+  CANCELLED
+}
+
+model GroupReservation {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Anotation
+  note String?
+
+  allocationId String
+  allocation   Allocation @relation(fields: [allocationId], references: [id])
+
+  reservations Reservation[]
+}
+
+model Webhook {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  event  String
+  url    String
+  secret String
+
+  logs WebhookLog[]
+}
+
+model WebhookLog {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+
+  webhookId String
+  webhook   Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  status       String
+  payload      String
+  errorMessage String?
+}
+
+// Payment Links
+model PaymentLink {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  status PaymentLinkStatus @default(ACTIVE)
+
+  name        String
+  description String
+  amount      Int
+
+  url String @unique
+
+  validFrom DateTime?
+  expiresAt DateTime?
+}
+
+enum PaymentLinkStatus {
+  ACTIVE
+  EXPIRED
+  PAID
+  CANCELLED
+}
