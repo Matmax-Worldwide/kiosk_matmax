@@ -1,8 +1,21 @@
 import { gql } from "@apollo/client";
 
+export const CREATE_CONSUMER = gql`
+  mutation CreateConsumer($input: CreateConsumerInput!) {
+    createConsumer(input: $input) {
+      id
+      firstName
+      lastName
+      email
+      phoneNumber
+    }
+  }
+`;
+
 export const GET_BUNDLE_TYPES = gql`
   query BundleTypes {
     bundleTypes {
+      id
       name
       price
     }
@@ -77,3 +90,53 @@ export const GET_POSSIBLE_ALLOCATIONS = gql`
 		}
 	}
 `;
+
+export const GET_CONSUMER = gql`
+  query GetConsumer($id: ID!) {
+    consumer(id: $id) {
+      id
+      firstName
+      lastName
+      email
+      bundles {
+        id
+        status
+      }
+    }
+  }
+`;
+
+export const GET_BUNDLE_TYPE = gql`
+  query GetBundleType($id: ID!) {
+    bundleType(id: $id) {
+      id
+      name
+      price
+    }
+  }
+`;
+
+export const CREATE_BUNDLE = gql`
+  mutation CreateBundle($input: CreateBundleInput!) {
+    createBundle(input: $input) {
+      id
+      status
+      validFrom
+      validTo
+      remainingUses
+      note
+      bundleType {
+        id
+        name
+        price
+      }
+    }
+  }
+`;
+
+export enum BundleStatus {
+  ACTIVE = "ACTIVE",
+  EXPIRED = "EXPIRED",
+  CANCELLED = "CANCELLED",
+  EXPENDED = "EXPENDED"
+}

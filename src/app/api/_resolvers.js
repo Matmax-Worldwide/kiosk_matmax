@@ -222,6 +222,7 @@ const resolvers = {
                 ...(status && { status }),
             },
         }),
+        bundleType: (_, { id }) => prisma.bundleType.findUnique({ where: { id } }),
         bundleTypes: async () => prisma.bundleType.findMany(),
         reservation: (_, { id }) => prisma.reservation.findUnique({ where: { id } }),
         reservations: () => prisma.reservation.findMany(),

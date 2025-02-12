@@ -36,6 +36,7 @@ type Query {
 
   bundle(id: ID!): Bundle
   bundles(consumerId: ID!, status: BundleStatus): [Bundle!]!
+  bundleType(id: ID!): BundleType
   bundleTypes: [BundleType!]!
   
   reservation(id: ID!): Reservation

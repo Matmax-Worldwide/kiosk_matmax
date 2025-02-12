@@ -79,7 +79,6 @@ export default function BuyBundleTypesPage() {
                 {bundleTypes
                   ?.filter(pkg => 
                     !pkg.name.toLowerCase().includes('invitado') &&
-                    !pkg.name.toLowerCase().includes('1 ') &&
                     !pkg.name.toLowerCase().includes('hotel') &&
                     !pkg.name.toLowerCase().includes('co-work') &&
                     !pkg.name.toLowerCase().includes('acro')
@@ -89,23 +88,11 @@ export default function BuyBundleTypesPage() {
                     <Card 
                       key={pkg.id}
                       className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-white border-2 hover:border-blue-200"
-                      onClick={() => router.push(`/buy-packages/select?packageId=${pkg.id}`)}
+                      onClick={() => router.push(`/buy-packages/user-selection?packageId=${pkg.id}`)}
                     >
                       <div className="text-xl font-medium mb-2">{pkg.name}</div>
                       <div className="text-2xl font-bold mb-4 text-blue-600">
                         {formatCurrency(pkg.price, pkg.currency)}
-                      </div>
-                      <div className="space-y-2 text-sm text-gray-500">
-                        <div>
-                          {language === "en" 
-                            ? `${pkg.numberOfClasses} Classes`
-                            : `${pkg.numberOfClasses} Clases`}
-                        </div>
-                        <div>
-                          {language === "en"
-                            ? `Valid for ${pkg.usagePeriod} days`
-                            : `Válido por ${pkg.usagePeriod} días`}
-                        </div>
                       </div>
                     </Card>
                   ))}
@@ -125,7 +112,6 @@ export default function BuyBundleTypesPage() {
                 {bundleTypes
                   ?.filter(pkg => 
                     !pkg.name.toLowerCase().includes('invitado') &&
-                    !pkg.name.toLowerCase().includes('1 ') &&
                     !pkg.name.toLowerCase().includes('hotel') &&
                     !pkg.name.toLowerCase().includes('co-work') &&
                     pkg.name.toLowerCase().includes('acro')
@@ -135,23 +121,11 @@ export default function BuyBundleTypesPage() {
                     <Card 
                       key={pkg.id}
                       className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-purple-50 to-white border-2 hover:border-purple-200"
-                      onClick={() => router.push(`/buy-packages/select?packageId=${pkg.id}`)}
+                      onClick={() => router.push(`/buy-packages/user-selection?packageId=${pkg.id}`)}
                     >
                       <div className="text-xl font-medium mb-2">{pkg.name}</div>
                       <div className="text-2xl font-bold mb-4 text-purple-600">
                         {formatCurrency(pkg.price, pkg.currency)}
-                      </div>
-                      <div className="space-y-2 text-sm text-gray-500">
-                        <div>
-                          {language === "en" 
-                            ? `${pkg.numberOfClasses} Classes`
-                            : `${pkg.numberOfClasses} Clases`}
-                        </div>
-                        <div>
-                          {language === "en"
-                            ? `Valid for ${pkg.usagePeriod} days`
-                            : `Válido por ${pkg.usagePeriod} días`}
-                        </div>
                       </div>
                     </Card>
                   ))}
