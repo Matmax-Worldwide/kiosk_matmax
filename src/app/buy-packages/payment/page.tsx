@@ -1,228 +1,224 @@
 "use client";
-import { motion, AnimatePresence } from 'framer-motion';
-import { useLanguageContext } from '@/contexts/LanguageContext';
-import {
-ArrowRight,
-Package2,
-CalendarDays,
-UserCheck,
-Clock,
-ShoppingBag,
-Calendar
-} from 'lucide-react';
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Header } from "@/components/header";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useLanguageContext } from "@/contexts/LanguageContext";
+import { Banknote, CreditCard, QrCode } from "lucide-react";
+import { useQuery } from '@apollo/client';
+import { GET_CONSUMER, GET_BUNDLE_TYPE, CREATE_BUNDLE, BundleStatus } from '@/lib/graphql/queries';
+import { useMutation } from '@apollo/client';
 
-export default function Home() {
-const { language } = useLanguageContext();
-const [infoIndex, setInfoIndex] = useState(0);
+type PaymentMethod = "CARD" | "CASH" | "QR";
 
-const mainActions = [
-{
-icon: <CalendarDays className="w-8 h-8" />,
-title: 'Comprar MatPass',
-titleEn: 'Buy a MatPass',
-description: 'Reserva tu próxima clase o revisa el horario',
-descriptionEn: 'Book your next class or check schedule',
-href: '/class-pass',
-gradient: 'from-blue-600 to-indigo-600'
-},
-{
-icon: <Package2 className="w-8 h-8" />,
-title: 'Comprar Paquetes',
-titleEn: 'Buy Class Packages',
-description: 'Ver y comprar paquetes de clases',
-descriptionEn: 'View and purchase class packages',
-href: '/buy-packages',
-gradient: 'from-purple-600 to-pink-600'
+interface PaymentMethodCardProps {
+  method: PaymentMethod;
+  icon: React.ReactNode;
+  title: { en: string; es: string };
+  subtitle: string | { en: string; es: string };
+  selected: boolean;
+  onClick: () => void;
 }
-];
 
-const infoItems = [
-{
-icon: <Clock className="w-5 h-5" />,
-title: 'Clase Actual',
-description: 'Yoga Flow - 10:00 AM',
-detail: 'Traer mat y ropa cómoda'
-},
-{
-icon: <ShoppingBag className="w-5 h-5" />,
-title: 'Oferta',
-description: 'Bolsters de Yoga -20%',
-detail: 'Con MatPass activo'
-},
-{
-icon: <Calendar className="w-5 h-5" />,
-title: 'Próximamente',
-description: 'Taller de Meditación',
-detail: 'Este sábado 10 AM'
+function PaymentMethodCard({ icon, title, subtitle, selected, onClick }: PaymentMethodCardProps) {
+  const { language } = useLanguageContext();
+
+  return (
+    <Card 
+      className={`p-6 cursor-pointer transition-all hover:border-blue-500 ${
+        selected ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+      }`}
+      onClick={onClick}
+    >
+      <div className="flex flex-col items-center text-center space-y-3">
+        {icon}
+        <div>
+          <h3 className="font-medium">{title[language]}</h3>
+          <p className="text-sm text-gray-500">
+            {typeof subtitle === 'string' ? subtitle : subtitle[language]}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
 }
-];
 
-useEffect(() => {
-const timer = setInterval(() => {
-setInfoIndex((current) => (current + 1) % infoItems.length);
-}, 5000);
-return () => clearInterval(timer);
-}, [infoItems.length]);
+function PaymentContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { language } = useLanguageContext();
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-return (
-<main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-<div className="container mx-auto px-4 py-16 md:py-24">
-<div className="flex justify-center mb-8">
-<Image
-src="/img/logo.png"
-alt="MatMax Logo"
-width={300}
-height={150}
-priority
-/>
-</div>
-<motion.div
-initial={{ opacity: 0, y: 20 }}
-animate={{ opacity: 1, y: 0 }}
-className="text-center max-w-4xl mx-auto mb-16"
->
-<p className="text-xl text-gray-600">
-{language === 'en'
-? 'Choose an option to get started'
-: 'Elige una opción para comenzar'}
-</p>
-</motion.div>
+  const userId = searchParams.get('userId');
+  const packageId = searchParams.get('packageId');
 
-{/* Main Actions Grid */}
-<div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
-{mainActions.map((action, index) => (
-<motion.div
-key={index}
-initial={{ opacity: 0, x: index === 0 ? -20 : 20 }}
-animate={{ opacity: 1, x: 0 }}
-transition={{ delay: index * 0.2 }}
-whileHover={{ scale: 1.02 }}
-className="relative group h-full"
->
-<Link href={action.href} className="h-full block">
-<div className={`bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl
-transition-all duration-300 border-2 border-transparent
-hover:border-2 hover:border-opacity-50 h-full
-hover:border-gradient-to-r ${action.gradient}`}>
-<div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${action.gradient}
-flex items-center justify-center text-white mb-6`}>
-{action.icon}
-</div>
-<h3 className="text-2xl font-bold mb-3">
-{language === 'en' ? action.titleEn : action.title}
-</h3>
-<p className="text-gray-600">
-{language === 'en' ? action.descriptionEn : action.description}
-</p>
-<div className="absolute bottom-8 right-8 opacity-0
-group-hover:opacity-100 transition-opacity">
-<ArrowRight className="w-6 h-6 text-gray-400" />
-</div>
-</div>
-</Link>
-</motion.div>
-))}
-</div>
+  const { data: consumerData, loading: consumerLoading, error: consumerError } = useQuery(GET_CONSUMER, {
+    variables: { id: userId },
+    skip: !userId,
+  });
 
-{/* Check-in Section */}
-<motion.div
-initial={{ opacity: 0, y: 20 }}
-animate={{ opacity: 1, y: 0 }}
-transition={{ delay: 0.4 }}
-className="max-w-4xl mx-auto text-center"
->
-<div className="mb-6">
-<h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-green-600
-to-teal-600 bg-clip-text text-transparent">
-¿Ya tienes una reserva?
-</h2>
-<p className="text-gray-600">
-{language === 'en' ? 'Check-in for your class here' : 'Haz check-in para tu clase aquí'}
-</p>
-</div>
-<motion.div
-whileHover={{ scale: 1.02 }}
-whileTap={{ scale: 0.98 }}
->
-<Link href="/check-in">
-<div className="bg-gradient-to-r from-green-600 to-teal-600 text-white
-p-6 rounded-2xl
-shadow-lg hover:shadow-xl transition-all duration-300 flex items-center
-justify-center gap-3 group">
-<UserCheck className="w-8 h-8 transition-transform group-hover:scale-110" />
-<span className="text-xl font-semibold">Check-in</span>
-<ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100
-transition-all" />
-</div>
-</Link>
-</motion.div>
-</motion.div>
+  const { data: bundleTypeData, loading: bundleTypeLoading, error: bundleTypeError } = useQuery(GET_BUNDLE_TYPE, {
+    variables: { id: packageId },
+    skip: !packageId,
+  });
 
-{/* Info Section - Above Footer */}
-<motion.div
-initial={{ opacity: 0 }}
-animate={{ opacity: 1 }}
-className="max-w-4xl mx-auto mt-16 mb-8"
->
-<AnimatePresence mode="wait">
-<motion.div
-key={infoIndex}
-initial={{ opacity: 0, y: 20 }}
-animate={{ opacity: 1, y: 0 }}
-exit={{ opacity: 0, y: -20 }}
-transition={{ duration: 0.5, ease: "easeInOut" }}
-className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border
-border-gray-100 p-6"
->
-<div className="flex items-center justify-between gap-8">
-<div className="flex items-center gap-6">
-<div className="w-16 h-16 rounded-xl bg-gray-50 flex items-center
-justify-center">
-<div className="text-blue-600">
-{infoItems[infoIndex].icon}
-</div>
-</div>
-<div>
-<div className="flex items-center gap-3 mb-2">
-<h3 className="text-xl font-bold text-gray-800">
-{infoItems[infoIndex].title}
-</h3>
-<span className="text-gray-400">•</span>
-<p className="text-lg text-gray-700">
-{infoItems[infoIndex].description}
-</p>
-</div>
-<p className="text-base text-gray-500">
-{infoItems[infoIndex].detail}
-</p>
-</div>
-</div>
-<div className="flex flex-col items-end gap-3">
-<div className="flex gap-2">
-{[...Array(infoItems.length)].map((_, idx) => (
-<div
-key={idx}
-className={`w-2 h-2 rounded-full transition-all duration-300 ${
-idx === infoIndex ? 'bg-blue-600 scale-125' : 'bg-gray-200'
-}`}
-/>
-))}
-</div>
-</div>
-</div>
-</motion.div>
-</AnimatePresence>
-</motion.div>
+  const [createBundle] = useMutation(CREATE_BUNDLE);
 
-{/* Add some bottom padding to prevent content from being cut off */}
-<div className="h-20" />
-</div>
-</main>
-);
+  const getPaymentMethodText = () => {
+    switch (selectedMethod) {
+      case 'CARD':
+        return 'Tarjeta de Crédito/Débito / Credit/Debit Card';
+      case 'QR':
+        return 'Pago con QR / QR Payment';
+      case 'CASH':
+        return 'Efectivo / Cash';
+    }
+  };
+  
+  useEffect(() => {
+    if (!userId || !packageId) {
+      router.push('/buy-packages');
+    }
+  }, [userId, packageId, router]);
+
+  const handlePayment = async () => {
+    if (!selectedMethod || !userId || !packageId) return;
+
+    try {
+      setIsProcessing(true);
+      setError(null);
+
+      const validFrom = new Date();
+      const validTo = new Date();
+      validTo.setDate(validFrom.getDate() + 30);
+
+      const { data } = await createBundle({
+        variables: {
+          input: {
+            consumerId: userId,
+            status: BundleStatus.ACTIVE,
+            bundleTypeId: packageId,
+            validFrom: validFrom.toISOString(),
+            validTo: validTo.toISOString(),
+            note: `Método de pago: ${getPaymentMethodText()}`,
+          }
+        }
+      });
+
+      router.push(`/buy-packages/confirmation?purchaseId=${data.createBundle.id}`);
+    } catch (err) {
+      console.error('Payment error:', err);
+      setError(
+        language === "en"
+          ? "Failed to process payment. Please try again."
+          : "Error al procesar el pago. Por favor intente de nuevo."
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  if (consumerLoading || bundleTypeLoading) return <div>Loading...</div>;
+  if (consumerError || bundleTypeError) return <div>Error loading data</div>;
+
+  return (
+    <div className="flex-1 p-6">
+      <div className="max-w-2xl mx-auto">
+        <Card className="p-6">
+          <h2 className="text-2xl font-medium text-center mb-6">
+            {language === "en" ? "Select Payment Method" : "Seleccionar Método de Pago"}
+          </h2>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-medium">Consumer Information</h3>
+            <p>Name: {consumerData.consumer.firstName} {consumerData.consumer.lastName}</p>
+            <p>Email: {consumerData.consumer.email}</p>
+          </div>
+
+          <div className="mb-6">
+            <h3 className="text-lg font-medium">Bundle Information</h3>
+            <p>Bundle Type: {bundleTypeData.bundleType.name}</p>
+            <p>Price: {bundleTypeData.bundleType.price}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <PaymentMethodCard
+              method="CARD"
+              icon={<CreditCard className="w-8 h-8 text-blue-500" />}
+              title={{ en: "Credit/Debit Card", es: "Tarjeta Crédito/Débito" }}
+              subtitle={{ 
+                en: "Pay securely with your card",
+                es: "Paga de forma segura con tu tarjeta"
+              }}
+              selected={selectedMethod === "CARD"}
+              onClick={() => setSelectedMethod("CARD")}
+            />
+
+            <PaymentMethodCard
+              method="CASH"
+              icon={<Banknote className="w-8 h-8 text-green-500" />}
+              title={{ en: "Cash", es: "Efectivo" }}
+              subtitle={{ 
+                en: "Pay with cash",
+                es: "Paga con efectivo"
+              }}
+              selected={selectedMethod === "CASH"}
+              onClick={() => setSelectedMethod("CASH")}
+            />
+
+            <PaymentMethodCard
+              method="QR"
+              icon={<QrCode className="w-8 h-8 text-purple-500" />}
+              title={{ en: "Yape / Plin", es: "Yape / Plin" }}
+              subtitle={{ 
+                en: "Pay using QR",
+                es: "Paga usando QR"
+              }}
+              selected={selectedMethod === "QR"}
+              onClick={() => setSelectedMethod("QR")}
+            />
+          </div>
+
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            </div>
+          )}
+
+          {selectedMethod && (
+            <div className="mt-8">
+              <Button
+                onClick={handlePayment}
+                variant="default"
+                className="w-full"
+                disabled={isProcessing}
+              >
+                {language === "en" 
+                  ? isProcessing ? "Processing..." : "Complete Payment"
+                  : isProcessing ? "Procesando..." : "Completar Pago"
+                }
+              </Button>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default function PaymentPage() {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header title={{ en: "Payment", es: "Pago" }} />
+      <Suspense fallback={<div>Loading...</div>}>
+        <PaymentContent />
+      </Suspense>
+    </div>
+  );
 }
 
 export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
+export const fetchCache = "force-no-store"; 
