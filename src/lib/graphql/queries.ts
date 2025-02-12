@@ -67,6 +67,75 @@ export const SEARCH_CONSUMERS = gql`
   }
 `;
 
+export const GET_CONSUMER = gql`
+  query GetConsumer($id: ID!) {
+    consumer(id: $id) {
+      id
+      firstName
+      lastName
+      email
+      phoneNumber
+      bundles {
+        id
+        status
+        validFrom
+        validTo
+        bundleType {
+          name
+        }
+        remainingUses
+      }
+      reservations {
+        id
+        createdAt
+        updatedAt
+        status
+        bundle {
+          id
+          bundleType {
+            name
+          }
+          remainingUses
+        }
+        allocation {
+          startTime
+          timeSlot {
+            sessionType {
+              name
+            }
+            agent {
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export const UPDATE_RESERVATION_STATUS = gql`
+  mutation UpdateReservation($id: ID!, $status: ReservationStatus!) {
+    updateReservation(id: $id, input: { status: $status }) {
+      id
+      status
+      forConsumer {
+        fullName
+      }
+      allocation {
+        startTime
+        timeSlot {
+          sessionType {
+            name
+          }
+          agent {
+            name
+          }
+        }
+      }
+    }
+  }
+`;
+
 // Define the GraphQL queries and mutations
 export const GET_POSSIBLE_ALLOCATIONS = gql`
 	query PossibleAllocations($contextId: ID!, $startDate: DateTime!, $endDate: DateTime!) {
@@ -89,21 +158,6 @@ export const GET_POSSIBLE_ALLOCATIONS = gql`
 			}
 		}
 	}
-`;
-
-export const GET_CONSUMER = gql`
-  query GetConsumer($id: ID!) {
-    consumer(id: $id) {
-      id
-      firstName
-      lastName
-      email
-      bundles {
-        id
-        status
-      }
-    }
-  }
 `;
 
 export const GET_BUNDLE_TYPE = gql`

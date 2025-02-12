@@ -7,6 +7,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ApolloProvider } from "@apollo/client";
 import { client } from "@/lib/apolloClient";
+import { Toaster } from "@/components/ui/toaster"
 
 export default function RootLayout({
   children,
@@ -29,6 +30,7 @@ export default function RootLayout({
             </NotificationProvider>
           </LanguageProvider>
         </ApolloProvider>
+        <Toaster />
       </body>
     </html>
   );
