@@ -72,7 +72,7 @@ return (
 <div className="container mx-auto px-4 py-16 md:py-24">
 <div className="flex justify-center mb-8">
 <Image
-src="/img/logo.png"
+src="/img/matmax.svg"
 alt="MatMax Logo"
 width={300}
 height={150}
