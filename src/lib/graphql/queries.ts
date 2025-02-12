@@ -38,7 +38,6 @@ export const GET_FULL_SCHEDULE = gql`
         }
         sessionType {
           name
-          maxConsumers
         }
       }
       reservations {
@@ -75,16 +74,6 @@ export const GET_CONSUMER = gql`
       lastName
       email
       phoneNumber
-      bundles {
-        id
-        status
-        validFrom
-        validTo
-        bundleType {
-          name
-        }
-        remainingUses
-      }
       reservations {
         id
         createdAt
@@ -155,6 +144,7 @@ export const GET_POSSIBLE_ALLOCATIONS = gql`
 			sessionType {
 				id
 				name
+				maxConsumers
 			}
 		}
 	}
