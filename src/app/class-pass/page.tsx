@@ -176,7 +176,7 @@ export default function ClassPassPage() {
 
   return (
     <>
-    <Header title={{ en: "Buy a Pass", es: "Comprar un Pase" }} />
+    <Header title={{ en: "Reserve Now", es: "Reserva Ahora" }} />
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}

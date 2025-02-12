@@ -40,7 +40,7 @@ export default function HomePage() {
                       <CalendarDays className="w-12 h-12 text-blue-600" />
                     </div>
                     <h3 className="text-2xl font-semibold text-blue-900">
-                      {language === "en" ? "Buy a Pass" : "Comprar un Pase"}
+                      {language === "en" ? "Reserve Now" : "Reserva Ahora"}
                     </h3>
                     <p className="text-blue-700 text-lg">
                       {language === "en"
