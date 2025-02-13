@@ -90,7 +90,7 @@ export default function BuyBundleTypesPage() {
                     <Card 
                       key={pkg.id}
                       className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-sm border border-gray-100 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
-                      onClick={() => router.push(`/buy-packages/user-selection?packageId=${pkg.id}`)}
+                      onClick={() => router.push(`/user-selection?packageId=${pkg.id}`)}
                     >
                       <div className="flex flex-col h-full">
                         <div className="flex-1">
@@ -183,7 +183,7 @@ export default function BuyBundleTypesPage() {
                     <Card 
                       key={pkg.id}
                       className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-sm border border-gray-100 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
-                      onClick={() => router.push(`/buy-packages/user-selection?packageId=${pkg.id}`)}
+                      onClick={() => router.push(`/user-selection?packageId=${pkg.id}`)}
                     >
                       <div className="flex flex-col h-full">
                         <div className="flex-1">

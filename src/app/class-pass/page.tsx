@@ -27,6 +27,7 @@ import { Spinner } from "@/components/spinner";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ScheduleItem {
+  id: string;
   time: string;
   duration: string;
   activity: string;
@@ -73,6 +74,7 @@ export default function ClassPassPage() {
         if (!groups[dayEn]) groups[dayEn] = [];
         const time = format(start, "h:mm a");
         groups[dayEn].push({
+          id: alloc.id,
           time,
           duration: alloc.duration.toString(),
           activity: alloc.sessionType?.name || "Unknown",
@@ -194,7 +196,7 @@ export default function ClassPassPage() {
   const handleClassSelection = () => {
     if (nextClass && singleClassPass) {
       router.push(
-        `/class-pass/user-selection?classId=next&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
+        `/user-selection?classId=${nextClass.id}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
       );
     }
   };
@@ -399,7 +401,7 @@ export default function ClassPassPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md group"
-                    onClick={() => router.push("/class-pass/schedule")}
+                    onClick={() => router.push("/schedule")}
                   >
                     <AnimatePresence mode="wait">
                       <motion.span

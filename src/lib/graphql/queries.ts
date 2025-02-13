@@ -184,3 +184,23 @@ export enum BundleStatus {
   CANCELLED = "CANCELLED",
   EXPENDED = "EXPENDED"
 }
+
+export const GET_ALLOCATION = gql`
+  query GetAllocation($id: ID!) {
+    allocation(input: { id: $id }) {
+      id
+      startTime
+      status
+      currentReservations
+      timeSlot {
+        agent {
+          name
+        }
+        sessionType {
+          name
+          maxConsumers
+        }
+      }
+    }
+  }
+`;
