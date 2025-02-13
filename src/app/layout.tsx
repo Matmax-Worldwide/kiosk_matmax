@@ -24,7 +24,7 @@ export default function RootLayout({
           <LanguageProvider>
             <NotificationProvider>
               <AnimatedLayout>
-                <div className="absolute top-0 w-full h-screen">
+                <div className="absolute top-0 w-full h-screen pt-16">
                   {children}
                 </div>
               </AnimatedLayout>
