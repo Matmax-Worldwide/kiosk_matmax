@@ -24,7 +24,7 @@ import type {
 } from "@/types/graphql";
 import { Header } from "@/components/header";
 import { Spinner } from "@/components/spinner";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ScheduleItem {
   time: string;
@@ -313,7 +313,17 @@ export default function ClassPassPage() {
                           className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-6 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-2xl font-semibold shadow-lg hover:shadow-xl group"
                         >
                           <CreditCard className="w-7 h-7 transition-transform group-hover:scale-110" />
-                          {language === "en" ? "Book Now" : "Reservar Ahora"}
+                          <AnimatePresence mode="wait">
+                            <motion.span
+                              key={language}
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: -10, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              {language === "en" ? "Book Now" : "Reservar Ahora"}
+                            </motion.span>
+                          </AnimatePresence>
                           <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all" />
                         </button>
                       </motion.div>
@@ -330,19 +340,50 @@ export default function ClassPassPage() {
                             <Users className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
                               {nextClass.currentReservations}/{nextClass.maxConsumers}{" "}
-                              {language === "en" ? "mats" : "mats"}
+                              <AnimatePresence mode="wait">
+                                <motion.span
+                                  key={language}
+                                  initial={{ y: 10, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  exit={{ y: -10, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  mats
+                                </motion.span>
+                              </AnimatePresence>
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
                             <Clock className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
-                              {nextClass.duration} {language === "en" ? "minutes" : "minutos"}
+                              {nextClass.duration}{" "}
+                              <AnimatePresence mode="wait">
+                                <motion.span
+                                  key={language}
+                                  initial={{ y: 10, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  exit={{ y: -10, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  {language === "en" ? "minutes" : "minutos"}
+                                </motion.span>
+                              </AnimatePresence>
                             </span>
                           </div>
                           <div className="flex items-center gap-3">
                             <Award className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
-                              {nextClass.status}
+                              <AnimatePresence mode="wait">
+                                <motion.span
+                                  key={language}
+                                  initial={{ y: 10, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  exit={{ y: -10, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  {nextClass.status}
+                                </motion.span>
+                              </AnimatePresence>
                             </span>
                           </div>
                         </div>
@@ -357,10 +398,20 @@ export default function ClassPassPage() {
                     transition={{ duration: 0.5, delay: 0.8 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md"
+                    className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md group"
                     onClick={() => router.push("/class-pass/schedule")}
                   >
-                    {language === "en" ? "View Schedule" : "Ver Horarios"}
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={language}
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -10, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {language === "en" ? "View Schedule" : "Ver Horarios"}
+                      </motion.span>
+                    </AnimatePresence>
                     <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </motion.button>
                 </div>
