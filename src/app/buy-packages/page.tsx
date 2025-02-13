@@ -21,7 +21,7 @@ export default function BuyBundleTypesPage() {
   const bundleTypes = data?.bundleTypes;
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col pt-16">
         <Header title={{ en: "Buy Packages", es: "Comprar Paquetes" }} />
         <div className="flex-1 flex items-center justify-center">
           <Spinner size="lg" />
@@ -32,7 +32,7 @@ export default function BuyBundleTypesPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col pt-16">
         <Header title={{ en: "Buy Packages", es: "Comprar Paquetes" }} />
         <div className="flex-1 p-6">
             <Card className="p-6 text-center">
@@ -50,7 +50,7 @@ export default function BuyBundleTypesPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white pt-16">
       <Header title={{ en: "Buy Packages", es: "Comprar Paquetes" }} />
       <PageTransition key="buy-packages">
         <div className="flex-1 p-6">
@@ -90,7 +90,7 @@ export default function BuyBundleTypesPage() {
                     <Card 
                       key={pkg.id}
                       className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-sm border border-gray-100 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
-                      onClick={() => router.push(`/buy-packages/user-selection?packageId=${pkg.id}`)}
+                      onClick={() => router.push(`/user-selection?packageId=${pkg.id}`)}
                     >
                       <div className="flex flex-col h-full">
                         <div className="flex-1">
@@ -183,7 +183,7 @@ export default function BuyBundleTypesPage() {
                     <Card 
                       key={pkg.id}
                       className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-sm border border-gray-100 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
-                      onClick={() => router.push(`/buy-packages/user-selection?packageId=${pkg.id}`)}
+                      onClick={() => router.push(`/user-selection?packageId=${pkg.id}`)}
                     >
                       <div className="flex flex-col h-full">
                         <div className="flex-1">

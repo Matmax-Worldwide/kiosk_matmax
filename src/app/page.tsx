@@ -244,7 +244,7 @@ transition-all"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="flex justify-center w-full mt-8 mb-12"
+          className="flex justify-center w-full mb-12"
         >
           <div 
             className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-lg 

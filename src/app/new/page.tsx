@@ -30,7 +30,7 @@ function NewUserContent() {
 
       const response = await createConsumer({ variables: { input: data } });
       const newUserId = response.data.createConsumer.id;
-      router.push(`/buy-packages/payment?packageId=${packageId}&userId=${newUserId}`);
+      router.push(`/payment?packageId=${packageId}&userId=${newUserId}`);
     } catch (error) {
       console.error("Registration error:", error);
       

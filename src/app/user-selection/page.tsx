@@ -13,18 +13,20 @@ function SelectContent() {
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
   const packageId = searchParams.get('packageId');
+  const classId = searchParams.get('classId');
 
+  // Only packageId is required now
   if (!packageId) {
     return (
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 pt-16">
         <Card className="p-6 text-center">
           <p className="text-red-600 mb-4">
             {language === "en"
-              ? "No package selected. Please select a package first."
-              : "No se ha seleccionado un paquete. Por favor, seleccione un paquete primero."}
+              ? "Missing required parameters. Please select a package first."
+              : "Faltan parámetros requeridos. Por favor, seleccione un paquete primero."}
           </p>
           <Button
-            onClick={() => router.push('/buy-packages')}
+            onClick={() => router.push('/class-pass')}
             variant="default"
           >
             {language === "en" ? "Return to Packages" : "Volver a Paquetes"}
@@ -34,8 +36,15 @@ function SelectContent() {
     );
   }
 
+  // Build the query string conditionally
+  const buildQueryString = () => {
+    return classId
+      ? `?packageId=${packageId}&classId=${classId}`
+      : `?packageId=${packageId}`;
+  };
+
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-6 pt-16">
       <div className="max-w-2xl mx-auto">
         <Card className="p-6">
           <div className="text-center mb-6">
@@ -51,7 +60,7 @@ function SelectContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button
-              onClick={() => router.push(`/buy-packages/existing?packageId=${packageId}`)}
+              onClick={() => router.push(`/existing${buildQueryString()}`)}
               variant="outline"
               className="p-6 h-auto flex flex-col items-center"
             >
@@ -67,7 +76,7 @@ function SelectContent() {
             </Button>
 
             <Button
-              onClick={() => router.push(`/buy-packages/new?packageId=${packageId}`)}
+              onClick={() => router.push(`/new${buildQueryString()}`)}
               variant="outline"
               className="p-6 h-auto flex flex-col items-center"
             >
@@ -90,7 +99,7 @@ function SelectContent() {
 
 export default function SelectUserTypePage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pt-16">
       <Header title={{ en: "Select Account Type", es: "Seleccionar Tipo de Cuenta" }} />
       <PageTransition>
         <Suspense fallback={<div>Loading...</div>}>
@@ -102,4 +111,4 @@ export default function SelectUserTypePage() {
 }
 
 export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store"; 
+export const fetchCache = "force-no-store";

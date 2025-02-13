@@ -5,10 +5,11 @@ import { Header } from "@/components/header";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { Banknote, CreditCard, QrCode } from "lucide-react";
-import { useQuery } from '@apollo/client';
-import { GET_CONSUMER, GET_BUNDLE_TYPE, CREATE_BUNDLE, BundleStatus } from '@/lib/graphql/queries';
-import { useMutation } from '@apollo/client';
+import { Banknote, CreditCard, QrCode, Clock, Users } from "lucide-react";
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_CONSUMER, GET_BUNDLE_TYPE, CREATE_BUNDLE, GET_ALLOCATION, BundleStatus, CREATE_RESERVATION } from '@/lib/graphql/queries';
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 type PaymentMethod = "CARD" | "CASH" | "QR";
 
@@ -54,18 +55,25 @@ function PaymentContent() {
 
   const userId = searchParams.get('userId');
   const packageId = searchParams.get('packageId');
+  const classId = searchParams.get('classId');
 
-  const { data: consumerData, loading: consumerLoading, error: consumerError } = useQuery(GET_CONSUMER, {
+  const { data: consumerData, loading: consumerLoading } = useQuery(GET_CONSUMER, {
     variables: { id: userId },
     skip: !userId,
   });
 
-  const { data: bundleTypeData, loading: bundleTypeLoading, error: bundleTypeError } = useQuery(GET_BUNDLE_TYPE, {
+  const { data: bundleTypeData, loading: bundleTypeLoading } = useQuery(GET_BUNDLE_TYPE, {
     variables: { id: packageId },
     skip: !packageId,
   });
 
+  const { data: allocationData, loading: allocationLoading } = useQuery(GET_ALLOCATION, {
+    variables: { id: classId },
+    skip: !classId,
+  });
+
   const [createBundle] = useMutation(CREATE_BUNDLE);
+  const [createReservation] = useMutation(CREATE_RESERVATION);
 
   const getPaymentMethodText = () => {
     switch (selectedMethod) {
@@ -80,7 +88,7 @@ function PaymentContent() {
   
   useEffect(() => {
     if (!userId || !packageId) {
-      router.push('/buy-packages');
+      router.push('/class-pass');
     }
   }, [userId, packageId, router]);
 
@@ -95,7 +103,7 @@ function PaymentContent() {
       const validTo = new Date();
       validTo.setDate(validFrom.getDate() + 30);
 
-      const { data } = await createBundle({
+      const { data: bundleData } = await createBundle({
         variables: {
           input: {
             consumerId: userId,
@@ -103,12 +111,53 @@ function PaymentContent() {
             bundleTypeId: packageId,
             validFrom: validFrom.toISOString(),
             validTo: validTo.toISOString(),
-            note: `Método de pago: ${getPaymentMethodText()}`,
+            note: `Método de pago: ${getPaymentMethodText()}${classId ? ` - Clase reservada: ${allocationData?.allocation?.timeSlot?.sessionType?.name || 'N/A'}` : ''}`,
           }
         }
       });
 
-      router.push(`/buy-packages/confirmation?purchaseId=${data.createBundle.id}`);
+      // If classId exists, create a reservation
+      let reservationData;
+      if (classId && bundleData?.createBundle?.id && allocationData?.allocation) {
+        const { data: reservationResponse } = await createReservation({
+          variables: {
+            input: {
+              bundleId: bundleData.createBundle.id,
+              timeSlotId: allocationData.allocation.timeSlot.id,
+              startTime: new Date(allocationData.allocation.startTime).toISOString(),
+              forConsumerId: userId,
+              status: "CONFIRMED"
+            }
+          }
+        });
+        reservationData = reservationResponse?.createReservation;
+      }
+
+      // Build URL with all relevant parameters
+      const params = new URLSearchParams({
+        purchaseId: bundleData.createBundle.id,
+        packageId,
+        userId,
+        paymentMethod: selectedMethod,
+        ...(classId && { 
+          classId,
+          className: allocationData?.allocation?.timeSlot?.sessionType?.name,
+          classDate: allocationData?.allocation?.startTime,
+          professorName: allocationData?.allocation?.timeSlot?.agent?.name,
+          reservationId: reservationData?.id
+        }),
+        ...(consumerData?.consumer && {
+          firstName: consumerData.consumer.firstName,
+          lastName: consumerData.consumer.lastName,
+          email: consumerData.consumer.email
+        }),
+        ...(bundleTypeData?.bundleType && {
+          packageName: bundleTypeData.bundleType.name,
+          packagePrice: bundleTypeData.bundleType.price.toString()
+        })
+      });
+
+      router.push(`/confirmation?${params.toString()}`);
     } catch (err) {
       console.error('Payment error:', err);
       setError(
@@ -121,27 +170,54 @@ function PaymentContent() {
     }
   };
 
-  if (consumerLoading || bundleTypeLoading) return <div>Loading...</div>;
-  if (consumerError || bundleTypeError) return <div>Error loading data</div>;
+  const isLoading = consumerLoading || bundleTypeLoading || (classId && allocationLoading);
+  if (isLoading) return <div>Loading...</div>;
+
+  const allocation = allocationData?.allocation;
+  const classDate = allocation ? new Date(allocation.startTime) : null;
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-6 pt-16">
       <div className="max-w-2xl mx-auto">
         <Card className="p-6">
           <h2 className="text-2xl font-medium text-center mb-6">
             {language === "en" ? "Select Payment Method" : "Seleccionar Método de Pago"}
           </h2>
 
+          {allocation && classDate && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-lg font-medium mb-3">
+                {language === "en" ? "Class Information" : "Información de la Clase"}
+              </h3>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-500" />
+                  <p>{format(classDate, "EEEE d 'de' MMMM, HH:mm", { locale: language === 'es' ? es : undefined })}</p>
+                </div>
+                <p className="font-medium">{allocation.timeSlot.sessionType.name}</p>
+                <p>{language === "en" ? "with" : "con"} {allocation.timeSlot.agent.name}</p>
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  <p>{allocation.currentReservations}/{allocation.timeSlot.sessionType.maxConsumers} {language === "en" ? "spots taken" : "lugares ocupados"}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mb-6">
-            <h3 className="text-lg font-medium">Consumer Information</h3>
-            <p>Name: {consumerData.consumer.firstName} {consumerData.consumer.lastName}</p>
-            <p>Email: {consumerData.consumer.email}</p>
+            <h3 className="text-lg font-medium">
+              {language === "en" ? "Consumer Information" : "Información del Usuario"}
+            </h3>
+            <p>{consumerData.consumer.firstName} {consumerData.consumer.lastName}</p>
+            <p>{consumerData.consumer.email}</p>
           </div>
 
           <div className="mb-6">
-            <h3 className="text-lg font-medium">Bundle Information</h3>
-            <p>Bundle Type: {bundleTypeData.bundleType.name}</p>
-            <p>Price: {bundleTypeData.bundleType.price}</p>
+            <h3 className="text-lg font-medium">
+              {language === "en" ? "Package Information" : "Información del Paquete"}
+            </h3>
+            <p>{bundleTypeData.bundleType.name}</p>
+            <p>S/. {bundleTypeData.bundleType.price}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">

@@ -184,3 +184,54 @@ export enum BundleStatus {
   CANCELLED = "CANCELLED",
   EXPENDED = "EXPENDED"
 }
+
+export const GET_ALLOCATION = gql`
+  query GetAllocation($id: ID!) {
+    allocation(input: { id: $id }) {
+      id
+      startTime
+      status
+      currentReservations
+      timeSlot {
+        id
+        agent {
+          name
+        }
+        sessionType {
+          name
+          maxConsumers
+        }
+      }
+    }
+  }
+`;
+
+export const CREATE_RESERVATION = gql`
+  mutation CreateReservation($input: CreateReservationInput!) {
+    createReservation(input: $input) {
+      id
+      status
+      allocation {
+        startTime
+        timeSlot {
+          sessionType {
+            name
+          }
+          agent {
+            name
+          }
+        }
+      }
+      bundle {
+        id
+        remainingUses
+      }
+      forConsumer {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+`;
