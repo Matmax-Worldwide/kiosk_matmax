@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 export default function Home() {
-  const { language } = useLanguageContext();
+  const { language, setLanguage } = useLanguageContext();
   const [infoIndex, setInfoIndex] = useState(0);
 
   const mainActions = [
@@ -176,67 +176,104 @@ transition-all"
         </motion.div>
 
         {/* Info Section - Above Footer */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="max-w-4xl mx-auto mt-16 mb-8"
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={infoIndex}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeInOut" }}
-              className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border
-border-gray-100 p-6"
-            >
-              <div className="flex items-center justify-between gap-8">
-                <div className="flex items-center gap-6">
-                  <div
-                    className="w-16 h-16 rounded-xl bg-gray-50 flex items-center
-justify-center"
-                  >
-                    <div className="text-blue-600">
-                      {infoItems[infoIndex].icon}
+          {/* <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="max-w-4xl mx-auto mt-16 mb-8"
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={infoIndex}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border
+  border-gray-100 p-6"
+              >
+                <div className="flex items-center justify-between gap-8">
+                  <div className="flex items-center gap-6">
+                    <div
+                      className="w-16 h-16 rounded-xl bg-gray-50 flex items-center
+  justify-center"
+                    >
+                      <div className="text-blue-600">
+                        {infoItems[infoIndex].icon}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-bold text-gray-800">
-                        {infoItems[infoIndex].title}
-                      </h3>
-                      <span className="text-gray-400">•</span>
-                      <p className="text-lg text-gray-700">
-                        {infoItems[infoIndex].description}
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-bold text-gray-800">
+                          {infoItems[infoIndex].title}
+                        </h3>
+                        <span className="text-gray-400">•</span>
+                        <p className="text-lg text-gray-700">
+                          {infoItems[infoIndex].description}
+                        </p>
+                      </div>
+                      <p className="text-base text-gray-500">
+                        {infoItems[infoIndex].detail}
                       </p>
                     </div>
-                    <p className="text-base text-gray-500">
-                      {infoItems[infoIndex].detail}
-                    </p>
+                  </div>
+                  <div className="flex flex-col items-end gap-3">
+                    <div className="flex gap-2">
+                      {[...Array(infoItems.length)].map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            idx === infoIndex
+                              ? "bg-blue-600 scale-125"
+                              : "bg-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-3">
-                  <div className="flex gap-2">
-                    {[...Array(infoItems.length)].map((_, idx) => (
-                      <div
-                        key={idx}
-                        className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          idx === infoIndex
-                            ? "bg-blue-600 scale-125"
-                            : "bg-gray-200"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </motion.div> */}
 
         {/* Add some bottom padding to prevent content from being cut off */}
         <div className="h-20" />
+
+        {/* Language Selector */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="flex justify-center w-full mt-8 mb-12"
+        >
+          <div 
+            className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-lg 
+            border border-green-100 p-1.5 flex gap-2 hover:shadow-xl 
+            transition-all duration-500 hover:border-green-200"
+          >
+            <button
+              onClick={() => language === "es" && setLanguage("en")}
+              className={`px-6 py-2.5 rounded-xl transition-all duration-500 font-medium
+              ${
+                language === "en"
+                  ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md"
+                  : "text-green-700 hover:bg-green-50"
+              }`}
+            >
+              English
+            </button>
+            <button
+              onClick={() => language === "en" && setLanguage("es")}
+              className={`px-6 py-2.5 rounded-xl transition-all duration-500 font-medium
+              ${
+                language === "es"
+                  ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md"
+                  : "text-green-700 hover:bg-green-50"
+              }`}
+            >
+              Español
+            </button>
+          </div>
+        </motion.div>
         </div>
       </main>
   );
