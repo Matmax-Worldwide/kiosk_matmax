@@ -192,9 +192,9 @@ export default function ClassPassPage() {
 
   console.log(singleClassPass);
   const handleClassSelection = () => {
-    if (nextClass) {
+    if (nextClass && singleClassPass) {
       router.push(
-        `/class-pass/user-selection?classId=next&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}`
+        `/class-pass/user-selection?classId=next&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
       );
     }
   };

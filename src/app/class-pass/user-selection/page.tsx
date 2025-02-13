@@ -24,7 +24,7 @@ function SelectContent() {
               : "No se ha seleccionado un paquete. Por favor, seleccione un paquete primero."}
           </p>
           <Button
-            onClick={() => router.push('/buy-packages')}
+            onClick={() => router.push('/class-pass')}
             variant="default"
           >
             {language === "en" ? "Return to Packages" : "Volver a Paquetes"}
@@ -51,7 +51,7 @@ function SelectContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Button
-              onClick={() => router.push(`/buy-packages/existing?packageId=${packageId}`)}
+              onClick={() => router.push(`/class-pass/existing?packageId=${packageId}`)}
               variant="outline"
               className="p-6 h-auto flex flex-col items-center"
             >
@@ -67,7 +67,7 @@ function SelectContent() {
             </Button>
 
             <Button
-              onClick={() => router.push(`/buy-packages/new?packageId=${packageId}`)}
+              onClick={() => router.push(`/class-pass/new?packageId=${packageId}`)}
               variant="outline"
               className="p-6 h-auto flex flex-col items-center"
             >
