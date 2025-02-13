@@ -6,9 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { Banknote, CreditCard, QrCode, Clock, Users } from "lucide-react";
-import { useQuery } from '@apollo/client';
-import { GET_CONSUMER, GET_BUNDLE_TYPE, CREATE_BUNDLE, GET_ALLOCATION, BundleStatus } from '@/lib/graphql/queries';
-import { useMutation } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client';
+import { GET_CONSUMER, GET_BUNDLE_TYPE, CREATE_BUNDLE, GET_ALLOCATION, BundleStatus, CREATE_RESERVATION } from '@/lib/graphql/queries';
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -74,6 +73,7 @@ function PaymentContent() {
   });
 
   const [createBundle] = useMutation(CREATE_BUNDLE);
+  const [createReservation] = useMutation(CREATE_RESERVATION);
 
   const getPaymentMethodText = () => {
     switch (selectedMethod) {
@@ -103,7 +103,7 @@ function PaymentContent() {
       const validTo = new Date();
       validTo.setDate(validFrom.getDate() + 30);
 
-      const { data } = await createBundle({
+      const { data: bundleData } = await createBundle({
         variables: {
           input: {
             consumerId: userId,
@@ -116,13 +116,36 @@ function PaymentContent() {
         }
       });
 
+      // If classId exists, create a reservation
+      let reservationData;
+      if (classId && bundleData?.createBundle?.id && allocationData?.allocation) {
+        const { data: reservationResponse } = await createReservation({
+          variables: {
+            input: {
+              bundleId: bundleData.createBundle.id,
+              timeSlotId: allocationData.allocation.timeSlot.id,
+              startTime: new Date(allocationData.allocation.startTime).toISOString(),
+              forConsumerId: userId,
+              status: "CONFIRMED"
+            }
+          }
+        });
+        reservationData = reservationResponse?.createReservation;
+      }
+
       // Build URL with all relevant parameters
       const params = new URLSearchParams({
-        purchaseId: data.createBundle.id,
+        purchaseId: bundleData.createBundle.id,
         packageId,
         userId,
         paymentMethod: selectedMethod,
-        ...(classId && { classId }),
+        ...(classId && { 
+          classId,
+          className: allocationData?.allocation?.timeSlot?.sessionType?.name,
+          classDate: allocationData?.allocation?.startTime,
+          professorName: allocationData?.allocation?.timeSlot?.agent?.name,
+          reservationId: reservationData?.id
+        }),
         ...(consumerData?.consumer && {
           firstName: consumerData.consumer.firstName,
           lastName: consumerData.consumer.lastName,

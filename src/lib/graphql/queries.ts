@@ -193,6 +193,7 @@ export const GET_ALLOCATION = gql`
       status
       currentReservations
       timeSlot {
+        id
         agent {
           name
         }
@@ -200,6 +201,36 @@ export const GET_ALLOCATION = gql`
           name
           maxConsumers
         }
+      }
+    }
+  }
+`;
+
+export const CREATE_RESERVATION = gql`
+  mutation CreateReservation($input: CreateReservationInput!) {
+    createReservation(input: $input) {
+      id
+      status
+      allocation {
+        startTime
+        timeSlot {
+          sessionType {
+            name
+          }
+          agent {
+            name
+          }
+        }
+      }
+      bundle {
+        id
+        remainingUses
+      }
+      forConsumer {
+        id
+        firstName
+        lastName
+        email
       }
     }
   }
