@@ -13,8 +13,6 @@ import {
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Header } from "@/components/header";
-
 export default function Home() {
   const { language } = useLanguageContext();
   const [infoIndex, setInfoIndex] = useState(0);
@@ -68,9 +66,7 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [infoItems.length]);
 
-  return (
-    <>
-      <Header title={{ en: "Welcome", es: "Bienvenido" }} />
+  return (    
     <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="flex justify-center mb-8">
@@ -243,7 +239,6 @@ justify-center"
         <div className="h-20" />
         </div>
       </main>
-    </>
   );
 }
 

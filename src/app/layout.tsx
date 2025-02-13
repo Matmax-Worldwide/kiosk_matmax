@@ -19,12 +19,14 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
       </head>
-      <body>
+      <body className="h-screen">
         <ApolloProvider client={client}>
           <LanguageProvider>
             <NotificationProvider>
-              <AnimatedLayout> 
-                {children}
+              <AnimatedLayout>
+                <div className="absolute top-0 w-full h-screen">
+                  {children}
+                </div>
               </AnimatedLayout>
               <NotificationList />
             </NotificationProvider>
