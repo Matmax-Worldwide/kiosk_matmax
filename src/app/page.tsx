@@ -67,7 +67,7 @@ export default function Home() {
   }, [infoItems.length]);
 
   return (    
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <main className="min-h-screen">
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="flex justify-center mb-8">
           <Image
