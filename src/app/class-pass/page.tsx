@@ -7,6 +7,7 @@ import {
   Users,
   ChevronRight,
   CreditCard,
+  ArrowRight,
 } from "lucide-react";
 import { format, parse, isAfter, startOfDay, addDays } from "date-fns";
 import { es, enUS } from "date-fns/locale";
@@ -221,151 +222,158 @@ export default function ClassPassPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="container mx-auto px-4 py-8"
+        className="min-h-screen bg-gradient-to-b from-blue-50 to-white"
       >
-        <div className="max-w-4xl mx-auto">
-          <div className="space-y-6">
-            {nextClass && singleClassPass && (
-              <div key={nextClass.activity}>
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-4"
-                >
-                  <div className="p-6 sm:p-8">
-                    {/* Header Section with Class Info */}
-                    <div className="flex flex-col gap-4 pb-6 border-b border-gray-100">
-                      <div>
-                        <div className="flex items-start justify-between mb-6">
-                          {/* Left side - Class info */}
-                          <div className="flex flex-col">
-                            <motion.h2
-                              initial={{ x: -20, opacity: 0 }}
+        <div className="container mx-auto px-4 py-16 md:py-24">
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-6">
+              {nextClass && singleClassPass && (
+                <div key={nextClass.activity}>
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-4"
+                  >
+                    <div className="p-6 sm:p-8">
+                      {/* Header Section with Class Info */}
+                      <div className="flex flex-col gap-4 pb-6 border-b border-gray-100">
+                        <div>
+                          <div className="flex items-start justify-between mb-6">
+                            {/* Left side - Class info */}
+                            <div className="flex flex-col">
+                              <motion.h2
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.3 }}
+                                className="text-4xl font-bold text-gray-900"
+                              >
+                                {nextClass.activity}
+                              </motion.h2>
+                              <motion.span
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.4 }}
+                                className="text-2xl text-gray-600 font-medium mt-2"
+                              >
+                                {language === "en" ? "with" : "con"}{" "}
+                                <span className="font-semibold">
+                                  {nextClass.instructor}
+                                </span>
+                              </motion.span>
+                              <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.5 }}
+                                className="flex items-center gap-3 text-xl mt-3"
+                              >
+                                <p className="font-medium text-gray-800">
+                                  {`${nextClass.day} ${nextClass.time}`}
+                                </p>
+                                <span className="text-gray-400">•</span>
+                                <p className="font-medium text-gray-800">
+                                  {nextClass.duration} min
+                                </p>
+                              </motion.div>
+                            </div>
+
+                            {/* Right side - Price */}
+                            <motion.div
+                              initial={{ x: 20, opacity: 0 }}
                               animate={{ x: 0, opacity: 1 }}
                               transition={{ duration: 0.5, delay: 0.3 }}
-                              className="text-4xl font-bold text-gray-900"
+                              className="flex flex-col items-end"
                             >
-                              {nextClass.activity}
-                            </motion.h2>
-                            <motion.span
-                              initial={{ x: -20, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ duration: 0.5, delay: 0.4 }}
-                              className="text-2xl text-gray-600 font-medium mt-2"
-                            >
-                              {language === "en" ? "with" : "con"}{" "}
-                              <span className="font-semibold">
-                                {nextClass.instructor}
-                              </span>
-                            </motion.span>
-                            <motion.div
-                              initial={{ x: -20, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ duration: 0.5, delay: 0.5 }}
-                              className="flex items-center gap-3 text-xl mt-3"
-                            >
-                              <p className="font-medium text-gray-800">
-                                {`${nextClass.day} ${nextClass.time}`}
-                              </p>
-                              <span className="text-gray-400">•</span>
-                              <p className="font-medium text-gray-800">
-                                {nextClass.duration} min
-                              </p>
+                              <div className="flex flex-col items-end">
+                                <div className="text-6xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-1">
+                                  S/. {Number(singleClassPass.price).toFixed(2)}
+                                </div>
+                                <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg">
+                                  <span className="bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent font-bold tracking-wider text-xl">
+                                    01 MATPASS
+                                  </span>
+                                </div>
+                              </div>
                             </motion.div>
                           </div>
-
-                          {/* Right side - Price */}
-                          <motion.div
-                            initial={{ x: 20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ duration: 0.5, delay: 0.3 }}
-                            className="flex flex-col items-end"
-                          >
-                            <div className="flex flex-col items-end">
-                              <div className="text-6xl font-bold text-green-600 tracking-tight mb-1">
-                                S/. {Number(singleClassPass.price).toFixed(2)}
-                              </div>
-                              <div className="bg-green-100 px-4 py-2 rounded-lg">
-                                <span className="text-green-700 font-bold tracking-wider text-xl">
-                                  01 MATPASS
-                                </span>
-                              </div>
-                            </div>
-                          </motion.div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Action Button */}
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.6 }}
-                      className="mt-6"
-                    >
-                      <button
-                        onClick={handleClassSelection}
-                        className="w-full bg-green-500 text-white py-6 px-6 rounded-xl hover:bg-green-600 transition-colors flex items-center justify-center gap-3 text-2xl font-semibold shadow-lg hover:shadow-xl"
+                      {/* Action Button */}
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.6 }}
+                        className="mt-6"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <CreditCard className="w-7 h-7" />
-                        {language === "en" ? "Book Now" : "Reservar Ahora"}
-                      </button>
-                    </motion.div>
+                        <button
+                          onClick={handleClassSelection}
+                          className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-6 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-2xl font-semibold shadow-lg hover:shadow-xl group"
+                        >
+                          <CreditCard className="w-7 h-7 transition-transform group-hover:scale-110" />
+                          {language === "en" ? "Book Now" : "Reservar Ahora"}
+                          <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all" />
+                        </button>
+                      </motion.div>
 
-                    {/* Additional Info */}
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.7 }}
-                      className="mt-8 pt-6 border-t border-gray-100"
-                    >
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                        <div className="flex items-center gap-3">
-                          <Users className="w-6 h-6 text-green-500" />
-                          <span className="text-gray-700 text-lg">
-                            {nextClass.currentReservations}/{nextClass.maxConsumers}{" "}
-                            {language === "en" ? "mats" : "mats"}
-                          </span>
+                      {/* Additional Info */}
+                      <motion.div
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.7 }}
+                        className="mt-8 pt-6 border-t border-gray-100"
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                          <div className="flex items-center gap-3">
+                            <Users className="w-6 h-6 text-green-500" />
+                            <span className="text-gray-700 text-lg">
+                              {nextClass.currentReservations}/{nextClass.maxConsumers}{" "}
+                              {language === "en" ? "mats" : "mats"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-6 h-6 text-green-500" />
+                            <span className="text-gray-700 text-lg">
+                              {nextClass.duration} {language === "en" ? "minutes" : "minutos"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <Award className="w-6 h-6 text-green-500" />
+                            <span className="text-gray-700 text-lg">
+                              {nextClass.status}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Clock className="w-6 h-6 text-green-500" />
-                          <span className="text-gray-700 text-lg">
-                            {nextClass.duration} {language === "en" ? "minutes" : "minutos"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Award className="w-6 h-6 text-green-500" />
-                          <span className="text-gray-700 text-lg">
-                            {nextClass.status}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </div>
-                </motion.div>
+                      </motion.div>
+                    </div>
+                  </motion.div>
 
-                {/* Ver Horarios button outside the card */}
-                <motion.button
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.8 }}
-                  className="w-full bg-white text-gray-500 py-3 px-6 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 border-2 border-gray-300 font-semibold text-lg"
-                  onClick={() => router.push("/class-pass/schedule")}
-                >
-                  {language === "en" ? "View Schedule" : "Ver Horarios"}
-                  <ChevronRight className="w-5 h-5" />
-                </motion.button>
-              </div>
-            )}
+                  {/* Ver Horarios button outside the card */}
+                  <motion.button
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md"
+                    onClick={() => router.push("/class-pass/schedule")}
+                  >
+                    {language === "en" ? "View Schedule" : "Ver Horarios"}
+                    <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  </motion.button>
+                </div>
+              )}
 
-            {!nextClass && (
-              <div className="text-center text-gray-500 py-8">
-                {language === "en"
-                  ? "No classes available at the moment."
-                  : "No hay clases disponibles en este momento."}
-              </div>
-            )}
+              {!nextClass && (
+                <div className="text-center text-gray-500 py-8">
+                  {language === "en"
+                    ? "No classes available at the moment."
+                    : "No hay clases disponibles en este momento."}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </motion.div>
