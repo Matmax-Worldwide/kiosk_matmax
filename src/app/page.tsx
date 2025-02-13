@@ -1,21 +1,22 @@
 "use client";
-import { motion, AnimatePresence } from "framer-motion";
+// import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import {
   ArrowRight,
   Package2,
   CalendarDays,
   UserCheck,
-  Clock,
-  ShoppingBag,
-  Calendar,
+//   Clock,
+//   ShoppingBag,
+//   Calendar,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 import Image from "next/image";
 export default function Home() {
   const { language, setLanguage } = useLanguageContext();
-  const [infoIndex, setInfoIndex] = useState(0);
+//   const [infoIndex, setInfoIndex] = useState(0);
 
   const mainActions = [
     {
@@ -38,33 +39,33 @@ export default function Home() {
     },
   ];
 
-  const infoItems = [
-    {
-      icon: <Clock className="w-5 h-5" />,
-      title: "Clase Actual",
-      description: "Yoga Flow - 10:00 AM",
-      detail: "Traer mat y ropa cómoda",
-    },
-    {
-      icon: <ShoppingBag className="w-5 h-5" />,
-      title: "Oferta",
-      description: "Bolsters de Yoga -20%",
-      detail: "Con MatPass activo",
-    },
-    {
-      icon: <Calendar className="w-5 h-5" />,
-      title: "Próximamente",
-      description: "Taller de Meditación",
-      detail: "Este sábado 10 AM",
-    },
-  ];
+//   const infoItems = [
+//     {
+//       icon: <Clock className="w-5 h-5" />,
+//       title: "Clase Actual",
+//       description: "Yoga Flow - 10:00 AM",
+//       detail: "Traer mat y ropa cómoda",
+//     },
+//     {
+//       icon: <ShoppingBag className="w-5 h-5" />,
+//       title: "Oferta",
+//       description: "Bolsters de Yoga -20%",
+//       detail: "Con MatPass activo",
+//     },
+//     {
+//       icon: <Calendar className="w-5 h-5" />,
+//       title: "Próximamente",
+//       description: "Taller de Meditación",
+//       detail: "Este sábado 10 AM",
+//     },
+//   ];
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setInfoIndex((current) => (current + 1) % infoItems.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [infoItems.length]);
+//   useEffect(() => {
+//     const timer = setInterval(() => {
+//       setInfoIndex((current) => (current + 1) % infoItems.length);
+//     }, 5000);
+//     return () => clearInterval(timer);
+//   }, [infoItems.length]);
 
   return (    
     <main className="min-h-screen">
