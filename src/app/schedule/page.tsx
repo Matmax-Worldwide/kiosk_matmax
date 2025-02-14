@@ -572,7 +572,11 @@ export default function SchedulePage() {
                                       : "bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]"
                                   }`}
                                   disabled={classInfo.enrolled >= classInfo.room.capacity}
-                                  onClick={() => router.push(`/user-selection?classId=${classInfo.id}`)}
+                                  onClick={() => {
+                                    const params = new URLSearchParams();
+                                    if (classInfo.id) params.append('classId', classInfo.id);
+                                    router.push(`/user-selection${params.toString() ? `?${params.toString()}` : ''}`);
+                                  }}
                                 >
                                   {classInfo.enrolled >= classInfo.room.capacity
                                     ? language === "en"

@@ -17,24 +17,34 @@ function NewUserContent() {
   const { language } = useLanguageContext();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const packageId = searchParams.get('packageId');
+  const classId = searchParams.get('classId');
 
   const [createConsumer] = useMutation(CREATE_CONSUMER);
 
   const handleSubmit = async (data: { firstName: string; lastName: string; email: string; phoneNumber?: string }) => {
-    if (!packageId) {
-      router.push("/buy-packages");
-      return;
-    }
-
     try {
       setIsSubmitting(true);
 
       const response = await createConsumer({ variables: { input: data } });
       const newUserId = response.data.createConsumer.id;
-      router.push(`/payment?packageId=${packageId}&userId=${newUserId}`);
+      
+      // Build URL parameters
+      const params = new URLSearchParams();
+      if (packageId) params.append('packageId', packageId);
+      if (classId) params.append('classId', classId);
+      if (newUserId) params.append('userId', newUserId);
+
+      // Determine next route based on parameters
+      let nextRoute = '/class-pass'; // Default route
+      if (packageId) {
+        nextRoute = '/payment';
+      } else if (classId) {
+        nextRoute = '/buy-packages';
+      }
+
+      router.push(`${nextRoute}${params.toString() ? `?${params.toString()}` : ''}`);
     } catch (error) {
       console.error("Registration error:", error);
-      
     } finally {
       setIsSubmitting(false);
     }
@@ -53,8 +63,12 @@ function NewUserContent() {
           </h2>
           <p className="text-xl text-gray-600">
             {language === "en"
-              ? "Enter your details to purchase the package"
-              : "Ingresa tus datos para comprar el paquete"}
+              ? packageId 
+                ? "Enter your details to purchase the package"
+                : "Enter your details to create your account"
+              : packageId
+                ? "Ingresa tus datos para comprar el paquete"
+                : "Ingresa tus datos para crear tu cuenta"}
           </p>
         </motion.div>
 
