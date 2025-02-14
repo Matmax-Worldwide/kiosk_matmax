@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Users, Tag, Clock, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tag, Clock, X, Calendar } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { 
   format, 
@@ -237,19 +237,24 @@ export default function SchedulePage() {
   const [isScrollable, setIsScrollable] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(false);
+  const [viewMode, setViewMode] = useState<'week' | 'calendar'>('week');
 
-  const weekStart = startOfWeek(addWeeks(today, selectedWeek), {
-    weekStartsOn: 1,
-  });
-  const weekDays = Array.from({ length: 7 }).map((_, index) => {
-    const date = addDays(weekStart, index);
-    return {
-      date,
-      dayName: format(date, "EEEE", { locale: language === "es" ? es : enUS }),
-      dayNumber: format(date, "d"),
-      isToday: format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd"),
-    };
-  });
+  const weekStarts = [0, 1, 2].map(offset => 
+    startOfWeek(addWeeks(today, selectedWeek + offset), { weekStartsOn: 1 })
+  );
+
+  const allWeekDays = weekStarts.map(weekStart => 
+    Array.from({ length: 7 }).map((_, index) => {
+      const date = addDays(weekStart, index);
+      return {
+        date,
+        dayName: format(date, "EEEE", { locale: language === "es" ? es : enUS }),
+        dayNumber: format(date, "d"),
+        isToday: format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd"),
+        isSelected: format(date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
+      };
+    })
+  );
 
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
@@ -283,7 +288,7 @@ export default function SchedulePage() {
     );
   };
 
-  const getDayButtonClass = (day: (typeof weekDays)[0]) => {
+  const getDayButtonClass = (day: (typeof allWeekDays)[0][0]) => {
     const dayKey = format(day.date, "yyyy-MM-dd");
     const selectedKey = format(selectedDate, "yyyy-MM-dd");
     const todayKey = format(today, "yyyy-MM-dd");
@@ -424,8 +429,12 @@ export default function SchedulePage() {
     fetchSchedule();
   }, [client, selectedDate]);
 
-  const handleMonthClick = () => {
-    setShowMonthlyCalendar(true);
+  const handleViewToggle = () => {
+    if (viewMode === 'week') {
+      setShowMonthlyCalendar(true);
+    } else {
+      setViewMode('week');
+    }
   };
 
   const handleMonthlyDateSelect = (date: Date) => {
@@ -443,104 +452,109 @@ export default function SchedulePage() {
         <div className="max-w-4xl mx-auto px-6 h-full flex flex-col relative">
           <div className="z-40 bg-gradient-to-b from-blue-50 via-blue-50 to-transparent pb-4 flex-shrink-0">
             <div className="pt-4">
-              <div className="bg-white rounded-2xl shadow-lg p-6">
-                <div className="flex items-center justify-between">
-                  <h1 className="text-2xl font-bold text-gray-900">
-                    {language === "en"
-                      ? "Class Schedule"
-                      : "Horarios de Clases"}
-                  </h1>
-                  <div className="flex items-center gap-4">
-                    {selectedWeek > 0 && (
+              <div className="bg-white rounded-2xl shadow-lg">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setViewMode('week')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          viewMode === 'week' 
+                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {language === "en" ? "Week" : "Semana"}
+                      </button>
+                      <button
+                        onClick={() => setShowMonthlyCalendar(true)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          viewMode === 'calendar' 
+                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {language === "en" ? "Month" : "Mes"}
+                      </button>
+                    </div>
+                    <div className="h-6 w-px bg-gray-200"></div>
+                    <div className="flex items-center gap-4">
+                      {selectedWeek > 0 && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleWeekChange(-1)}
+                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <ChevronLeft className="w-5 h-5" />
+                        </motion.button>
+                      )}
+                      <motion.button
+                        key={selectedWeek}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
+                        onClick={() => setShowMonthlyCalendar(true)}
+                      >
+                        <Calendar className="w-4 h-4 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900">
+                          {format(weekStarts[0], "MMMM d", { locale: language === "es" ? es : enUS })} - 
+                          {format(addDays(weekStarts[0], 6), "MMMM d", { locale: language === "es" ? es : enUS })}
+                        </span>
+                      </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => handleWeekChange(-1)}
-                        className="p-3 rounded-lg hover:bg-gray-100 transition-colors"
+                        animate={
+                          selectedWeek === 0
+                            ? {
+                                x: [0, 8, 0],
+                                transition: {
+                                  repeat: Infinity,
+                                  duration: 1.5,
+                                },
+                              }
+                            : {}
+                        }
+                        onClick={() => handleWeekChange(1)}
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                       >
-                        <ChevronLeft className="w-6 h-6" />
+                        <ChevronRight className="w-5 h-5" />
                       </motion.button>
-                    )}
-                    <motion.button
-                      key={selectedWeek}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="min-w-[150px] text-center hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                      onClick={handleMonthClick}
-                    >
-                      {formatMonthAndWeek(addWeeks(today, selectedWeek))}
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      animate={
-                        selectedWeek === 0
-                          ? {
-                              x: [0, 8, 0],
-                              transition: {
-                                repeat: Infinity,
-                                duration: 1.5,
-                              },
-                            }
-                          : {}
-                      }
-                      onClick={() => handleWeekChange(1)}
-                      className="p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </motion.button>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-7 gap-3 mt-4">
-                  {weekDays.map((day) => {
-                    const dayKey = format(day.date, "yyyy-MM-dd");
-                    const isDisabled =
-                      selectedWeek === 0 &&
-                      day.date < today &&
-                      dayKey !== format(today, "yyyy-MM-dd");
-                    return (
-                      <motion.button
-                        key={dayKey}
-                        disabled={isDisabled}
-                        whileHover={!isDisabled ? { scale: 1.05 } : {}}
-                        whileTap={!isDisabled ? { scale: 0.95 } : {}}
-                        onClick={() =>
-                          !isDisabled && handleDateSelect(day.date)
-                        }
-                        className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${getDayButtonClass(
-                          day
-                        )} ${
-                          isDisabled ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
-                      >
-                        <span
-                          className={`text-sm font-medium capitalize
-                          ${
-                            dayKey === format(selectedDate, "yyyy-MM-dd")
-                              ? "text-white font-semibold"
-                              : dayKey === format(today, "yyyy-MM-dd")
-                              ? "text-green-600"
-                              : "text-gray-600"
-                          }`}
+                <div className="p-4">
+                  <div className="grid grid-cols-7 gap-3">
+                    {allWeekDays[0].map((day) => {
+                      const isPast = isBefore(day.date, startOfDay(new Date()));
+                      return (
+                        <button
+                          key={day.dayNumber}
+                          onClick={() => !isPast && handleDateSelect(day.date)}
+                          disabled={isPast}
+                          className={`
+                            flex flex-col items-center p-3 rounded-xl transition-all duration-200
+                            ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50 cursor-pointer'}
+                            ${day.isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105' : ''}
+                            ${day.isToday ? 'bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2' : ''}
+                          `}
                         >
-                          {day.dayName}
-                        </span>
-                        <span
-                          className={`text-3xl font-bold mt-1
-                          ${
-                            dayKey === format(selectedDate, "yyyy-MM-dd")
-                              ? "text-white"
-                              : dayKey === format(today, "yyyy-MM-dd")
-                              ? "text-green-600"
-                              : "text-gray-900"
-                          }`}
-                        >
-                          {day.dayNumber}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
+                          <span className={`text-sm font-medium capitalize
+                            ${day.isSelected ? 'text-white' : day.isToday ? 'text-green-600' : 'text-gray-600'}
+                          `}>
+                            {day.dayName}
+                          </span>
+                          <span className={`text-2xl font-bold mt-1
+                            ${day.isSelected ? 'text-white' : day.isToday ? 'text-green-600' : 'text-gray-900'}
+                          `}>
+                            {day.dayNumber}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
