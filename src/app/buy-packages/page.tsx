@@ -10,7 +10,7 @@ import { formatCurrency } from "@/lib/utils";
 import { GET_BUNDLE_TYPES } from "@/lib/graphql/queries";
 import { useQuery } from "@apollo/client";
 import { GetBundleQuery } from "@/types/graphql";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Users, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function BuyBundleTypesPage() {
@@ -74,7 +74,7 @@ export default function BuyBundleTypesPage() {
                     <div className="flex flex-col h-full">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-4">
-                          <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                          <div className="w-full text-center text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
                             {pkg.name.split(' ')[0].padStart(2, '0')} {pkg.name.toLowerCase().includes('acro') ? 'ACRO MATPASS' : 'MATPASS'}
                           </div>
                         </div>
@@ -174,15 +174,26 @@ export default function BuyBundleTypesPage() {
                       <div className="flex flex-col h-full">
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-4">
-                            <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                            <div className="w-full text-center text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
                               {pkg.name.split(' ')[0].padStart(2, '0')} ACRO MATPASS
-                              {(pkg.price === 160 || pkg.price === 530) && (
-                                <div className="text-sm font-medium text-gray-600 mt-1">
-                                  {language === "en" ? "Doubles Pass" : "Pase Doble"}
-                                </div>
-                              )}
                             </div>
                           </div>
+
+                          {(pkg.price === 160 || pkg.price === 530) ? (
+                            <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 p-3 rounded-xl mb-4 flex items-center justify-center gap-2">
+                              <Users className="w-5 h-5 text-green-600" />
+                              <span className="text-green-700 font-medium text-lg">
+                                {language === "en" ? "Double Pass" : "Pase Doble"}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 p-3 rounded-xl mb-4 flex items-center justify-center gap-2">
+                              <User className="w-5 h-5 text-green-600" />
+                              <span className="text-green-700 font-medium text-lg">
+                                {language === "en" ? "Single Pass" : "Pase Individual"}
+                              </span>
+                            </div>
+                          )}
 
                           {/* Price Section with Per Class Price */}
                           <div className="bg-gradient-to-br from-green-50 to-teal-50 p-4 rounded-xl mb-6">
@@ -193,10 +204,18 @@ export default function BuyBundleTypesPage() {
                             </div>
                             <div className="text-center border-t border-green-100 pt-2 mt-2">
                               <div className="text-lg font-bold text-green-600">
-                                {formatCurrency(pkg.price / parseInt(pkg.name.split(' ')[0] || '1'), pkg.currency)}
+                                {formatCurrency(
+                                  (pkg.price === 160 || pkg.price === 530) 
+                                    ? (pkg.price / parseInt(pkg.name.split(' ')[0] || '1') / 2)  // Divide by number of classes and by 2 people
+                                    : (pkg.price / parseInt(pkg.name.split(' ')[0] || '1')),     // Only divide by number of classes
+                                  pkg.currency
+                                )}
                                 {" "}
                                 <span className="text-sm font-medium text-gray-600">
-                                  {language === "en" ? "per class" : "por clase"}
+                                  {(pkg.price === 160 || pkg.price === 530)
+                                    ? (language === "en" ? "per class per person" : "por clase por persona")
+                                    : (language === "en" ? "per class" : "por clase")
+                                  }
                                 </span>
                               </div>
                             </div>
