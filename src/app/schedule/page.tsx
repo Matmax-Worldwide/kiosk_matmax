@@ -221,8 +221,11 @@ export default function SchedulePage() {
           const timeSlot = allocation.timeSlot;
           const duration = timeSlot?.duration || sessionType?.defaultDuration || 60;
 
+          // Generar un ID único basado en timeSlotId y startTime si no existe
+          const allocationId = allocation.id || `${timeSlot.id}_${format(startTime, 'yyyy-MM-dd_HH:mm')}`;
+
           groupedSchedule[dayKey].push({
-            id: allocation.id,
+            id: allocationId,
             startDateTime: allocation.startTime,
             endDateTime: new Date(new Date(allocation.startTime).getTime() + duration * 60000).toISOString(),
             enrolled: allocation.currentReservations || 0,
@@ -418,7 +421,6 @@ export default function SchedulePage() {
                               borderBottom: '4px solid #f3f4f6',
                               minHeight: 'calc((100vh - 400px) / 3)'
                             }}
-                            onClick={() => router.push(`/user-selection?classId=${classInfo.id}`)}
                           >
                             <div className="flex flex-col justify-between h-full">
                               <div>
@@ -511,6 +513,7 @@ export default function SchedulePage() {
                                       : 'bg-green-500 text-white hover:bg-green-600'
                                   }`}
                                   disabled={classInfo.enrolled >= classInfo.room.capacity}
+                                  onClick={() => router.push(`/user-selection?classId=${classInfo.id}`)}
                                 >
                                   {classInfo.enrolled >= classInfo.room.capacity
                                     ? (language === 'en' ? 'Full' : 'Lleno')
