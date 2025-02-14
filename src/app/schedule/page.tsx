@@ -532,9 +532,6 @@ export default function SchedulePage() {
                                   <p className="text-2xl font-bold text-gray-900">
                                     {format(new Date(classInfo.startDateTime), "h:mm a")}
                                   </p>
-                                  <p className="text-gray-600 mt-1">
-                                    {format(new Date(classInfo.endDateTime), "h:mm a")}
-                                  </p>
                                   
                                   <div className="flex items-center gap-2 mt-2">
                                     <p className="text-sm bg-gray-100 text-gray-600 px-4 py-1.5 rounded-full flex items-center gap-2">
