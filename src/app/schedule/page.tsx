@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Users, Tag, Clock } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { format, addDays, startOfWeek, addWeeks, getISOWeek } from "date-fns";
-import { es } from "date-fns/locale";
+import { enUS, es } from "date-fns/locale";
 import { useApolloClient } from "@apollo/client";
 import { GET_POSSIBLE_ALLOCATIONS } from "@/lib/graphql/queries";
 import { Allocation, GetPossibleAllocationsQuery } from "@/types/graphql";
@@ -109,7 +109,7 @@ export default function SchedulePage() {
     const date = addDays(weekStart, index);
     return {
       date,
-      dayName: format(date, "EEEE", { locale: es }),
+      dayName: format(date, "EEEE", { locale: language === "es" ? es : enUS }),
       dayNumber: format(date, "d"),
       isToday: format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd"),
     };
@@ -139,7 +139,9 @@ export default function SchedulePage() {
     const weekNumber = getWeekOfMonth(date);
     return (
       <div className="flex flex-col items-center">
-        <span className="text-sm text-gray-500">Semana {weekNumber}</span>
+        <span className="text-sm text-gray-500">
+          {language === "en" ? `Week ${weekNumber}` : `Semana ${weekNumber}`}
+        </span>
         <span className="text-lg font-medium capitalize">{monthName}</span>
       </div>
     );
@@ -157,7 +159,7 @@ export default function SchedulePage() {
       return "bg-gray-200 text-gray-500 cursor-not-allowed";
     }
     if (dayKey === selectedKey) {
-      return "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg transform scale-105 ring-2 ring-green-300 ring-offset-2";
+      return "bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105 ring-2 ring-green-300 ring-offset-2";
     }
     if (dayKey === todayKey) {
       return "bg-green-50 text-green-600 hover:bg-green-100 hover:scale-105 transition-transform";
@@ -567,7 +569,7 @@ export default function SchedulePage() {
                                   className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
                                     classInfo.enrolled >= classInfo.room.capacity
                                       ? "bg-gray-400 text-white cursor-not-allowed"
-                                      : "bg-gradient-to-r from-green-500 to-teal-500 text-white hover:shadow-lg transform hover:scale-[1.02]"
+                                      : "bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]"
                                   }`}
                                   disabled={classInfo.enrolled >= classInfo.room.capacity}
                                   onClick={() => router.push(`/user-selection?classId=${classInfo.id}`)}
