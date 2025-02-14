@@ -3,9 +3,8 @@ import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/header";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useLanguageContext } from "@/contexts/LanguageContext";
 import { UserPlus, Users, ArrowRight } from "lucide-react";
+import { useLanguageContext } from "@/contexts/LanguageContext";
 import { PageTransition } from "@/components/page-transition";
 import { motion } from "framer-motion";
 
@@ -16,32 +15,13 @@ function SelectContent() {
   const packageId = searchParams.get('packageId');
   const classId = searchParams.get('classId');
 
-  // Only packageId is required now
-  if (!packageId) {
-    return (
-      <div className="flex-1 p-6 pt-16">
-        <Card className="p-6 text-center">
-          <p className="text-red-600 mb-4">
-            {language === "en"
-              ? "Missing required parameters. Please select a package first."
-              : "Faltan parámetros requeridos. Por favor, seleccione un paquete primero."}
-          </p>
-          <Button
-            onClick={() => router.push('/class-pass')}
-            variant="default"
-          >
-            {language === "en" ? "Return to Packages" : "Volver a Paquetes"}
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
   // Build the query string conditionally
   const buildQueryString = () => {
-    return classId
-      ? `?packageId=${packageId}&classId=${classId}`
-      : `?packageId=${packageId}`;
+    const params = new URLSearchParams();
+    if (packageId) params.append('packageId', packageId);
+    if (classId) params.append('classId', classId);
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : '';
   };
 
   return (
