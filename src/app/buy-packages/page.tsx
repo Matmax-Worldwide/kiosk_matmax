@@ -61,86 +61,95 @@ export default function BuyBundleTypesPage() {
                   !pkg.name.toLowerCase().includes('invitado') &&
                   !pkg.name.toLowerCase().includes('hotel') &&
                   !pkg.name.toLowerCase().includes('co-work') &&
-                  !pkg.name.toLowerCase().includes('acro') &&
-                  !pkg.name.toLowerCase().includes('1 ')
+                  !pkg.name.toLowerCase().includes('acro')
                 )
                 .sort((a, b) => a.price - b.price)
-                .map((pkg) => (
-                  <Card 
-                    key={pkg.id}
-                    className="p-6 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-sm border border-gray-100 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group"
-                    onClick={() => router.push(`/user-selection?packageId=${pkg.id}`)}
-                  >
-                    <div className="flex flex-col h-full">
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                            {pkg.name.split(' ')[0].padStart(2, '0')} {pkg.name.toLowerCase().includes('acro') ? 'ACRO MATPASS' : 'MATPASS'}
+                .map((pkg) => {
+                  const is01MatPass = pkg.name.match(/^0?1\s/);
+                  return (
+                    <Card 
+                      key={pkg.id}
+                      className={`p-6 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-sm border border-gray-100 hover:scale-[1.02] active:scale-[0.98] overflow-hidden group
+                        ${is01MatPass ? 'md:col-span-2 lg:col-span-2 bg-gradient-to-br from-white via-green-50 to-teal-50' : ''}`}
+                      onClick={() => router.push(`/user-selection?packageId=${pkg.id}`)}
+                    >
+                      <div className={`flex flex-col h-full ${is01MatPass ? 'md:flex-row md:gap-8' : ''}`}>
+                        <div className={`flex-1 ${is01MatPass ? 'md:w-1/2' : ''}`}>
+                          <div className="flex items-center justify-between mb-4">
+                            <div className={`font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent
+                              ${is01MatPass ? 'text-3xl md:text-4xl' : 'text-2xl'}`}>
+                              {pkg.name.split(' ')[0]} {pkg.name.toLowerCase().includes('acro') ? 'ACRO MATPASS' : 'MATPASS'}
+                            </div>
+                          </div>
+
+                          {/* Price Section with Per Class Price */}
+                          <div className={`bg-gradient-to-br from-green-50 to-teal-50 p-4 rounded-xl mb-6 
+                            ${is01MatPass ? 'bg-white/50' : ''}`}>
+                            <div className="flex items-baseline justify-center mb-2">
+                              <div className={`font-bold tracking-tight text-gray-900 
+                                ${is01MatPass ? 'text-5xl md:text-6xl' : 'text-4xl'}`}>
+                                {formatCurrency(pkg.price, pkg.currency)}
+                              </div>
+                            </div>
+                            <div className="text-center border-t border-green-100 pt-2 mt-2">
+                              <div className={`font-bold text-green-600 
+                                ${is01MatPass ? 'text-xl' : 'text-lg'}`}>
+                                {formatCurrency(pkg.price / parseInt(pkg.name.split(' ')[0] || '1'), pkg.currency)}
+                                {" "}
+                                <span className="text-sm font-medium text-gray-600">
+                                  {language === "en" ? "per class" : "por clase"}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Price Section with Per Class Price */}
-                        <div className="bg-gradient-to-br from-green-50 to-teal-50 p-4 rounded-xl mb-6">
-                          <div className="flex items-baseline justify-center mb-2">
-                            <div className="text-4xl font-bold tracking-tight text-gray-900">
-                              {formatCurrency(pkg.price, pkg.currency)}
+                        <div className={`${is01MatPass ? 'md:w-1/2 md:flex md:flex-col md:justify-center' : ''}`}>
+                          <div className="space-y-3 mb-6">
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                              <span className={is01MatPass ? 'text-lg' : ''}>
+                                {pkg.name.split(' ')[0]} {language === "en" ? "Passes to classes" : "Pases para clases"}
+                              </span>
                             </div>
-                          </div>
-                          <div className="text-center border-t border-green-100 pt-2 mt-2">
-                            <div className="text-lg font-bold text-green-600">
-                              {formatCurrency(pkg.price / parseInt(pkg.name.split(' ')[0] || '1'), pkg.currency)}
-                              {" "}
-                              <span className="text-sm font-medium text-gray-600">
-                                {language === "en" ? "per class" : "por clase"}
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                              <span className={is01MatPass ? 'text-lg' : ''}>
+                                {language === "en" ? "Valid for 30 days" : "Válido por 30 días"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-gray-600">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
+                              <span className={is01MatPass ? 'text-lg' : ''}>
+                                {language === "en" 
+                                  ? "60-minute regular classes" 
+                                  : "Clases regulares de 60 minutos"}
                               </span>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="space-y-3 mb-6">
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                            <span>
-                              {pkg.name.split(' ')[0]} {language === "en" ? "Passes to classes" : "Pases para clases"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                            <span>
-                              {language === "en" ? "Valid for 30 days" : "Válido por 30 días"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <div className="w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                            <span>
-                              {language === "en" 
-                                ? "60-minute regular classes" 
-                                : "Clases regulares de 60 minutos"}
-                            </span>
+                          <div className={`mt-4 ${is01MatPass ? 'md:mt-8' : ''}`}>
+                            <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer shadow-sm hover:shadow-md">
+                              <AnimatePresence mode="wait">
+                                <motion.span
+                                  key={language}
+                                  initial={{ y: 10, opacity: 0 }}
+                                  animate={{ y: 0, opacity: 1 }}
+                                  exit={{ y: -10, opacity: 0 }}
+                                  transition={{ duration: 0.2 }}
+                                  className={`font-semibold ${is01MatPass ? 'text-lg' : ''}`}
+                                >
+                                  {language === "en" ? "Buy Now" : "Comprar Ahora"}
+                                </motion.span>
+                              </AnimatePresence>
+                              <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
+                            </div>
                           </div>
                         </div>
                       </div>
-
-                      <div className="mt-4">
-                        <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer shadow-sm hover:shadow-md">
-                          <AnimatePresence mode="wait">
-                            <motion.span
-                              key={language}
-                              initial={{ y: 10, opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              exit={{ y: -10, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="font-semibold"
-                            >
-                              {language === "en" ? "Buy Now" : "Comprar Ahora"}
-                            </motion.span>
-                          </AnimatePresence>
-                          <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  );
+                })}
             </div>
 
             {/* Acro Classes Section */}
@@ -175,7 +184,7 @@ export default function BuyBundleTypesPage() {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-4">
                             <div className="text-2xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                              {pkg.name.split(' ')[0].padStart(2, '0')} ACRO MATPASS
+                              {pkg.name.split(' ')[0]} ACRO MATPASS
                               {(pkg.price === 160 || pkg.price === 530) && (
                                 <div className="text-sm font-medium text-gray-600 mt-1">
                                   {language === "en" ? "Doubles Pass" : "Pase Doble"}
