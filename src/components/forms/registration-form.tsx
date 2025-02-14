@@ -59,7 +59,7 @@ export function RegistrationForm({
   };
 
   return (
-    <Form {...form}>
+    <Form  {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         {/* First Name */}
         <FormField
@@ -73,9 +73,11 @@ export function RegistrationForm({
               <FormControl>
                 <Input
                   {...field}
-                  className="w-full h-16 p-4 text-xl border-2 rounded-lg"
+                  className="w-full h-16 p-4 text-2xl border-2 rounded-lg text-2xl"
                   placeholder={
-                    language === "en" ? "Enter first name" : "Ingrese su nombre"
+                    language === "en"
+                      ? "Enter first name"
+                      : "Ingrese su nombre"
                   }
                   disabled={isSubmitting}
                 />
@@ -97,7 +99,7 @@ export function RegistrationForm({
               <FormControl>
                 <Input
                   {...field}
-                  className="w-full h-16 p-4 text-xl border-2 rounded-lg"
+                  className="w-full h-16 p-4 text-2xl border-2 rounded-lg text-2xl"
                   placeholder={
                     language === "en"
                       ? "Enter last name"
@@ -124,7 +126,7 @@ export function RegistrationForm({
                 <Input
                   {...field}
                   type="email"
-                  className="w-full h-16 p-4 text-xl border-2 rounded-lg"
+                  className="w-full h-16 p-4 text-2xl border-2 rounded-lg text-2xl"
                   placeholder={
                     language === "en" ? "Enter your email" : "Ingrese su correo"
                   }
@@ -176,7 +178,7 @@ export function RegistrationForm({
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full py-6 text-xl font-medium mt-8 rounded-xl hover:shadow-lg transition-all duration-200"
+          className="w-full py-6 text-xl font-medium mt-8 rounded-xl hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-green-600 to-teal-600 text-white"
           variant="default"
           disabled={isSubmitting}
         >
