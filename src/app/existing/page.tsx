@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { UserSearch } from "@/components/forms/user-search";
 import { PageTransition } from "@/components/page-transition";
-import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 
@@ -15,48 +14,28 @@ export default function ExistingUserPage() {
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
   const packageId = searchParams.get('packageId');
-  const classId = searchParams.get('classId'); // Optional
+  const classId = searchParams.get('classId');
 
-  if (!packageId) {
-    return (
-      <div className="min-h-screen flex flex-col pt-16 bg-gradient-to-b ">
-        <Header title={{ en: "Error", es: "Error" }} />
-        <PageTransition>
-          <div className="flex-1 p-6">
-            <div className="max-w-2xl mx-auto">
-              <Card className="p-6 text-center">
-                <p className="text-red-600 mb-4">
-                  {language === "en"
-                    ? "Missing required parameters. Please select a package first."
-                    : "Faltan parámetros requeridos. Por favor, seleccione un paquete primero."}
-                </p>
-                <Button
-                  onClick={() => router.push('/buy-packages')}
-                  variant="default"
-                  className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700"
-                >
-                  {language === "en" ? "Return to Packages" : "Volver a Paquetes"}
-                </Button>
-              </Card>
-            </div>
-          </div>
-        </PageTransition>
-      </div>
-    );
-  }
+  const handleUserSelect = (consumer: { id: string }) => {
+    const params = new URLSearchParams();
+    if (packageId) params.append('packageId', packageId);
+    if (classId) params.append('classId', classId);
+    if (consumer.id) params.append('userId', consumer.id);
 
-  const handleUserSelect: (consumer: { id: string }) => void = (consumer) => {
-    const userId = consumer.id;
-    let url = `/payment?packageId=${packageId}&userId=${userId}`;
-    if (classId) {
-      url += `&classId=${classId}`;
+    // Determine next route based on parameters
+    let nextRoute = '/class-pass'; // Default route
+    if (packageId) {
+      nextRoute = '/payment';
+    } else if (classId) {
+      nextRoute = '/buy-packages';
     }
-    router.push(url);
+
+    router.push(`${nextRoute}${params.toString() ? `?${params.toString()}` : ''}`);
   };
 
   return (
-    <div className="min-h-screen flex flex-col pt-16">
-      <Header title={{ en: "Select Existing User", es: "Seleccionar Usuario Existente" }} />
+    <div className="min-h-screen flex flex-col pt-16 bg-gradient-to-b">
+      <Header title={{ en: "Find Your Account", es: "Encuentra tu Cuenta" }} />
       <PageTransition>
         <div className="flex-1 p-6">
           <div className="max-w-2xl mx-auto">
@@ -69,9 +48,13 @@ export default function ExistingUserPage() {
                 {language === "en" ? "Find Your Account" : "Encuentra tu Cuenta"}
               </h2>
               <p className="text-xl text-gray-600">
-                {language === "en" 
-                  ? "Search by name or email to continue"
-                  : "Busca por nombre o email para continuar"}
+                {language === "en"
+                  ? packageId
+                    ? "Search your account to purchase the package"
+                    : "Search your account to continue"
+                  : packageId
+                    ? "Busca tu cuenta para comprar el paquete"
+                    : "Busca tu cuenta para continuar"}
               </p>
             </motion.div>
 
