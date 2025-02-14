@@ -49,11 +49,11 @@ export function Header({ title, showBackButton = true, onBack }: HeaderProps) {
                 <ArrowLeft className="h-5 w-5" />
               </button>
             )}
-            <div className="flex flex-col">
+            <div className="flex items-center gap-4">
               <h1 className="text-xl font-semibold text-gray-900">
                 {title[language]}
               </h1>
-              <div className="flex items-center gap-1 text-sm text-gray-500 mt-0.5">
+              <div className="flex items-center gap-1 text-sm text-gray-500">
                 <Calendar className="h-4 w-4" />
                 <span className="capitalize">{formattedDate}</span>
               </div>
