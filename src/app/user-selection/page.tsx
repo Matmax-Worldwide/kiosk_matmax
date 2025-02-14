@@ -12,14 +12,10 @@ function SelectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
-  const packageId = searchParams.get('packageId');
-  const classId = searchParams.get('classId');
 
-  // Build the query string conditionally
+  // Build the query string only if parameters exist
   const buildQueryString = () => {
-    const params = new URLSearchParams();
-    if (packageId) params.append('packageId', packageId);
-    if (classId) params.append('classId', classId);
+    const params = new URLSearchParams(searchParams.toString());
     const queryString = params.toString();
     return queryString ? `?${queryString}` : '';
   };

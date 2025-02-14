@@ -144,7 +144,7 @@ group-hover:opacity-100 transition-opacity"
         >
           <div className="mb-6">
             <h2
-              className="text-2xl font-bold mb-2 bg-gradient-to-r from-green-600
+              className="text-2xl mb-2 font-bold bg-gradient-to-r from-green-600
 to-teal-600 bg-clip-text text-transparent"
             >
               {language === "en"

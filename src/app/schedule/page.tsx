@@ -157,7 +157,7 @@ export default function SchedulePage() {
       return "bg-gray-200 text-gray-500 cursor-not-allowed";
     }
     if (dayKey === selectedKey) {
-      return "bg-green-500 text-white shadow-lg transform scale-105 ring-2 ring-green-300 ring-offset-2";
+      return "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-lg transform scale-105 ring-2 ring-green-300 ring-offset-2";
     }
     if (dayKey === todayKey) {
       return "bg-green-50 text-green-600 hover:bg-green-100 hover:scale-105 transition-transform";
@@ -567,7 +567,7 @@ export default function SchedulePage() {
                                   className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
                                     classInfo.enrolled >= classInfo.room.capacity
                                       ? "bg-gray-400 text-white cursor-not-allowed"
-                                      : "bg-green-500 text-white hover:bg-green-600 hover:shadow-md"
+                                      : "bg-gradient-to-r from-green-500 to-teal-500 text-white hover:shadow-lg transform hover:scale-[1.02]"
                                   }`}
                                   disabled={classInfo.enrolled >= classInfo.room.capacity}
                                   onClick={() => router.push(`/user-selection?classId=${classInfo.id}`)}
