@@ -540,18 +540,18 @@ export default function SchedulePage() {
                           disabled={isPast}
                           className={`
                             flex flex-col items-center p-3 rounded-xl transition-all duration-200
-                            ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50 cursor-pointer'}
+                            ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50/80 cursor-pointer bg-green-50/40'}
                             ${day.isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105' : ''}
                             ${day.isToday ? 'bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2' : ''}
                           `}
                         >
                           <span className={`text-sm font-medium capitalize
-                            ${day.isSelected ? 'text-white' : day.isToday ? 'text-green-600' : 'text-gray-600'}
+                            ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
                             {day.dayName}
                           </span>
                           <span className={`text-2xl font-bold mt-1
-                            ${day.isSelected ? 'text-white' : day.isToday ? 'text-green-600' : 'text-gray-900'}
+                            ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
                             {day.dayNumber}
                           </span>
