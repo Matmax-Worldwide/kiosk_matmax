@@ -51,7 +51,7 @@ function NewUserContent() {
   };
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-6 pt-16">
       <div className="max-w-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
