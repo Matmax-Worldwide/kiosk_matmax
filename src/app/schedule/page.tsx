@@ -454,74 +454,72 @@ export default function SchedulePage() {
             <div className="pt-4">
               <div className="bg-white rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between p-4 border-b">
-                  <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setViewMode('week')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          viewMode === 'week' 
-                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {language === "en" ? "Week" : "Semana"}
-                      </button>
-                      <button
-                        onClick={() => setShowMonthlyCalendar(true)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          viewMode === 'calendar' 
-                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {language === "en" ? "Month" : "Mes"}
-                      </button>
-                    </div>
-                    <div className="h-6 w-px bg-gray-200"></div>
-                    <div className="flex items-center gap-4">
-                      {selectedWeek > 0 && (
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleWeekChange(-1)}
-                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                          <ChevronLeft className="w-5 h-5" />
-                        </motion.button>
-                      )}
-                      <motion.button
-                        key={selectedWeek}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors"
-                        onClick={() => setShowMonthlyCalendar(true)}
-                      >
-                        <Calendar className="w-4 h-4 text-gray-500" />
-                        <span className="text-sm font-medium text-gray-900">
-                          {format(weekStarts[0], "MMMM d", { locale: language === "es" ? es : enUS })} - 
-                          {format(addDays(weekStarts[0], 6), "MMMM d", { locale: language === "es" ? es : enUS })}
-                        </span>
-                      </motion.button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setViewMode('week')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        viewMode === 'week' 
+                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {language === "en" ? "Week" : "Semana"}
+                    </button>
+                    <button
+                      onClick={() => setShowMonthlyCalendar(true)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        viewMode === 'calendar' 
+                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {language === "en" ? "Month" : "Mes"}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-4 ml-auto">
+                    {selectedWeek > 0 && (
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.95 }}
-                        animate={
-                          selectedWeek === 0
-                            ? {
-                                x: [0, 8, 0],
-                                transition: {
-                                  repeat: Infinity,
-                                  duration: 1.5,
-                                },
-                              }
-                            : {}
-                        }
-                        onClick={() => handleWeekChange(1)}
+                        onClick={() => handleWeekChange(-1)}
                         className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                       >
-                        <ChevronRight className="w-5 h-5" />
+                        <ChevronLeft className="w-5 h-5" />
                       </motion.button>
-                    </div>
+                    )}
+                    <motion.button
+                      key={selectedWeek}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors bg-gray-50/50"
+                      onClick={() => setShowMonthlyCalendar(true)}
+                    >
+                      <Calendar className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm font-medium text-gray-900">
+                        {format(weekStarts[0], "MMMM d", { locale: language === "es" ? es : enUS })} - 
+                        {format(addDays(weekStarts[0], 6), "MMMM d", { locale: language === "es" ? es : enUS })}
+                      </span>
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      animate={
+                        selectedWeek === 0
+                          ? {
+                              x: [0, 8, 0],
+                              transition: {
+                                repeat: Infinity,
+                                duration: 1.5,
+                              },
+                            }
+                          : {}
+                      }
+                      onClick={() => handleWeekChange(1)}
+                      className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </motion.button>
                   </div>
                 </div>
 
