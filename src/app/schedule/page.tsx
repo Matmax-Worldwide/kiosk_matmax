@@ -457,30 +457,35 @@ export default function SchedulePage() {
             <div className="pt-4">
               <div className="bg-white rounded-2xl shadow-lg">
                 <div className="flex items-center justify-between p-4 border-b">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setViewMode('week')}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        viewMode === 'week' 
-                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
-                          : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
-                      }`}
-                    >
-                      {language === "en" ? "Week" : "Semana"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowMonthlyCalendar(true);
-                        setViewMode('calendar');
-                      }}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        viewMode === 'calendar' 
-                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
-                          : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
-                      }`}
-                    >
-                      {language === "en" ? "Month" : "Mes"}
-                    </button>
+                  <div className="flex items-center gap-4">
+                    <span className="text-gray-600 font-bold">
+                      {language === "en" ? "Calendar View" : "Vista de Calendario"}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setViewMode('week')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          viewMode === 'week' 
+                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
+                            : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
+                        }`}
+                      >
+                        {language === "en" ? "Week" : "Semana"}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMonthlyCalendar(true);
+                          setViewMode('calendar');
+                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          viewMode === 'calendar' 
+                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
+                            : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
+                        }`}
+                      >
+                        {language === "en" ? "Month" : "Mes"}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-4 ml-auto">
@@ -540,18 +545,18 @@ export default function SchedulePage() {
                           disabled={isPast}
                           className={`
                             flex flex-col items-center p-3 rounded-xl transition-all duration-200
-                            ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50 cursor-pointer'}
+                            ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50/80 cursor-pointer bg-green-50/40'}
                             ${day.isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105' : ''}
                             ${day.isToday ? 'bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2' : ''}
                           `}
                         >
                           <span className={`text-sm font-medium capitalize
-                            ${day.isSelected ? 'text-white' : day.isToday ? 'text-green-600' : 'text-gray-600'}
+                            ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
                             {day.dayName}
                           </span>
                           <span className={`text-2xl font-bold mt-1
-                            ${day.isSelected ? 'text-white' : day.isToday ? 'text-green-600' : 'text-gray-900'}
+                            ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
                             {day.dayNumber}
                           </span>
@@ -725,6 +730,16 @@ export default function SchedulePage() {
                                       {language === "en"
                                         ? `${classInfo.room.capacity - classInfo.enrolled} spots left`
                                         : `${classInfo.room.capacity - classInfo.enrolled} cupos disponibles`}
+                                    </span>
+                                    <span className="text-gray-400 text-sm">•</span>
+                                    <span className="text-gray-600 text-sm">
+                                      {classInfo.schedule.name.toLowerCase().includes("acro")
+                                        ? language === "en"
+                                          ? "Requires 1 Acro MatPass"
+                                          : "Requiere 1 Acro MatPass"
+                                        : language === "en"
+                                        ? "Requires 1 MatPass"
+                                        : "Requiere 1 MatPass"}
                                     </span>
                                   </div>
 
