@@ -8,6 +8,8 @@ import {
   ChevronRight,
   CreditCard,
   ArrowRight,
+  Tag,
+  Globe2,
 } from "lucide-react";
 import { format, parse, isAfter, startOfDay, addDays } from "date-fns";
 import { es, enUS } from "date-fns/locale";
@@ -36,11 +38,70 @@ interface ScheduleItem {
   currentReservations: number;
   cron: string;
   maxConsumers: number;
+  startDateTime?: string;
 }
 
 interface DaySchedule {
   day: { en: string; es: string };
   items: ScheduleItem[];
+}
+
+function CountdownTimer({ classTime, language }: { classTime: string, language: string }) {
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number } | null>(null);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const [hours, minutes, period] = classTime.split(/:|\s/);
+      const today = new Date();
+      const classDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      // Convert to 24-hour format
+      let hour = parseInt(hours);
+      if (period.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+      if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
+      
+      classDate.setHours(hour, parseInt(minutes), 0);
+      
+      // If the class time has passed for today, set it to tomorrow
+      if (classDate < now) {
+        classDate.setDate(classDate.getDate() + 1);
+      }
+
+      const difference = classDate.getTime() - now.getTime();
+      
+      if (difference <= 0) {
+        setTimeLeft(null);
+        return;
+      }
+
+      const hoursLeft = Math.floor(difference / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      
+      setTimeLeft({ hours: hoursLeft, minutes: minutesLeft });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [classTime]);
+
+  if (!timeLeft) return null;
+
+  return (
+    <span className="text-gray-700 text-lg">
+      {language === "en" ? (
+        <>
+          Starts in {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}{timeLeft.minutes}m
+        </>
+      ) : (
+        <>
+          Comienza en {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}{timeLeft.minutes}m
+        </>
+      )}
+    </span>
+  );
 }
 
 export default function ClassPassPage() {
@@ -84,6 +145,7 @@ export default function ClassPassPage() {
           cron: alloc.timeSlot.cron || "Unknown",
           maxConsumers:
             (alloc.sessionType as { maxConsumers?: number })?.maxConsumers || 0,
+          startDateTime: alloc.startTime,
         });
       });
 
@@ -287,12 +349,17 @@ export default function ClassPassPage() {
                               className="flex flex-col items-end"
                             >
                               <div className="flex flex-col items-end">
-                                <div className="text-5xl mb-8 font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-1">
+                                <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-2">
                                   S/. {Number(singleClassPass.price).toFixed(2)}
                                 </div>
-                                <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg">
-                                  <span className="bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent font-bold tracking-wider text-xl">
-                                    01 MATPASS
+                                <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
+                                  <Tag className="w-4 h-4 text-green-600" />
+                                  <span className="text-green-700 font-medium">
+                                    {nextClass?.activity.toLowerCase().includes("acro")
+                                      ? language === "en"
+                                        ? "1 Acro MatPass"
+                                        : "1 Acro MatPass"
+                                      : "1 MatPass"}
                                   </span>
                                 </div>
                               </div>
@@ -330,14 +397,9 @@ export default function ClassPassPage() {
                       </motion.div>
 
                       {/* Additional Info */}
-                      <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.7 }}
-                        className="mt-4 pt-6 border-t border-gray-100"
-                      >
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                          <div className="flex items-center gap-3">
+                      <div className="mt-4 pt-6 border-t border-gray-100">
+                        <div className="grid grid-cols-3 items-center">
+                          <div className="flex items-center gap-3 justify-start">
                             <Users className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
                               {nextClass.currentReservations}/{nextClass.maxConsumers}{" "}
@@ -354,41 +416,23 @@ export default function ClassPassPage() {
                               </AnimatePresence>
                             </span>
                           </div>
-                          <div className="flex items-center gap-3">
+
+                          <div className="flex items-center gap-3 justify-center">
                             <Clock className="w-6 h-6 text-green-500" />
-                            <span className="text-gray-700 text-lg">
-                              {nextClass.duration}{" "}
-                              <AnimatePresence mode="wait">
-                                <motion.span
-                                  key={language}
-                                  initial={{ y: 10, opacity: 0 }}
-                                  animate={{ y: 0, opacity: 1 }}
-                                  exit={{ y: -10, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  {language === "en" ? "minutes" : "minutos"}
-                                </motion.span>
-                              </AnimatePresence>
-                            </span>
+                            <CountdownTimer 
+                              classTime={nextClass.time}
+                              language={language}
+                            />
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Award className="w-6 h-6 text-green-500" />
+
+                          <div className="flex items-center gap-3 justify-end">
+                            <Globe2 className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
-                              <AnimatePresence mode="wait">
-                                <motion.span
-                                  key={language}
-                                  initial={{ y: 10, opacity: 0 }}
-                                  animate={{ y: 0, opacity: 1 }}
-                                  exit={{ y: -10, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  {nextClass.status}
-                                </motion.span>
-                              </AnimatePresence>
+                              {language === "en" ? "Bilingual Class" : "Clase Bilingüe"}
                             </span>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     </div>
                   </motion.div>
 

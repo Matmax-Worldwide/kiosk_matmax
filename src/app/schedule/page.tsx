@@ -715,34 +715,34 @@ export default function SchedulePage() {
                               </div>
 
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                  <div className="flex items-center space-x-2">
+                                <div className="flex items-center gap-6">
+                                  <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
+                                    <Tag className="w-4 h-4 text-green-600" />
+                                    <span className="text-green-700 font-medium">
+                                      {classInfo.schedule.name.toLowerCase().includes("acro")
+                                        ? language === "en"
+                                          ? "1 Acro MatPass"
+                                          : "1 Acro MatPass"
+                                        : "1 MatPass"}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 bg-gray-50/80 px-4 py-2 rounded-lg">
                                     <Users className="w-5 h-5 text-gray-500" />
                                     <span
                                       className={
                                         classInfo.enrolled >= classInfo.room.capacity
-                                          ? "text-red-600"
+                                          ? "text-red-600 font-medium"
                                           : classInfo.enrolled >= classInfo.room.capacity * 0.8
-                                          ? "text-yellow-600"
-                                          : "text-gray-600"
+                                          ? "text-yellow-600 font-medium"
+                                          : "text-gray-600 font-medium"
                                       }
                                     >
                                       {language === "en"
                                         ? `${classInfo.room.capacity - classInfo.enrolled} spots left`
                                         : `${classInfo.room.capacity - classInfo.enrolled} cupos disponibles`}
                                     </span>
-                                    <span className="text-gray-400 text-sm">•</span>
-                                    <span className="text-gray-600 text-sm">
-                                      {classInfo.schedule.name.toLowerCase().includes("acro")
-                                        ? language === "en"
-                                          ? "Requires 1 Acro MatPass"
-                                          : "Requiere 1 Acro MatPass"
-                                        : language === "en"
-                                        ? "Requires 1 MatPass"
-                                        : "Requiere 1 MatPass"}
-                                    </span>
                                   </div>
-
                                 </div>
 
                                 <button
