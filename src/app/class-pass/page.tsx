@@ -241,7 +241,7 @@ export default function ClassPassPage() {
                       {/* Header Section with Class Info */}
                       <div className="flex flex-col gap-4 pb-6 border-b border-gray-100">
                         <div>
-                          <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-start justify-between mb-2">
                             {/* Left side - Class info */}
                             <div className="flex flex-col">
                               <motion.h2
@@ -287,7 +287,7 @@ export default function ClassPassPage() {
                               className="flex flex-col items-end"
                             >
                               <div className="flex flex-col items-end">
-                                <div className="text-6xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-1">
+                                <div className="text-5xl mb-8 font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-1">
                                   S/. {Number(singleClassPass.price).toFixed(2)}
                                 </div>
                                 <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg">
@@ -306,7 +306,6 @@ export default function ClassPassPage() {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.6 }}
-                        className="mt-6"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
@@ -335,7 +334,7 @@ export default function ClassPassPage() {
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.5, delay: 0.7 }}
-                        className="mt-8 pt-6 border-t border-gray-100"
+                        className="mt-4 pt-6 border-t border-gray-100"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                           <div className="flex items-center gap-3">
