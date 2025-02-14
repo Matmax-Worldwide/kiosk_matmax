@@ -431,9 +431,11 @@ export default function SchedulePage() {
 
   const handleViewToggle = () => {
     if (viewMode === 'week') {
+      setViewMode('calendar');
       setShowMonthlyCalendar(true);
     } else {
       setViewMode('week');
+      setShowMonthlyCalendar(false);
     }
   };
 
@@ -441,6 +443,7 @@ export default function SchedulePage() {
     setSelectedDate(date);
     setSelectedWeek(Math.floor(differenceInDays(date, today) / 7));
     setShowMonthlyCalendar(false);
+    setViewMode('week');
   };
 
   return (
@@ -459,18 +462,21 @@ export default function SchedulePage() {
                       onClick={() => setViewMode('week')}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         viewMode === 'week' 
-                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
+                          : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
                       }`}
                     >
                       {language === "en" ? "Week" : "Semana"}
                     </button>
                     <button
-                      onClick={() => setShowMonthlyCalendar(true)}
+                      onClick={() => {
+                        setShowMonthlyCalendar(true);
+                        setViewMode('calendar');
+                      }}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                         viewMode === 'calendar' 
-                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg' 
-                          : 'text-gray-600 hover:bg-gray-100'
+                          ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
+                          : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
                       }`}
                     >
                       {language === "en" ? "Month" : "Mes"}
