@@ -8,7 +8,6 @@ import { CheckCircle2, Package, User, Calendar, Home, ArrowRight } from "lucide-
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
-import Image from "next/image";
 
 export default function ConfirmationPage() {
   const router = useRouter();
@@ -67,15 +66,6 @@ export default function ConfirmationPage() {
     <main className="min-h-screen bg-gradient-to-b from-white to-green-50/50">
       <Header title={{ en: "Purchase Confirmation", es: "Confirmación de Compra" }} />
       <div className="container mx-auto px-4 py-16 md:py-24">
-        <div className="flex justify-center mb-8">
-          <Image
-            src="/img/matmax.svg"
-            alt="MatMax Logo"
-            width={300}
-            height={150}
-            priority
-          />
-        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
