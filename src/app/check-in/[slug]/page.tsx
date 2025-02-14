@@ -305,7 +305,7 @@ export default function CheckInDetailsPage() {
                       <Button
                         onClick={() =>
                           router.push(
-                            `/class-pass/schedule?consumerId=${consumerId}`
+                            `/schedule?consumerId=${consumerId}`
                           )
                         }
                         className="bg-blue-500 hover:bg-blue-600"

@@ -336,7 +336,7 @@ export default function SchedulePage() {
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
                       borderBottom: '4px solid #f3f4f6'
                     }}
-                    onClick={() => router.push(`/class-pass/purchase?classId=${classInfo.id}`)}
+                    onClick={() => router.push(`/user-selection?classId=${classInfo.id}`)}
                   >
                     <div className="flex items-center justify-between">
                       <div>
