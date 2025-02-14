@@ -1,17 +1,17 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Users, UserCircle, Tag } from 'lucide-react';
 import { useLanguageContext } from '@/contexts/LanguageContext';
-import { format, addDays, startOfWeek, addWeeks, getISOWeek, differenceInWeeks } from 'date-fns';
+import { format, addDays, startOfWeek, addWeeks, getISOWeek } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useApolloClient } from '@apollo/client';
 import { GET_POSSIBLE_ALLOCATIONS } from '@/lib/graphql/queries';
 import { Allocation, GetPossibleAllocationsQuery } from '@/types/graphql';
 import { Header } from '@/components/header';
-import { Spinner } from '@/components/spinner';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ClassInstance {
   id: string;
@@ -51,25 +51,56 @@ function chunk<T>(array: T[], size: number): T[][] {
   return chunked;
 }
 
+function ScheduleSkeletonLoader() {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
+      <div className="space-y-6">
+        {[1, 2, 3].map((block) => (
+          <div key={block} className="border border-gray-100 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              </div>
+              <div className="text-right">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-6 w-20 mt-1" />
+              </div>
+            </div>
+            <Skeleton className="h-6 w-72 mt-4" />
+            <div className="flex items-center justify-between mt-6">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function SchedulePage() {
   const router = useRouter();
   const { language } = useLanguageContext();
   const client = useApolloClient();
   const today = new Date();
-  const [currentDate, setCurrentDate] = useState(today);
   const [selectedDate, setSelectedDate] = useState(today);
   const [schedule, setSchedule] = useState<GroupedClasses>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedWeek, setSelectedWeek] = useState(() => {
-    const start = startOfWeek(today);
-    const diff = differenceInWeeks(today, start);
-    return diff;
-  });
+  // selectedWeek representa el offset en semanas respecto a la semana actual.
+  const [selectedWeek, setSelectedWeek] = useState(0);
   const [isAtBottom, setIsAtBottom] = useState(false);
+  const [isScrollable, setIsScrollable] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Calculamos la semana visible a partir de today + offset (selectedWeek)
+  const weekStart = startOfWeek(addWeeks(today, selectedWeek), { weekStartsOn: 1 });
   const weekDays = Array.from({ length: 7 }).map((_, index) => {
-    const date = addDays(startOfWeek(addWeeks(currentDate, selectedWeek), { weekStartsOn: 1 }), index);
+    const date = addDays(weekStart, index);
     return {
       date,
       dayName: format(date, 'EEEE', { locale: es }),
@@ -78,13 +109,19 @@ export default function SchedulePage() {
     };
   });
 
+  // Al seleccionar un día, solo actualizamos la fecha seleccionada
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
-    setCurrentDate(date);
   };
 
+  // Permitir retroceder o avanzar semanas sin restricción
   const handleWeekChange = (direction: number) => {
-    setSelectedWeek(prevWeek => prevWeek + direction);
+    const newWeek = selectedWeek + direction;
+    // Prevent going to past weeks
+    if (newWeek < 0) {
+      return;
+    }
+    setSelectedWeek(newWeek);
   };
 
   const getWeekOfMonth = (date: Date) => {
@@ -99,23 +136,27 @@ export default function SchedulePage() {
     const weekNumber = getWeekOfMonth(date);
     return (
       <div className="flex flex-col items-center">
-        <span className="text-sm text-gray-500">
-          Semana {weekNumber}
-        </span>
-        <span className="text-lg font-medium capitalize">
-          {monthName}
-        </span>
+        <span className="text-sm text-gray-500">Semana {weekNumber}</span>
+        <span className="text-lg font-medium capitalize">{monthName}</span>
       </div>
     );
   };
 
+  // En la semana actual, deshabilitar días pasados (excepto hoy)
   const getDayButtonClass = (day: typeof weekDays[0]) => {
-    const isSelected = format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd');
-    const isToday = format(day.date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
-    if (isSelected) {
+    const dayKey = format(day.date, 'yyyy-MM-dd');
+    const selectedKey = format(selectedDate, 'yyyy-MM-dd');
+    const todayKey = format(today, 'yyyy-MM-dd');
+    // Si estamos en una semana pasada o si es la semana actual y el día es menor que hoy (excepto hoy), se deshabilita
+    const isDisabled = selectedWeek < 0 || (selectedWeek === 0 && day.date < today && dayKey !== todayKey);
+    
+    if (isDisabled) {
+      return 'bg-gray-200 text-gray-500 cursor-not-allowed';
+    }
+    if (dayKey === selectedKey) {
       return 'bg-green-500 text-white shadow-lg transform scale-105 ring-2 ring-green-300 ring-offset-2';
     }
-    if (isToday) {
+    if (dayKey === todayKey) {
       return 'bg-green-50 text-green-600 hover:bg-green-100 hover:scale-105 transition-transform';
     }
     return 'bg-gray-50 hover:bg-green-50 text-gray-700 hover:scale-105 transition-transform';
@@ -123,9 +164,17 @@ export default function SchedulePage() {
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    const isBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight;
-    setIsAtBottom(isBottom);
+    const atBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight;
+    setIsAtBottom(atBottom);
   };
+
+  // Verifica si el contenido es desplazable (por ejemplo, si hay más de 3 cards)
+  useEffect(() => {
+    if (scrollRef.current) {
+      const currentDayClasses = schedule[format(selectedDate, 'yyyy-MM-dd')] || [];
+      setIsScrollable(scrollRef.current.scrollHeight > scrollRef.current.clientHeight && currentDayClasses.length > 3);
+    }
+  }, [schedule, selectedDate, loading]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -156,10 +205,14 @@ export default function SchedulePage() {
         }
 
         const groupedSchedule: GroupedClasses = {};
+        const now = new Date();
+
         res.data.possibleAllocations.forEach((allocation: Allocation) => {
-          const date = new Date(allocation.startTime);
-          const dayKey = format(date, 'yyyy-MM-dd');
-          
+          const startTime = new Date(allocation.startTime);
+          // Solo incluir clases que aún no han comenzado
+          if (startTime <= now) return;
+
+          const dayKey = format(startTime, 'yyyy-MM-dd');
           if (!groupedSchedule[dayKey]) {
             groupedSchedule[dayKey] = [];
           }
@@ -198,6 +251,13 @@ export default function SchedulePage() {
           });
         });
 
+        // Ordenar las clases por hora de inicio
+        Object.keys(groupedSchedule).forEach(dayKey => {
+          groupedSchedule[dayKey].sort(
+            (a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime()
+          );
+        });
+
         setSchedule(groupedSchedule);
       } catch (err) {
         console.error('Error fetching schedule:', err);
@@ -217,7 +277,7 @@ export default function SchedulePage() {
       </div>
       <div className="h-full pt-16 overflow-hidden">
         <div className="max-w-4xl mx-auto px-6 h-full flex flex-col relative">
-          {/* Week Navigator - Siempre visible */}
+          {/* Week Navigator */}
           <div className="z-40 bg-gradient-to-b from-blue-50 via-blue-50 to-transparent pb-4 flex-shrink-0">
             <div className="pt-4">
               <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -226,25 +286,35 @@ export default function SchedulePage() {
                     {language === 'en' ? 'Class Schedule' : 'Horarios de Clases'}
                   </h1>
                   <div className="flex items-center gap-4">
-                    <motion.button
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => handleWeekChange(-1)}
-                      className="p-3 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                    </motion.button>
+                    {/* Botón izquierdo: se deshabilita para la semana actual */}
+                    {selectedWeek > 0 && (
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleWeekChange(-1)}
+                        className="p-3 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </motion.button>
+                    )}
                     <motion.div
                       key={selectedWeek}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="min-w-[150px] text-center"
                     >
-                      {formatMonthAndWeek(addWeeks(currentDate, selectedWeek))}
+                      {formatMonthAndWeek(addWeeks(today, selectedWeek))}
                     </motion.div>
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
+                      animate={selectedWeek === 0 ? {
+                        x: [0, 8, 0],
+                        transition: {
+                          repeat: Infinity,
+                          duration: 1.5
+                        }
+                      } : {}}
                       onClick={() => handleWeekChange(1)}
                       className="p-3 rounded-lg hover:bg-gray-100 transition-colors"
                     >
@@ -253,52 +323,54 @@ export default function SchedulePage() {
                   </div>
                 </div>
 
-                {/* Days of Week */}
+                {/* Días de la semana */}
                 <div className="grid grid-cols-7 gap-3 mt-4">
-                  {weekDays.map((day) => (
-                    <motion.button
-                      key={day.date.toString()}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${getDayButtonClass(day)}`}
-                      onClick={() => handleDateSelect(day.date)}
-                    >
-                      <span className={`text-sm font-medium capitalize
-                        ${format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-                          ? 'text-white font-semibold'
-                          : format(day.date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
-                            ? 'text-green-600'
-                            : 'text-gray-600'
-                        }`}
+                  {weekDays.map((day) => {
+                    const dayKey = format(day.date, 'yyyy-MM-dd');
+                    // En la semana actual (selectedWeek === 0), deshabilitar días pasados (excepto hoy)
+                    const isDisabled = selectedWeek === 0 && day.date < today && dayKey !== format(today, 'yyyy-MM-dd');
+                    return (
+                      <motion.button
+                        key={dayKey}
+                        disabled={isDisabled}
+                        whileHover={!isDisabled ? { scale: 1.05 } : {}}
+                        whileTap={!isDisabled ? { scale: 0.95 } : {}}
+                        onClick={() => !isDisabled && handleDateSelect(day.date)}
+                        className={`flex flex-col items-center p-3 rounded-xl transition-all duration-200 ${getDayButtonClass(day)} ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
-                        {day.dayName}
-                      </span>
-                      <span className={`text-3xl font-bold mt-1
-                        ${format(day.date, 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
-                          ? 'text-white'
-                          : format(day.date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd')
-                            ? 'text-green-600'
-                            : 'text-gray-900'
-                        }`}
-                      >
-                        {day.dayNumber}
-                      </span>
-                    </motion.button>
-                  ))}
+                        <span className={`text-sm font-medium capitalize
+                          ${dayKey === format(selectedDate, 'yyyy-MM-dd')
+                            ? 'text-white font-semibold'
+                            : dayKey === format(today, 'yyyy-MM-dd')
+                              ? 'text-green-600'
+                              : 'text-gray-600'
+                          }`}
+                        >
+                          {day.dayName}
+                        </span>
+                        <span className={`text-3xl font-bold mt-1
+                          ${dayKey === format(selectedDate, 'yyyy-MM-dd')
+                            ? 'text-white'
+                            : dayKey === format(today, 'yyyy-MM-dd')
+                              ? 'text-green-600'
+                              : 'text-gray-900'
+                          }`}
+                        >
+                          {day.dayNumber}
+                        </span>
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Schedule Content - Con estado de carga */}
+          {/* Schedule Content */}
           <div className="flex-1 overflow-hidden">
             {loading ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl shadow-lg p-6 h-full flex items-center justify-center"
-              >
-                <Spinner size="lg" />
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-1">
+                <ScheduleSkeletonLoader />
               </motion.div>
             ) : error ? (
               <motion.div
@@ -317,15 +389,11 @@ export default function SchedulePage() {
                 key={format(selectedDate, 'yyyy-MM-dd')}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  delay: 0.1
-                }}
+                transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.1 }}
                 className="bg-white rounded-2xl shadow-lg p-6 h-full relative"
               >
                 <div 
+                  ref={scrollRef}
                   className="snap-y snap-mandatory h-full overflow-y-auto scrollbar-hide"
                   onScroll={handleScroll}
                 >
@@ -334,12 +402,7 @@ export default function SchedulePage() {
                       key={`block-${blockIndex}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ 
-                        delay: 0.2 + (blockIndex * 0.1),
-                        type: "spring",
-                        stiffness: 100,
-                        damping: 20
-                      }}
+                      transition={{ delay: 0.2 + (blockIndex * 0.1), type: "spring", stiffness: 100, damping: 20 }}
                       className="snap-start min-h-full w-full flex flex-col"
                     >
                       <div className="flex flex-col flex-1 justify-between gap-4">
@@ -388,9 +451,35 @@ export default function SchedulePage() {
                                     </p>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2 mt-4">
-                                  <p className="text-gray-600 text-lg">
-                                    {language === 'en' ? 'with' : 'con'} {classInfo.primaryTeacher.user.firstName}
+                                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg border w-fit mt-3 ${
+                                  classInfo.schedule.name.toLowerCase().includes('nidra') || 
+                                  classInfo.schedule.name.toLowerCase().includes('beats')
+                                    ? 'border-purple-200 bg-purple-50'
+                                    : 'border-blue-200 bg-blue-50'
+                                }`}>
+                                  <Tag className={`w-4 h-4 ${
+                                    classInfo.schedule.name.toLowerCase().includes('nidra') || 
+                                    classInfo.schedule.name.toLowerCase().includes('beats')
+                                      ? 'text-purple-600'
+                                      : 'text-blue-600'
+                                  }`} />
+                                  <span className={`text-xs font-medium ${
+                                    classInfo.schedule.name.toLowerCase().includes('nidra') || 
+                                    classInfo.schedule.name.toLowerCase().includes('beats')
+                                      ? 'text-purple-600'
+                                      : 'text-blue-600'
+                                  }`}>
+                                    {classInfo.schedule.name.toLowerCase().includes('nidra') || 
+                                     classInfo.schedule.name.toLowerCase().includes('beats')
+                                      ? 'Sound Healing'
+                                      : 'Yoga'}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 mt-3">
+                                  <p className="text-gray-600 text-lg flex items-center gap-2">
+                                    {language === 'en' ? 'with' : 'con'} 
+                                    <UserCircle className="w-5 h-5 text-gray-500" />
+                                    {classInfo.primaryTeacher.user.firstName}
                                   </p>
                                   {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description] && (
                                     <span className="text-sm text-gray-500">
@@ -435,7 +524,8 @@ export default function SchedulePage() {
                     </motion.div>
                   ))}
 
-                  {(!schedule[format(selectedDate, 'yyyy-MM-dd')] || schedule[format(selectedDate, 'yyyy-MM-dd')].length === 0) && (
+                  {(!schedule[format(selectedDate, 'yyyy-MM-dd')] ||
+                    schedule[format(selectedDate, 'yyyy-MM-dd')].length === 0) && (
                     <div className="h-full flex items-center justify-center">
                       <div className="text-center">
                         <p className="text-gray-500 text-lg">
@@ -456,68 +546,66 @@ export default function SchedulePage() {
             )}
           </div>
 
-          {/* Indicador de Scroll fijo */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4 pointer-events-none">
-            <motion.div
-              initial={{ opacity: 0.5, y: -10 }}
-              animate={{ 
-                opacity: [0.5, 1, 0.5],
-                y: [-10, 0, -10]
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="flex flex-col items-center gap-2"
-            >
-              {isAtBottom ? (
-                <>
-                  <svg 
-                    className="w-6 h-6 text-green-500" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                    />
-                  </svg>
-                  
-                  
-                  <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
-                    {language === 'en' ? 'Scroll up' : 'Desliza arriba'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <svg 
-                    className="w-6 h-6 text-green-500" 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M5 10l7-7m0 0l7 7m-7-7v18"
-                    />
-                  </svg>
-                  
-                  <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
-                    {language === 'en' ? 'Scroll for more' : 'Desliza para más'}
-                  </span>
-                </>
-              )}
-            </motion.div>
-          </div>
+          {/* Indicador de Scroll fijo (solo si el contenedor es desplazable) */}
+          {isScrollable && (
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0.5, y: -10 }}
+                animate={{ 
+                  opacity: [0.5, 1, 0.5],
+                  y: [-10, 0, -10]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="flex flex-col items-center gap-2"
+              >
+                {isAtBottom ? (
+                  <>
+                    <svg 
+                      className="w-6 h-6 text-green-500" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                      {language === 'en' ? 'Scroll up' : 'Desliza arriba'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <svg 
+                      className="w-6 h-6 text-green-500" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M5 10l7-7m0 0l7 7m-7-7v18"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                      {language === 'en' ? 'Scroll for more' : 'Desliza para más'}
+                    </span>
+                  </>
+                )}
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
-      {/* Estilos para ocultar scrollbar */}
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
@@ -530,3 +618,4 @@ export default function SchedulePage() {
     </div>
   );
 }
+  

@@ -26,7 +26,7 @@ export default function Home() {
       description: "Reserva tu próxima clase o revisa el horario",
       descriptionEn: "Book your next class or check schedule",
       href: "/class-pass",
-      gradient: "from-blue-600 to-indigo-600",
+      gradient: "from-green-600 to-teal-600",
     },
     {
       icon: <Package2 className="w-8 h-8" />,
@@ -35,7 +35,7 @@ export default function Home() {
       description: "Ver y comprar paquetes de clases",
       descriptionEn: "View and purchase class packages",
       href: "/buy-packages",
-      gradient: "from-purple-600 to-pink-600",
+      gradient: "from-green-600 to-teal-600",
     },
   ];
 
