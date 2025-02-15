@@ -1,4 +1,4 @@
-import prisma from './_prisma.js';
+import prisma from './_prisma.ts';
 
 export default async function calculateBundleRemainingUses(tx, bundleId) {
     const _prisma = tx || prisma

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DateTimeResolver } from 'graphql-scalars';
 import cronParser from 'cron-parser';
 
-import prisma from './_prisma.js';
+import prisma from './_prisma.ts';
 
 import { triggerWebhooks } from './_webhook.js';
 // import { apiKeyManager } from './_apiKeyManager.ts';
