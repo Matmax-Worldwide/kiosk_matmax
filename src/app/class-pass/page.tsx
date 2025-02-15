@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Clock,
-  Award,
   Users,
   ChevronRight,
   CreditCard,
@@ -138,7 +137,7 @@ export default function ClassPassPage() {
           id: alloc.id,
           time,
           duration: alloc.duration.toString(),
-          activity: alloc.sessionType?.name || "Unknown",
+          activity: alloc.timeSlot.sessionType?.name || "Unknown",
           instructor: alloc.timeSlot.agent?.name || "Unknown",
           status: alloc.status || "Unknown",
           currentReservations: alloc.currentReservations,
@@ -186,8 +185,8 @@ export default function ClassPassPage() {
     const currentDay = format(today, "EEEE", {
       locale: language === "es" ? es : enUS,
     });
-    const currentTime = format(today, "h:mm a");
 
+    // Buscar primero en el día actual
     const todaySchedule = fetchedSchedule.find(
       (daySchedule) =>
         daySchedule.day[language].toLowerCase() === currentDay.toLowerCase()
@@ -195,9 +194,8 @@ export default function ClassPassPage() {
 
     if (todaySchedule) {
       const nextClass = todaySchedule.items.find((item) => {
-        const classTime = parse(item.time, "h:mm a", new Date());
-        const currentTimeDate = parse(currentTime, "h:mm a", new Date());
-        return isAfter(classTime, currentTimeDate);
+        const classTime = new Date(item.startDateTime);
+        return isAfter(classTime, today);
       });
 
       if (nextClass) {
@@ -208,34 +206,45 @@ export default function ClassPassPage() {
       }
     }
 
-    if (fetchedSchedule.length > 0) {
-      const weekDaysOrder = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ];
-      const currentIndex = weekDaysOrder.findIndex(
-        (day) => day.toLowerCase() === currentDay.toLowerCase()
+    // Si no hay clases disponibles hoy o ya pasaron todas, buscar en los días siguientes
+    const weekDaysOrder = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    const currentIndex = weekDaysOrder.findIndex(
+      (day) => day.toLowerCase() === currentDay.toLowerCase()
+    );
+
+    // Buscar en los días siguientes
+    for (let i = 1; i < weekDaysOrder.length; i++) {
+      const nextDay =
+        weekDaysOrder[(currentIndex + i) % weekDaysOrder.length];
+      const nextDaySchedule = fetchedSchedule.find(
+        (daySchedule) =>
+          daySchedule.day.en.toLowerCase() === nextDay.toLowerCase()
       );
-      for (let i = 1; i < weekDaysOrder.length; i++) {
-        const nextDay =
-          weekDaysOrder[(currentIndex + i) % weekDaysOrder.length];
-        const nextDaySchedule = fetchedSchedule.find(
-          (daySchedule) =>
-            daySchedule.day.en.toLowerCase() === nextDay.toLowerCase()
-        );
-        if (nextDaySchedule && nextDaySchedule.items.length > 0) {
-          return {
-            ...nextDaySchedule.items[0],
-            day: nextDaySchedule.day[language],
-          };
-        }
+
+      if (nextDaySchedule && nextDaySchedule.items.length > 0) {
+        // Ordenar las clases por hora de inicio
+        const sortedClasses = [...nextDaySchedule.items].sort((a, b) => {
+          const timeA = new Date(a.startDateTime);
+          const timeB = new Date(b.startDateTime);
+          return timeA.getTime() - timeB.getTime();
+        });
+
+        // Retornar la primera clase del día siguiente
+        return {
+          ...sortedClasses[0],
+          day: nextDaySchedule.day[language],
+        };
       }
     }
+
     return null;
   };
 

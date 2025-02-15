@@ -264,6 +264,54 @@ function PaymentContent() {
           </motion.div>
         </div>
 
+        {/* Información de la Clase (si existe) */}
+        {allocation && classDate && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent mb-8"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
+                <Calendar className="w-7 h-7" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">
+                  {language === "en" ? "Class Information" : "Información de la Clase"}
+                </h3>
+                <p className="text-gray-600">{allocation.timeSlot.sessionType.name}</p>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">
+                  {language === "en" ? "Professor" : "Profesor"}
+                </p>
+                <p className="font-semibold text-gray-700">{allocation.timeSlot.agent.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">
+                  {language === "en" ? "Date & Time" : "Fecha y Hora"}
+                </p>
+                <p className="font-semibold text-gray-700">
+                  {format(classDate, "EEEE d 'de' MMMM, HH:mm", {
+                    locale: language === 'es' ? es : undefined
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">
+                  {language === "en" ? "Availability" : "Disponibilidad"}
+                </p>
+                <p className="font-semibold text-gray-700">
+                  {allocation.currentReservations}/{allocation.timeSlot.sessionType.maxConsumers} {language === "en" ? "spots taken" : "lugares ocupados"}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Separador visual */}
         <hr className="my-8 border-gray-200" />
 
@@ -327,54 +375,6 @@ function PaymentContent() {
             />
           </motion.div>
         </div>
-
-        {/* Información de la Clase (si existe) */}
-        {allocation && classDate && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent mb-8"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
-                <Calendar className="w-7 h-7" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">
-                  {language === "en" ? "Class Information" : "Información de la Clase"}
-                </h3>
-                <p className="text-gray-600">{allocation.timeSlot.sessionType.name}</p>
-              </div>
-            </div>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-gray-500">
-                  {language === "en" ? "Professor" : "Profesor"}
-                </p>
-                <p className="font-semibold text-gray-700">{allocation.timeSlot.agent.name}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">
-                  {language === "en" ? "Date & Time" : "Fecha y Hora"}
-                </p>
-                <p className="font-semibold text-gray-700">
-                  {format(classDate, "EEEE d 'de' MMMM, HH:mm", {
-                    locale: language === 'es' ? es : undefined
-                  })}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">
-                  {language === "en" ? "Availability" : "Disponibilidad"}
-                </p>
-                <p className="font-semibold text-gray-700">
-                  {allocation.currentReservations}/{allocation.timeSlot.sessionType.maxConsumers} {language === "en" ? "spots taken" : "lugares ocupados"}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
         {error && (
           <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">

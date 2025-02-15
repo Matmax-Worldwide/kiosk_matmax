@@ -2,14 +2,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Users, Tag, Clock, X, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tag, Clock, Calendar } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { 
   format, 
   addDays, 
   startOfWeek, 
   addWeeks, 
-  getISOWeek, 
   startOfMonth, 
   endOfMonth, 
   endOfWeek, 
@@ -21,97 +20,26 @@ import {
   differenceInDays
 } from "date-fns";
 import { enUS, es } from "date-fns/locale";
-import { useApolloClient } from "@apollo/client";
-import { GET_POSSIBLE_ALLOCATIONS } from "@/lib/graphql/queries";
+import { useApolloClient, useMutation } from "@apollo/client";
+import { GET_POSSIBLE_ALLOCATIONS, CREATE_ALLOCATION, GET_ALLOCATION } from "@/lib/graphql/queries";
 import { Allocation, GetPossibleAllocationsQuery } from "@/types/graphql";
 import { Header } from "@/components/header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface ClassInstance {
-  id: string;
-  startDateTime: string;
-  endDateTime: string;
-  enrolled: number;
-  status: string;
-  schedule: {
-    id: string;
-    name: string;
-    description: { en: string; es: string };
-    duration: number;
-    matpassRequirement: number;
-    expertiseLevel: string;
-  };
-  primaryTeacher: {
-    user: {
-      firstName: string;
-      lastName: string;
-    };
-  };
-  room: {
-    name: string;
-    capacity: number;
-  };
-}
-
-interface GroupedClasses {
-  [key: string]: ClassInstance[];
-}
-
-function chunk<T>(array: T[], size: number): T[][] {
-  const chunked: T[][] = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunked.push(array.slice(i, i + size));
-  }
-  return chunked;
-}
-
-function ScheduleSkeletonLoader() {
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
-      <div className="h-full flex flex-col space-y-6">
-        {[1, 2, 3].map((block) => (
-          <div 
-            key={block} 
-            className="flex-1 border border-gray-100 rounded-xl p-6"
-            style={{
-              minHeight: "calc((100vh - 400px) / 3)"
-            }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-48" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-20" />
-                  <Skeleton className="h-6 w-20" />
-                </div>
-              </div>
-              <div className="text-right">
-                <Skeleton className="h-8 w-24" />
-                <Skeleton className="h-6 w-20 mt-1" />
-              </div>
-            </div>
-            <Skeleton className="h-6 w-72 mt-4" />
-            <div className="flex items-center justify-between mt-6">
-              <Skeleton className="h-6 w-32" />
-              <Skeleton className="h-10 w-32" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 interface MonthlyCalendarProps {
   selectedDate: Date;
   onDateSelect: (date: Date) => void;
   onClose: () => void;
   language: string;
+  show: boolean;
 }
 
-function MonthlyCalendar({ selectedDate, onDateSelect, onClose, language }: MonthlyCalendarProps) {
-  const [currentMonth, setCurrentMonth] = useState(selectedDate);
+const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ selectedDate, onDateSelect, onClose, language, show }) => {
+  const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate);
+
+  if (!show) return null;
+
   const firstDayOfMonth = startOfMonth(currentMonth);
   const lastDayOfMonth = endOfMonth(currentMonth);
   const startDate = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
@@ -221,6 +149,81 @@ function MonthlyCalendar({ selectedDate, onDateSelect, onClose, language }: Mont
       </div>
     </motion.div>
   );
+};
+
+interface ClassInstance {
+  id: string;
+  startDateTime: string;
+  endDateTime: string;
+  enrolled: number;
+  status: string;
+  schedule: {
+    id: string;
+    name: string;
+    description: { en: string; es: string };
+    duration: number;
+    matpassRequirement: number;
+    expertiseLevel: string;
+  };
+  primaryTeacher: {
+    user: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+  room: {
+    name: string;
+    capacity: number;
+  };
+}
+
+interface GroupedClasses {
+  [key: string]: ClassInstance[];
+}
+
+function chunk<T>(array: T[], size: number): T[][] {
+  const chunked: T[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunked.push(array.slice(i, i + size));
+  }
+  return chunked;
+}
+
+function ScheduleSkeletonLoader() {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
+      <div className="h-full flex flex-col space-y-6">
+        {[1, 2, 3].map((block) => (
+          <div 
+            key={block} 
+            className="flex-1 border border-gray-100 rounded-xl p-6"
+            style={{
+              minHeight: "calc((100vh - 400px) / 3)"
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-48" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-20" />
+                </div>
+              </div>
+              <div className="text-right">
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-6 w-20 mt-1" />
+              </div>
+            </div>
+            <Skeleton className="h-6 w-72 mt-4" />
+            <div className="flex items-center justify-between mt-6">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function SchedulePage() {
@@ -238,6 +241,7 @@ export default function SchedulePage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(false);
   const [viewMode, setViewMode] = useState<'week' | 'calendar'>('week');
+  const [createAllocation] = useMutation(CREATE_ALLOCATION);
 
   const weekStarts = [0, 1, 2].map(offset => 
     startOfWeek(addWeeks(today, selectedWeek + offset), { weekStartsOn: 1 })
@@ -266,46 +270,6 @@ export default function SchedulePage() {
       return;
     }
     setSelectedWeek(newWeek);
-  };
-
-  const getWeekOfMonth = (date: Date) => {
-    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-    const firstWeek = getISOWeek(firstDayOfMonth);
-    const currentWeek = getISOWeek(date);
-    return currentWeek - firstWeek + 1;
-  };
-
-  const formatMonthAndWeek = (date: Date) => {
-    const monthName = format(date, "MMMM", { locale: language === "es" ? es : enUS });
-    const weekNumber = getWeekOfMonth(date);
-    return (
-      <div className="flex flex-col items-center">
-        <span className="text-sm text-gray-500">
-          {language === "en" ? `Week ${weekNumber}` : `Semana ${weekNumber}`}
-        </span>
-        <span className="text-lg font-medium capitalize">{monthName}</span>
-      </div>
-    );
-  };
-
-  const getDayButtonClass = (day: (typeof allWeekDays)[0][0]) => {
-    const dayKey = format(day.date, "yyyy-MM-dd");
-    const selectedKey = format(selectedDate, "yyyy-MM-dd");
-    const todayKey = format(today, "yyyy-MM-dd");
-    const isDisabled =
-      selectedWeek < 0 ||
-      (selectedWeek === 0 && day.date < today && dayKey !== todayKey);
-
-    if (isDisabled) {
-      return "bg-gray-200 text-gray-500 cursor-not-allowed";
-    }
-    if (dayKey === selectedKey) {
-      return "bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105 ring-2 ring-green-300 ring-offset-2";
-    }
-    if (dayKey === todayKey) {
-      return "bg-green-50 text-green-600 hover:bg-green-100 hover:scale-105 transition-transform";
-    }
-    return "bg-gray-50 hover:bg-green-50 text-gray-700 hover:scale-105 transition-transform";
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -429,15 +393,6 @@ export default function SchedulePage() {
     fetchSchedule();
   }, [client, selectedDate]);
 
-  const handleViewToggle = () => {
-    if (viewMode === 'week') {
-      setViewMode('calendar');
-      setShowMonthlyCalendar(true);
-    } else {
-      setViewMode('week');
-      setShowMonthlyCalendar(false);
-    }
-  };
 
   const handleMonthlyDateSelect = (date: Date) => {
     setSelectedDate(date);
@@ -752,10 +707,66 @@ export default function SchedulePage() {
                                       : "bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]"
                                   }`}
                                   disabled={classInfo.enrolled >= classInfo.room.capacity}
-                                  onClick={() => {
+                                  onClick={async () => {
                                     const params = new URLSearchParams();
-                                    if (classInfo.id) params.append('classId', classInfo.id);
-                                    router.push(`/user-selection${params.toString() ? `?${params.toString()}` : ''}`);
+                                    
+                                    try {
+                                      let allocationId = classInfo.id;
+                                      
+                                      // Si el ID contiene '_', es un timeSlot y necesitamos crear una allocation
+                                      if (classInfo.id && classInfo.id.includes('_')) {
+                                        const [timeSlotId, dateTime] = classInfo.id.split('_');
+                                        const startTime = new Date(dateTime.replace('_', ' ')).toISOString();
+                                        
+                                        // Primero intentamos obtener una allocation existente
+                                        const existingAllocation = await client.query({
+                                          query: GET_ALLOCATION,
+                                          variables: {
+                                            input: {
+                                              timeSlotId,
+                                              startTime
+                                            }
+                                          },
+                                          fetchPolicy: 'network-only'
+                                        });
+
+                                        if (existingAllocation.data?.allocation) {
+                                          // Si existe una allocation, usamos su ID
+                                          allocationId = existingAllocation.data.allocation.id;
+                                        } else {
+                                          // Si no existe, creamos una nueva
+                                          const { data: newAllocationData } = await createAllocation({
+                                            variables: {
+                                              input: {
+                                                timeSlotId,
+                                                startTime,
+                                                status: "AVAILABLE"
+                                              }
+                                            }
+                                          });
+                                          
+                                          if (newAllocationData?.createAllocation?.id) {
+                                            allocationId = newAllocationData.createAllocation.id;
+                                          } else {
+                                            throw new Error('Failed to create allocation');
+                                          }
+                                        }
+                                      }
+
+                                      // Agregamos los parámetros a la URL
+                                      if (allocationId) {
+                                        params.append('classId', allocationId);
+                                        params.append('activity', classInfo.schedule.name);
+                                        params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
+                                        params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
+                                        params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
+                                        
+                                        router.push(`/user-selection${params.toString() ? `?${params.toString()}` : ''}`);
+                                      }
+                                    } catch (error) {
+                                      console.error('Error handling allocation:', error);
+                                      // Aquí podrías mostrar un mensaje de error al usuario
+                                    }
                                   }}
                                 >
                                   {classInfo.enrolled >= classInfo.room.capacity
@@ -859,14 +870,13 @@ export default function SchedulePage() {
         </div>
       </div>
       <AnimatePresence>
-        {showMonthlyCalendar && (
-          <MonthlyCalendar
-            selectedDate={selectedDate}
-            onDateSelect={handleMonthlyDateSelect}
-            onClose={() => setShowMonthlyCalendar(false)}
-            language={language}
-          />
-        )}
+        <MonthlyCalendar
+          selectedDate={selectedDate}
+          onDateSelect={handleMonthlyDateSelect}
+          onClose={() => setShowMonthlyCalendar(false)}
+          language={language}
+          show={showMonthlyCalendar}
+        />
       </AnimatePresence>
       <style jsx>{`
         .scrollbar-hide::-webkit-scrollbar {
