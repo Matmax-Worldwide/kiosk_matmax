@@ -21,6 +21,7 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { GET_CONSUMER, UPDATE_RESERVATION_STATUS } from "@/lib/graphql/queries";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Bundle {
   id: string;
@@ -56,6 +57,79 @@ interface Reservation {
       };
     };
   };
+}
+
+function CheckInSkeletonLoader() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        {/* Back Button Skeleton */}
+        <Skeleton className="h-10 w-24 mb-6" />
+
+        {/* Consumer Info Card Skeleton */}
+        <Card className="p-6 mb-6">
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-6 w-40" />
+            </div>
+            <Skeleton className="h-8 w-8" />
+          </div>
+
+          {/* Active Bundles Section */}
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <div className="space-y-3">
+              {[1, 2].map((i) => (
+                <div key={i} className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-4 w-4" />
+                      <Skeleton className="h-5 w-48" />
+                    </div>
+                    <Skeleton className="h-5 w-32" />
+                  </div>
+                  <div className="flex items-center justify-between text-xs mt-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* Today's Reservations Skeleton */}
+        <Skeleton className="h-8 w-48 mb-4" />
+        {[1, 2].map((i) => (
+          <div key={i} className="bg-white rounded-xl shadow-md p-6 border border-gray-100 mb-4">
+            <div className="flex justify-between items-start">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5" />
+                  <div className="flex flex-col">
+                    <Skeleton className="h-5 w-20 mb-1" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5" />
+                  <Skeleton className="h-5 w-24" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-5" />
+                  <Skeleton className="h-5 w-40" />
+                </div>
+                <Skeleton className="h-4 w-56" />
+              </div>
+              <Skeleton className="h-10 w-28" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function CheckInDetailsPage() {
@@ -123,17 +197,7 @@ export default function CheckInDetailsPage() {
       <>
         <Header title={{ en: "Check-in", es: "Check-in" }} />
         <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-          <div className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl mx-auto">
-              <Card className="p-6">
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              </Card>
-            </div>
-          </div>
+          <CheckInSkeletonLoader />
         </main>
       </>
     );

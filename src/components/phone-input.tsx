@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Search, ArrowLeft } from 'lucide-react';
 import * as Flags from 'country-flag-icons/react/3x2';
 
 interface Country {
@@ -166,7 +166,39 @@ export function PhoneInput({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [localValue, setLocalValue] = useState('');
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const countryListRef = React.useRef<HTMLDivElement>(null);
+
+  // Group countries by first letter
+  const groupedCountries = React.useMemo(() => {
+    const filtered = searchTerm
+      ? countries.filter(country =>
+          country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          country.dialCode.includes(searchTerm)
+        )
+      : countries;
+
+    return filtered.reduce((acc, country) => {
+      const firstLetter = country.name[0].toUpperCase();
+      if (!acc[firstLetter]) {
+        acc[firstLetter] = [];
+      }
+      acc[firstLetter].push(country);
+      return acc;
+    }, {} as Record<string, Country[]>);
+  }, [searchTerm]);
+
+  const alphabet = React.useMemo(() => 
+    Object.keys(groupedCountries).sort()
+  , [groupedCountries]);
+
+  const scrollToLetter = (letter: string) => {
+    const element = document.getElementById(`country-group-${letter}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     // Extract number without dial code if value changes externally
@@ -187,7 +219,6 @@ export function PhoneInput({
         setIsOpen(false);
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
@@ -222,11 +253,6 @@ export function PhoneInput({
     setIsOpen(false);
     onChange(country.dialCode + ' ' + localValue);
   };
-
-  const filteredCountries = countries.filter(country =>
-    country.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    country.dialCode.includes(searchTerm)
-  );
 
   const getFlagComponent = (countryCode: string) => {
     const FlagComponent = (Flags as Record<string, React.ComponentType<{ title?: string; className?: string }>>)[countryCode];
@@ -274,34 +300,93 @@ export function PhoneInput({
         </div>
 
         {isOpen && !disabled && (
-          <div className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-lg">
-            <div className="p-2 border-b border-gray-100">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search country or code..."
-                className="w-full p-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
-              />
-            </div>
-            <div className="max-h-64 overflow-y-auto">
-              {filteredCountries.map((country) => (
+          <div className="fixed inset-0 z-50 bg-white">
+            <div className="flex flex-col h-full">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-4 border-b bg-gradient-to-r from-green-600 to-teal-600 text-white">
                 <button
-                  key={country.code}
-                  className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center space-x-3"
-                  onClick={() => handleCountrySelect(country)}
+                  onClick={() => setIsOpen(false)}
+                  className="p-2 hover:bg-white/10 rounded-full transition-colors"
                 >
-                  <span className="text-2xl" role="img" aria-label={country.name}>
-                    {getFlagComponent(country.code)}
-                  </span>
-                  <span className="flex-1">{country.name}</span>
-                  <span className="text-gray-500">{country.dialCode}</span>
+                  <ArrowLeft className="w-6 h-6" />
                 </button>
-              ))}
+                <h2 className="text-xl font-semibold">Select your country</h2>
+                <button
+                  onClick={() => setIsSearchVisible(!isSearchVisible)}
+                  className="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-full transition-colors"
+                >
+                  <Search className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Search Input - Only shown when search is active */}
+              {isSearchVisible && (
+                <div className="p-4 border-b border-gray-100 bg-white sticky top-0 z-10">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <input
+                      type="text"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search country or code..."
+                      className="w-full p-4 pl-12 text-lg border border-gray-200 rounded-xl focus:outline-none focus:border-green-500 bg-gray-50"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-1 overflow-hidden">
+                {/* Countries List */}
+                <div className="flex-1 overflow-y-auto scrollbar-hide" ref={countryListRef}>
+                  {alphabet.map(letter => (
+                    <div key={letter} id={`country-group-${letter}`}>
+                      <div className="sticky top-0 px-6 py-2 bg-gray-50 font-semibold text-lg text-gray-600 border-b border-gray-100">
+                        {letter}
+                      </div>
+                      {groupedCountries[letter].map((country) => (
+                        <button
+                          key={country.code}
+                          className="w-full px-6 py-4 text-left hover:bg-gray-50 flex items-center space-x-4 border-b border-gray-100"
+                          onClick={() => handleCountrySelect(country)}
+                        >
+                          <span className="text-2xl flex-shrink-0" role="img" aria-label={country.name}>
+                            {getFlagComponent(country.code)}
+                          </span>
+                          <span className="flex-1 text-lg">{country.name}</span>
+                          <span className="text-gray-500 text-lg">{country.dialCode}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Alphabet Navigation */}
+                <div className="flex flex-col justify-center px-2 py-4 bg-gray-50">
+                  {alphabet.map(letter => (
+                    <button
+                      key={letter}
+                      onClick={() => scrollToLetter(letter)}
+                      className="p-1 text-sm font-medium text-gray-600 hover:text-green-600 transition-colors"
+                    >
+                      {letter}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
+      <style jsx global>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 } 

@@ -3,109 +3,143 @@ import React, { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/header";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { UserPlus, Users, ArrowRight } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { UserPlus, Users } from "lucide-react";
 import { PageTransition } from "@/components/page-transition";
+import { motion } from "framer-motion";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 function SelectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
-  const packageId = searchParams.get('packageId');
-  const classId = searchParams.get('classId');
+  const [showNewUserOverlay, setShowNewUserOverlay] = React.useState(false);
+  const [showExistingUserOverlay, setShowExistingUserOverlay] = React.useState(false);
 
-  // Only packageId is required now
-  if (!packageId) {
-    return (
-      <div className="flex-1 p-6 pt-16">
-        <Card className="p-6 text-center">
-          <p className="text-red-600 mb-4">
-            {language === "en"
-              ? "Missing required parameters. Please select a package first."
-              : "Faltan parámetros requeridos. Por favor, seleccione un paquete primero."}
-          </p>
-          <Button
-            onClick={() => router.push('/class-pass')}
-            variant="default"
-          >
-            {language === "en" ? "Return to Packages" : "Volver a Paquetes"}
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-
-  // Build the query string conditionally
-  const buildQueryString = () => {
-    return classId
-      ? `?packageId=${packageId}&classId=${classId}`
-      : `?packageId=${packageId}`;
+  const handleNavigation = (path: string, type: 'new' | 'existing') => {
+    if (type === 'new') {
+      setShowNewUserOverlay(true);
+    } else {
+      setShowExistingUserOverlay(true);
+    }
+    setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      router.push(`${path}${params.toString() ? `?${params.toString()}` : ''}`);
+    }, 1500);
   };
 
   return (
-    <div className="flex-1 p-6 pt-16">
-      <div className="max-w-2xl mx-auto">
-        <Card className="p-6">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-medium mb-2">
-              {language === "en" ? "Do you have an account?" : "¿Tienes una cuenta?"}
-            </h2>
-            <p className="text-gray-600">
-              {language === "en"
-                ? "Choose an option to continue"
-                : "Elige una opción para continuar"}
-            </p>
-          </div>
+    <>
+      {/* New User Overlay */}
+      <SuccessOverlay
+        show={showNewUserOverlay}
+        title={{
+          en: "Creating New Account",
+          es: "Creando Nueva Cuenta"
+        }}
+        message={{
+          en: "You will be redirected to create a new account",
+          es: "Serás redirigido para crear una nueva cuenta"
+        }}
+        variant="user"
+        duration={1500}
+      />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button
-              onClick={() => router.push(`/existing${buildQueryString()}`)}
-              variant="outline"
-              className="p-6 h-auto flex flex-col items-center"
-            >
-              <Users className="h-8 w-8 mb-2" />
-              <span className="font-medium">
-                {language === "en" ? "Existing User" : "Usuario Existente"}
-              </span>
-              <span className="text-sm text-gray-500">
-                {language === "en"
-                  ? "I already have an account"
-                  : "Ya tengo una cuenta"}
-              </span>
-            </Button>
+      {/* Existing User Overlay */}
+      <SuccessOverlay
+        show={showExistingUserOverlay}
+        title={{
+          en: "Finding Your Account",
+          es: "Buscando Tu Cuenta"
+        }}
+        message={{
+          en: "You will be redirected to find your account",
+          es: "Serás redirigido para buscar tu cuenta"
+        }}
+        variant="user"
+        duration={1500}
+      />
 
-            <Button
-              onClick={() => router.push(`/new${buildQueryString()}`)}
-              variant="outline"
-              className="p-6 h-auto flex flex-col items-center"
-            >
-              <UserPlus className="h-8 w-8 mb-2" />
-              <span className="font-medium">
-                {language === "en" ? "New User" : "Usuario Nuevo"}
-              </span>
-              <span className="text-sm text-gray-500">
-                {language === "en"
-                  ? "Create a new account"
-                  : "Crear una cuenta nueva"}
-              </span>
-            </Button>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="relative group"
+        >
+          <div
+            onClick={() => handleNavigation('/new', 'new')}
+            className="cursor-pointer"
+          >
+            <Card className="p-8 hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
+                  <UserPlus className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">
+                    {language === "en" ? "New User" : "Usuario Nuevo"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {language === "en"
+                      ? "Create a new account"
+                      : "Crear una cuenta nueva"}
+                  </p>
+                </div>
+                <ArrowRight className="w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </Card>
           </div>
-        </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="relative group"
+        >
+          <div
+            onClick={() => handleNavigation('/existing', 'existing')}
+            className="cursor-pointer"
+          >
+            <Card className="p-8 hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
+                  <Users className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">
+                    {language === "en" ? "Existing User" : "Usuario Existente"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {language === "en"
+                      ? "I already have an account"
+                      : "Ya tengo una cuenta"}
+                  </p>
+                </div>
+                <ArrowRight className="w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </Card>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </>
   );
 }
 
-export default function SelectUserTypePage() {
+export default function UserSelectionPage() {
   return (
-    <div className="min-h-screen flex flex-col pt-16">
-      <Header title={{ en: "Select Account Type", es: "Seleccionar Tipo de Cuenta" }} />
-      <PageTransition>
-        <Suspense fallback={<div>Loading...</div>}>
-          <SelectContent />
-        </Suspense>
-      </PageTransition>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <Header title={{ en: "User Selection", es: "Selección de Usuario" }} />
+      <div className="container mx-auto px-4 py-16 md:py-24">
+        <PageTransition>
+          <Suspense fallback={<div>Loading...</div>}>
+            <SelectContent />
+          </Suspense>
+        </PageTransition>
+      </div>
     </div>
   );
 }

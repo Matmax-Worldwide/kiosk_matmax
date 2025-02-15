@@ -127,27 +127,31 @@ export const UPDATE_RESERVATION_STATUS = gql`
 
 // Define the GraphQL queries and mutations
 export const GET_POSSIBLE_ALLOCATIONS = gql`
-	query PossibleAllocations($contextId: ID!, $startDate: DateTime!, $endDate: DateTime!) {
-		possibleAllocations(contextId: $contextId, startDate: $startDate, endDate: $endDate) {
-			id
-			startTime
-			currentReservations 
-			duration
-      status
-			timeSlot {
-				id
-				agent {
-					id
-					name
-				}
-			}
-			sessionType {
-				id
-				name
-				maxConsumers
-			}
-		}
-	}
+  query GetPossibleAllocations(
+    $contextId: ID!
+    $startDate: DateTime!
+    $endDate: DateTime!
+  ) {
+    possibleAllocations(
+      contextId: $contextId
+      startDate: $startDate
+      endDate: $endDate
+    ) {
+      id
+      startTime
+      duration
+      timeSlot {
+        id
+        agent {
+          name
+        }
+        sessionType {
+          id
+          name
+        }
+      }
+    }
+  }
 `;
 
 export const GET_BUNDLE_TYPE = gql`
@@ -182,14 +186,15 @@ export enum BundleStatus {
   ACTIVE = "ACTIVE",
   EXPIRED = "EXPIRED",
   CANCELLED = "CANCELLED",
-  EXPENDED = "EXPENDED"
+  EXPENDED = "EXPENDED",
 }
 
-export const GET_ALLOCATION = gql`
-  query GetAllocation($id: ID!) {
-    allocation(input: { id: $id }) {
+export const CREATE_ALLOCATION = gql`
+  mutation CreateAllocation($input: CreateAllocationInput!) {
+    createAllocation(input: $input) {
       id
       startTime
+      endTime
       status
       currentReservations
       timeSlot {
@@ -200,6 +205,29 @@ export const GET_ALLOCATION = gql`
         sessionType {
           name
           maxConsumers
+        }
+      }
+    }
+  }
+`;
+
+export const GET_ALLOCATION = gql`
+  query GetAllocation($id: ID!) {
+    allocation(input: { id: $id }) {
+      id
+      startTime
+      endTime
+      status
+      currentReservations
+      timeSlot {
+        id
+        agent {
+          name
+        }
+        sessionType {
+          name
+          maxConsumers
+          defaultDuration
         }
       }
     }

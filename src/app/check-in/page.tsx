@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Search, User2 } from "lucide-react";
 import { SEARCH_CONSUMERS } from "@/lib/graphql/queries";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Consumer {
   id: string;
@@ -18,12 +19,38 @@ interface Consumer {
   phoneNumber: string;
 }
 
+function SearchSkeletonLoader() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="mt-4 space-y-2"
+    >
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="p-3 rounded-lg bg-white shadow-sm border border-gray-100"
+        >
+          <div className="flex items-center gap-3">
+            <Skeleton className="w-5 h-5 rounded-full" />
+            <div className="flex-1">
+              <Skeleton className="h-5 w-48 mb-1" />
+              <Skeleton className="h-4 w-32" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
 export default function CheckInPage() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
 
   // Search consumers query
-  const { data: searchData } = useQuery(SEARCH_CONSUMERS, {
+  const { data: searchData, loading: searchLoading } = useQuery(SEARCH_CONSUMERS, {
     variables: { query: searchQuery, limit: 5 },
     skip: searchQuery.length < 3,
   });
@@ -61,35 +88,41 @@ export default function CheckInPage() {
                 />
               </div>
 
-              {/* Search Results */}
+              {/* Search Results with Loading State */}
               <AnimatePresence>
-                {searchQuery.length >= 3 && searchData?.searchConsumers && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="mt-4 space-y-2"
-                  >
-                    {searchData.searchConsumers.map((consumer: Consumer) => (
+                {searchQuery.length >= 3 && (
+                  searchLoading ? (
+                    <SearchSkeletonLoader />
+                  ) : (
+                    searchData?.searchConsumers && (
                       <motion.div
-                        key={consumer.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="p-3 rounded-lg bg-white shadow-sm hover:shadow-md
-                        cursor-pointer border border-gray-100"
-                        onClick={() => handleConsumerSelect(consumer.id)}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="mt-4 space-y-2"
                       >
-                        <div className="flex items-center gap-3">
-                          <User2 className="w-5 h-5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">
-                              {consumer.firstName} {consumer.lastName}
-                            </p>
-                            <p className="text-sm text-gray-500">{consumer.email}</p>
-                          </div>
-                        </div>
+                        {searchData.searchConsumers.map((consumer: Consumer) => (
+                          <motion.div
+                            key={consumer.id}
+                            whileHover={{ scale: 1.02 }}
+                            className="p-3 rounded-lg bg-white shadow-sm hover:shadow-md
+                            cursor-pointer border border-gray-100"
+                            onClick={() => handleConsumerSelect(consumer.id)}
+                          >
+                            <div className="flex items-center gap-3">
+                              <User2 className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="font-medium">
+                                  {consumer.firstName} {consumer.lastName}
+                                </p>
+                                <p className="text-sm text-gray-500">{consumer.email}</p>
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
                       </motion.div>
-                    ))}
-                  </motion.div>
+                    )
+                  )
                 )}
               </AnimatePresence>
             </Card>
