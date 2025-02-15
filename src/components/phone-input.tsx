@@ -223,7 +223,7 @@ export function PhoneInput({
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [localValue]);
+  }, []);
 
   const formatPhoneNumber = (input: string, format: string) => {
     let result = '';
