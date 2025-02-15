@@ -219,12 +219,11 @@ export function PhoneInput({
         setIsOpen(false);
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [localValue]);
 
   const formatPhoneNumber = (input: string, format: string) => {
     let result = '';

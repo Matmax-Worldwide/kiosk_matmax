@@ -865,8 +865,7 @@ Please review the details in the admin Dashboard.
 
             console.log("Hora", sessionStartTime.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: false }));
             console.log("Validated At: ", attendanceList
-                .map(
-                    (item) => { item.validatedAt }))
+                .map((item) => item.validatedAt))
 
             // Construir mensaje formateado
             const formattedMessage = `

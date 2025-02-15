@@ -1,4 +1,4 @@
-export default `#graphql
+const schema = `#graphql
 type Query {
   agency(id: ID!): Agency
   agencies(status: AgencyStatus): [Agency!]!
@@ -672,3 +672,5 @@ input UpdatePaymentLinkInput {
 # }
 
 `
+
+export default schema;
