@@ -142,10 +142,7 @@ function PaymentContent() {
       // Show success message before navigation
       setShowSuccess(true);
       
-      // Wait for 2 seconds before navigating
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Construct URL with params and navigate
+      // Construct URL with params
       const params = new URLSearchParams({
         purchaseId: bundleData.createBundle.id,
         packageId,
@@ -169,7 +166,10 @@ function PaymentContent() {
         })
       });
 
-      router.push(`/confirmation?${params.toString()}`);
+      // Wait for 2 seconds before navigating
+      setTimeout(() => {
+        router.push(`/confirmation?${params.toString()}`);
+      }, 2000);
     } catch (err) {
       console.error('Payment error:', err);
       setError(
@@ -177,8 +177,8 @@ function PaymentContent() {
           ? "Failed to process payment. Please try again."
           : "Error al procesar el pago. Por favor intente de nuevo."
       );
-    } finally {
       setIsProcessing(false);
+      setShowSuccess(false);
     }
   };
 
@@ -205,7 +205,6 @@ function PaymentContent() {
         }}
         variant="payment"
         duration={2000}
-        onComplete={() => setShowSuccess(false)}
       />
       <motion.div
         initial={{ opacity: 0, y: 20 }}

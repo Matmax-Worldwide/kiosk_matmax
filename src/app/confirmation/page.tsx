@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { CheckCircle2, Package, User, Calendar, Home, ArrowRight } from "lucide-react";
+import { CheckCircle2, Package, User, Calendar, Home, ArrowRight, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
@@ -324,28 +324,87 @@ export default function ConfirmationPage() {
           className="max-w-4xl mx-auto text-center"
         >
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={handleScheduleClick}
-                className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-              >
-                <Calendar className="w-6 h-6 mr-2" />
-                {language === "en" ? "View Schedule" : "Ver Horario"}
-              </Button>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={handleHomeClick}
-                variant="outline"
-                className="border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group"
-              >
-                <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
-                {language === "en" ? "Return to Home" : "Volver al Inicio"}
-                <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
-              </Button>
-            </motion.div>
+            {classId ? (
+              <>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={() => router.push('/check-in')}
+                    className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <Clock className="w-6 h-6 mr-2" />
+                    {language === "en" ? "Go to Check-in" : "Ir a Check-in"}
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={handleScheduleClick}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <Calendar className="w-6 h-6 mr-2" />
+                    {language === "en" ? "Book Another Class" : "Reservar Otra Clase"}
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={handleHomeClick}
+                    variant="outline"
+                    className="border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group"
+                  >
+                    <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
+                    {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                    <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+                  </Button>
+                </motion.div>
+              </>
+            ) : (
+              <>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={handleScheduleClick}
+                    className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
+                  >
+                    <Calendar className="w-6 h-6 mr-2" />
+                    {language === "en" ? "View Schedule" : "Ver Horario"}
+                  </Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button
+                    onClick={handleHomeClick}
+                    variant="outline"
+                    className="border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group"
+                  >
+                    <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
+                    {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                    <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
+                  </Button>
+                </motion.div>
+              </>
+            )}
           </div>
         </motion.div>
+
+        {/* Mensaje adicional para usuarios con reserva */}
+        {classId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="max-w-4xl mx-auto text-center mt-8"
+          >
+            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100">
+              <p className="text-blue-700 mb-2 font-medium">
+                {language === "en" 
+                  ? "You can now check in for your class or book another one!"
+                  : "¡Ahora puedes hacer check-in para tu clase o reservar otra!"}
+              </p>
+              <p className="text-blue-600 text-sm">
+                {language === "en"
+                  ? "Remember to arrive 10 minutes before your class starts"
+                  : "Recuerda llegar 10 minutos antes del inicio de tu clase"}
+              </p>
+            </div>
+          </motion.div>
+        )}
       </motion.div>
     </main>
   );
