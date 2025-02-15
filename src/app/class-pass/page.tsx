@@ -3,13 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Clock,
-  Award,
   Users,
   ChevronRight,
   CreditCard,
   ArrowRight,
+  Tag,
+  Globe2,
 } from "lucide-react";
-import { format, parse, isAfter, startOfDay, addDays } from "date-fns";
+import { format, isAfter, startOfDay, addDays } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { useQuery } from "@apollo/client";
@@ -23,8 +24,9 @@ import type {
   GetPossibleAllocationsQuery,
 } from "@/types/graphql";
 import { Header } from "@/components/header";
-import { Spinner } from "@/components/spinner";
 import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 interface ScheduleItem {
   id: string;
@@ -36,6 +38,7 @@ interface ScheduleItem {
   currentReservations: number;
   cron: string;
   maxConsumers: number;
+  startDateTime?: string;
 }
 
 interface DaySchedule {
@@ -43,10 +46,139 @@ interface DaySchedule {
   items: ScheduleItem[];
 }
 
+function CountdownTimer({ classTime, language }: { classTime: string, language: string }) {
+  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number } | null>(null);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const [hours, minutes, period] = classTime.split(/:|\s/);
+      const today = new Date();
+      const classDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      if (!hours || !minutes || !period) return;
+      
+      // Convert to 24-hour format
+      let hour = parseInt(hours);
+      if (period.toLowerCase() === 'pm' && hour !== 12) hour += 12;
+      if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
+      
+      classDate.setHours(hour, parseInt(minutes), 0);
+      
+      // If the class time has passed for today, set it to tomorrow
+      if (classDate < now) {
+        classDate.setDate(classDate.getDate() + 1);
+      }
+
+      const difference = classDate.getTime() - now.getTime();
+      
+      if (difference <= 0) {
+        setTimeLeft(null);
+        return;
+      }
+
+      const hoursLeft = Math.floor(difference / (1000 * 60 * 60));
+      const minutesLeft = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      
+      setTimeLeft({ hours: hoursLeft, minutes: minutesLeft });
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
+
+    return () => clearInterval(timer);
+  }, [classTime]);
+
+  if (!timeLeft) return null;
+
+  return (
+    <span className="text-gray-700 text-lg">
+      {language === "en" ? (
+        <>
+          Starts in {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}{timeLeft.minutes}m
+        </>
+      ) : (
+        <>
+          Comienza en {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}{timeLeft.minutes}m
+        </>
+      )}
+    </span>
+  );
+}
+
+function ClassPassSkeletonLoader() {
+  return (
+    <div className="container mx-auto px-4 py-16 md:py-24">
+      <div className="max-w-4xl mx-auto">
+        <div className="space-y-6">
+          <div>
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-4"
+            >
+              <div className="p-6 sm:p-8">
+                {/* Header Section Skeleton */}
+                <div className="flex flex-col gap-4 pb-6 border-b border-gray-100">
+                  <div>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex flex-col gap-4">
+                        <Skeleton className="h-12 w-64" />
+                        <Skeleton className="h-8 w-48" />
+                        <div className="flex items-center gap-3">
+                          <Skeleton className="h-6 w-32" />
+                          <div className="text-gray-400">•</div>
+                          <Skeleton className="h-6 w-24" />
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <Skeleton className="h-12 w-32 mb-2" />
+                        <Skeleton className="h-10 w-40 rounded-lg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Button Skeleton */}
+                <div className="mt-6">
+                  <Skeleton className="h-20 w-full rounded-xl" />
+                </div>
+
+                {/* Additional Info Skeleton */}
+                <div className="mt-4 pt-6 border-t border-gray-100">
+                  <div className="grid grid-cols-3 items-center">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-6 w-6 rounded-full" />
+                      <Skeleton className="h-6 w-24" />
+                    </div>
+                    <div className="flex items-center gap-3 justify-center">
+                      <Skeleton className="h-6 w-6 rounded-full" />
+                      <Skeleton className="h-6 w-32" />
+                    </div>
+                    <div className="flex items-center gap-3 justify-end">
+                      <Skeleton className="h-6 w-6 rounded-full" />
+                      <Skeleton className="h-6 w-28" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Ver Horarios button skeleton */}
+            <Skeleton className="h-14 w-full rounded-xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ClassPassPage() {
   const router = useRouter();
   const { language } = useLanguageContext();
   const [fetchedSchedule, setFetchedSchedule] = useState<DaySchedule[]>([]);
+  const [showScheduleOverlay, setShowScheduleOverlay] = useState(false);
 
   const startDate = startOfDay(new Date());
   const endDate = addDays(startDate, 7);
@@ -77,13 +209,14 @@ export default function ClassPassPage() {
           id: alloc.id,
           time,
           duration: alloc.duration.toString(),
-          activity: alloc.sessionType?.name || "Unknown",
+          activity: alloc.timeSlot.sessionType?.name || "Unknown",
           instructor: alloc.timeSlot.agent?.name || "Unknown",
           status: alloc.status || "Unknown",
           currentReservations: alloc.currentReservations,
           cron: alloc.timeSlot.cron || "Unknown",
           maxConsumers:
             (alloc.sessionType as { maxConsumers?: number })?.maxConsumers || 0,
+          startDateTime: alloc.startTime,
         });
       });
 
@@ -124,8 +257,8 @@ export default function ClassPassPage() {
     const currentDay = format(today, "EEEE", {
       locale: language === "es" ? es : enUS,
     });
-    const currentTime = format(today, "h:mm a");
 
+    // Buscar primero en el día actual
     const todaySchedule = fetchedSchedule.find(
       (daySchedule) =>
         daySchedule.day[language].toLowerCase() === currentDay.toLowerCase()
@@ -133,9 +266,9 @@ export default function ClassPassPage() {
 
     if (todaySchedule) {
       const nextClass = todaySchedule.items.find((item) => {
-        const classTime = parse(item.time, "h:mm a", new Date());
-        const currentTimeDate = parse(currentTime, "h:mm a", new Date());
-        return isAfter(classTime, currentTimeDate);
+        if (!item.startDateTime) return false;
+        const classTime = new Date(item.startDateTime);
+        return isAfter(classTime, today);
       });
 
       if (nextClass) {
@@ -146,34 +279,49 @@ export default function ClassPassPage() {
       }
     }
 
-    if (fetchedSchedule.length > 0) {
-      const weekDaysOrder = [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-        "Sunday",
-      ];
-      const currentIndex = weekDaysOrder.findIndex(
-        (day) => day.toLowerCase() === currentDay.toLowerCase()
+    // Si no hay clases disponibles hoy o ya pasaron todas, buscar en los días siguientes
+    const weekDaysOrder = [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ];
+    const currentIndex = weekDaysOrder.findIndex(
+      (day) => day.toLowerCase() === currentDay.toLowerCase()
+    );
+
+    // Buscar en los días siguientes
+    for (let i = 1; i < weekDaysOrder.length; i++) {
+      const nextDay =
+        weekDaysOrder[(currentIndex + i) % weekDaysOrder.length];
+      const nextDaySchedule = fetchedSchedule.find(
+        (daySchedule) =>
+          daySchedule.day.en.toLowerCase() === nextDay.toLowerCase()
       );
-      for (let i = 1; i < weekDaysOrder.length; i++) {
-        const nextDay =
-          weekDaysOrder[(currentIndex + i) % weekDaysOrder.length];
-        const nextDaySchedule = fetchedSchedule.find(
-          (daySchedule) =>
-            daySchedule.day.en.toLowerCase() === nextDay.toLowerCase()
-        );
-        if (nextDaySchedule && nextDaySchedule.items.length > 0) {
+
+      if (nextDaySchedule && nextDaySchedule.items.length > 0) {
+        // Ordenar las clases por hora de inicio
+        const sortedClasses = [...nextDaySchedule.items]
+          .filter(item => item.startDateTime) // Filter out items without startDateTime
+          .sort((a, b) => {
+            const timeA = new Date(a.startDateTime!);
+            const timeB = new Date(b.startDateTime!);
+            return timeA.getTime() - timeB.getTime();
+          });
+
+        if (sortedClasses.length > 0) {
+          // Retornar la primera clase del día siguiente
           return {
-            ...nextDaySchedule.items[0],
+            ...sortedClasses[0],
             day: nextDaySchedule.day[language],
           };
         }
       }
     }
+
     return null;
   };
 
@@ -201,11 +349,21 @@ export default function ClassPassPage() {
     }
   };
 
+  const handleViewSchedule = () => {
+    setShowScheduleOverlay(true);
+    setTimeout(() => {
+      router.push("/schedule");
+    }, 1500);
+  };
+
   if (scheduleLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner />
-      </div>
+      <>
+        <Header title={{ en: "Reserve Now", es: "Reserva Ahora" }} />
+        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+          <ClassPassSkeletonLoader />
+        </div>
+      </>
     );
   }
 
@@ -220,6 +378,22 @@ export default function ClassPassPage() {
   return (
     <>
       <Header title={{ en: "Reserve Now", es: "Reserva Ahora" }} />
+      
+      {/* Schedule Navigation Overlay */}
+      <SuccessOverlay
+        show={showScheduleOverlay}
+        title={{
+          en: "Opening Schedule",
+          es: "Abriendo Horario"
+        }}
+        message={{
+          en: "You will be redirected to view all available classes",
+          es: "Serás redirigido para ver todas las clases disponibles"
+        }}
+        variant="schedule"
+        duration={1500}
+      />
+
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -287,12 +461,17 @@ export default function ClassPassPage() {
                               className="flex flex-col items-end"
                             >
                               <div className="flex flex-col items-end">
-                                <div className="text-5xl mb-8 font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-1">
+                                <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-2">
                                   S/. {Number(singleClassPass.price).toFixed(2)}
                                 </div>
-                                <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg">
-                                  <span className="bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent font-bold tracking-wider text-xl">
-                                    01 MATPASS
+                                <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
+                                  <Tag className="w-4 h-4 text-green-600" />
+                                  <span className="text-green-700 font-medium">
+                                    {nextClass?.activity.toLowerCase().includes("acro")
+                                      ? language === "en"
+                                        ? "1 Acro MatPass"
+                                        : "1 Acro MatPass"
+                                      : "1 MatPass"}
                                   </span>
                                 </div>
                               </div>
@@ -303,17 +482,28 @@ export default function ClassPassPage() {
 
                       {/* Action Button */}
                       <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.6 }}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <button
                           onClick={handleClassSelection}
-                          className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-6 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-2xl font-semibold shadow-lg hover:shadow-xl group"
+                          className="relative w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-6 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-2xl font-semibold shadow-lg hover:shadow-xl group overflow-hidden"
                         >
-                          <CreditCard className="w-7 h-7 transition-transform group-hover:scale-110" />
+                          {/* Darkening overlay */}
+                          <motion.div
+                            className="absolute inset-0 bg-black/0"
+                            initial={{ x: "-100%" }}
+                            whileHover={{ 
+                              x: "0%",
+                              backgroundColor: "rgba(0, 0, 0, 0.2)",
+                              transition: { duration: 0.3, ease: "easeOut" }
+                            }}
+                          />
+
+                          <CreditCard className="w-7 h-7 relative transition-transform group-hover:scale-110" />
                           <AnimatePresence mode="wait">
                             <motion.span
                               key={language}
@@ -321,23 +511,34 @@ export default function ClassPassPage() {
                               animate={{ y: 0, opacity: 1 }}
                               exit={{ y: -10, opacity: 0 }}
                               transition={{ duration: 0.2 }}
+                              className="relative"
                             >
                               {language === "en" ? "Book Now" : "Reservar Ahora"}
                             </motion.span>
                           </AnimatePresence>
-                          <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-all" />
+                          <motion.div
+                            className="relative"
+                            initial={{ x: 0, y: 0 }}
+                            whileHover={{ 
+                              x: [0, 10, 10],
+                              y: [0, -5, 5],
+                              transition: { 
+                                duration: 1.5,
+                                repeat: Infinity,
+                                repeatType: "reverse",
+                                ease: "easeInOut"
+                              }
+                            }}
+                          >
+                            <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          </motion.div>
                         </button>
                       </motion.div>
 
                       {/* Additional Info */}
-                      <motion.div
-                        initial={{ y: 20, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ duration: 0.5, delay: 0.7 }}
-                        className="mt-4 pt-6 border-t border-gray-100"
-                      >
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                          <div className="flex items-center gap-3">
+                      <div className="mt-4 pt-6 border-t border-gray-100">
+                        <div className="grid grid-cols-3 items-center">
+                          <div className="flex items-center gap-3 justify-start">
                             <Users className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
                               {nextClass.currentReservations}/{nextClass.maxConsumers}{" "}
@@ -354,41 +555,23 @@ export default function ClassPassPage() {
                               </AnimatePresence>
                             </span>
                           </div>
-                          <div className="flex items-center gap-3">
+
+                          <div className="flex items-center gap-3 justify-center">
                             <Clock className="w-6 h-6 text-green-500" />
-                            <span className="text-gray-700 text-lg">
-                              {nextClass.duration}{" "}
-                              <AnimatePresence mode="wait">
-                                <motion.span
-                                  key={language}
-                                  initial={{ y: 10, opacity: 0 }}
-                                  animate={{ y: 0, opacity: 1 }}
-                                  exit={{ y: -10, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  {language === "en" ? "minutes" : "minutos"}
-                                </motion.span>
-                              </AnimatePresence>
-                            </span>
+                            <CountdownTimer 
+                              classTime={nextClass.time}
+                              language={language}
+                            />
                           </div>
-                          <div className="flex items-center gap-3">
-                            <Award className="w-6 h-6 text-green-500" />
+
+                          <div className="flex items-center gap-3 justify-end">
+                            <Globe2 className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
-                              <AnimatePresence mode="wait">
-                                <motion.span
-                                  key={language}
-                                  initial={{ y: 10, opacity: 0 }}
-                                  animate={{ y: 0, opacity: 1 }}
-                                  exit={{ y: -10, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  {nextClass.status}
-                                </motion.span>
-                              </AnimatePresence>
+                              {language === "en" ? "Bilingual Class" : "Clase Bilingüe"}
                             </span>
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     </div>
                   </motion.div>
 
@@ -400,7 +583,7 @@ export default function ClassPassPage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md group"
-                    onClick={() => router.push("/schedule")}
+                    onClick={handleViewSchedule}
                   >
                     <AnimatePresence mode="wait">
                       <motion.span
