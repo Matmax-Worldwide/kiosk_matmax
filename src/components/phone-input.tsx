@@ -211,7 +211,7 @@ export function PhoneInput({
         setLocalValue(value);
       }
     }
-  }, [value]);
+  }, [value, localValue]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {

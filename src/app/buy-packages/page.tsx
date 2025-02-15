@@ -1,4 +1,3 @@
-"use client";
 import React, { Suspense } from "react";
 import { Header } from "@/components/header";
 import { PageTransition } from "@/components/page-transition";
