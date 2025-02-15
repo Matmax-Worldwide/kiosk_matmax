@@ -1,7 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
-
-import type { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 
 import typeDefs from '../_schema.js';
 import resolvers from '../_resolvers.js';
@@ -9,14 +8,16 @@ import resolvers from '../_resolvers.js';
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [
-    // Add any necessary Apollo Server plugins here
-  ]
 });
 
-const handler = startServerAndCreateNextHandler(server, {
-  context: async (req: NextRequest) => ({ req })
-});
+// Create handler with basic context
+const handler = startServerAndCreateNextHandler(server);
 
-export const GET = handler;
-export const POST = handler;
+// Export route handlers with proper Next.js App Router types
+export async function GET(req: NextRequest) {
+  return handler(req);
+}
+
+export async function POST(req: NextRequest) {
+  return handler(req);
+}
