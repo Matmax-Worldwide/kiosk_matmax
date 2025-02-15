@@ -7,79 +7,72 @@ import { UserPlus, Users, ArrowRight } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { PageTransition } from "@/components/page-transition";
 import { motion } from "framer-motion";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 function SelectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
+  const [showNewUserOverlay, setShowNewUserOverlay] = React.useState(false);
+  const [showExistingUserOverlay, setShowExistingUserOverlay] = React.useState(false);
 
-  // Build the query string only if parameters exist
-  const buildQueryString = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    const queryString = params.toString();
-    return queryString ? `?${queryString}` : '';
+  const handleNavigation = (path: string, type: 'new' | 'existing') => {
+    if (type === 'new') {
+      setShowNewUserOverlay(true);
+    } else {
+      setShowExistingUserOverlay(true);
+    }
+    setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      router.push(`${path}${params.toString() ? `?${params.toString()}` : ''}`);
+    }, 1500);
   };
 
   return (
-    <div className="flex-1 p-6 pt-16">
-      <div className="max-w-2xl mx-auto">
+    <>
+      {/* New User Overlay */}
+      <SuccessOverlay
+        show={showNewUserOverlay}
+        title={{
+          en: "Creating New Account",
+          es: "Creando Nueva Cuenta"
+        }}
+        message={{
+          en: "You will be redirected to create a new account",
+          es: "Serás redirigido para crear una nueva cuenta"
+        }}
+        variant="user"
+        duration={1500}
+      />
+
+      {/* Existing User Overlay */}
+      <SuccessOverlay
+        show={showExistingUserOverlay}
+        title={{
+          en: "Finding Your Account",
+          es: "Buscando Tu Cuenta"
+        }}
+        message={{
+          en: "You will be redirected to find your account",
+          es: "Serás redirigido para buscar tu cuenta"
+        }}
+        variant="user"
+        duration={1500}
+      />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-4xl mx-auto mb-8"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="relative group"
         >
-          <h2 className="text-3xl font-bold mb-3 bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-            {language === "en" ? "Do you have an account?" : "¿Tienes una cuenta?"}
-          </h2>
-          <p className="text-xl text-gray-600">
-            {language === "en"
-              ? "Choose an option to continue"
-              : "Elige una opción para continuar"}
-          </p>
-        </motion.div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <div
+            onClick={() => handleNavigation('/new', 'new')}
+            className="cursor-pointer"
           >
-            <Card
-              onClick={() => router.push(`/existing${buildQueryString()}`)}
-              className="p-8 cursor-pointer hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group"
-            >
-              <div className="flex flex-col items-center text-center space-y-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
-                  <Users className="h-8 w-8" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2">
-                    {language === "en" ? "Existing User" : "Usuario Existente"}
-                  </h3>
-                  <p className="text-gray-600">
-                    {language === "en"
-                      ? "I already have an account"
-                      : "Ya tengo una cuenta"}
-                  </p>
-                </div>
-                <ArrowRight className="w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
-              </div>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            <Card
-              onClick={() => router.push(`/new${buildQueryString()}`)}
-              className="p-8 cursor-pointer hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group"
-            >
+            <Card className="p-8 hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group">
               <div className="flex flex-col items-center text-center space-y-4">
                 <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
                   <UserPlus className="h-8 w-8" />
@@ -97,22 +90,56 @@ function SelectContent() {
                 <ArrowRight className="w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
               </div>
             </Card>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="relative group"
+        >
+          <div
+            onClick={() => handleNavigation('/existing', 'existing')}
+            className="cursor-pointer"
+          >
+            <Card className="p-8 hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
+                  <Users className="h-8 w-8" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">
+                    {language === "en" ? "Existing User" : "Usuario Existente"}
+                  </h3>
+                  <p className="text-gray-600">
+                    {language === "en"
+                      ? "I already have an account"
+                      : "Ya tengo una cuenta"}
+                  </p>
+                </div>
+                <ArrowRight className="w-6 h-6 text-gray-400 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+            </Card>
+          </div>
+        </motion.div>
       </div>
-    </div>
+    </>
   );
 }
 
-export default function SelectUserTypePage() {
+export default function UserSelectionPage() {
   return (
-    <div className="min-h-screen flex flex-col pt-16">
-      <Header title={{ en: "Select Account Type", es: "Seleccionar Tipo de Cuenta" }} />
-      <PageTransition>
-        <Suspense fallback={<div>Loading...</div>}>
-          <SelectContent />
-        </Suspense>
-      </PageTransition>
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <Header title={{ en: "User Selection", es: "Selección de Usuario" }} />
+      <div className="container mx-auto px-4 py-16 md:py-24">
+        <PageTransition>
+          <Suspense fallback={<div>Loading...</div>}>
+            <SelectContent />
+          </Suspense>
+        </PageTransition>
+      </div>
     </div>
   );
 }

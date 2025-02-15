@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 type PaymentMethod = "CARD" | "CASH" | "QR";
 
@@ -56,6 +57,7 @@ function PaymentContent() {
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   const userId = searchParams.get('userId');
   const packageId = searchParams.get('packageId');
@@ -137,7 +139,13 @@ function PaymentContent() {
         reservationData = reservationResponse?.createReservation;
       }
 
-      // Construir URL con todos los parámetros relevantes
+      // Show success message before navigation
+      setShowSuccess(true);
+      
+      // Wait for 2 seconds before navigating
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      // Construct URL with params and navigate
       const params = new URLSearchParams({
         purchaseId: bundleData.createBundle.id,
         packageId,
@@ -185,6 +193,20 @@ function PaymentContent() {
 
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">
+      <SuccessOverlay
+        show={showSuccess}
+        title={{
+          en: "Payment Processing",
+          es: "Procesando Pago"
+        }}
+        message={{
+          en: "Your payment is being processed. Please wait a moment...",
+          es: "Tu pago está siendo procesado. Por favor espera un momento..."
+        }}
+        variant="payment"
+        duration={2000}
+        onComplete={() => setShowSuccess(false)}
+      />
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

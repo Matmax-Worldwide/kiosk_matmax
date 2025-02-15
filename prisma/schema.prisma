@@ -230,7 +230,7 @@ model SessionConsumer {
   sessionId  String
   session    Session   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   consumerId String
-  consumer   Consumer  @relation(fields: [consumerId], references: [id])
+  consumer   Consumer  @relation(fields: [consumerId], references: [id], onDelete: Cascade)
 
   @@id([sessionId, consumerId])
 }
@@ -284,7 +284,7 @@ model Address {
   postalCode String
   country    String
 
-  consumer   Consumer @relation(fields: [consumerId], references: [id])
+  consumer   Consumer @relation(fields: [consumerId], references: [id], onDelete: Cascade)
   consumerId String   @unique
 }
 
@@ -306,7 +306,7 @@ model Bundle {
 
   // Owner
   consumerId String
-  consumer   Consumer @relation(fields: [consumerId], references: [id])
+  consumer   Consumer @relation(fields: [consumerId], references: [id], onDelete: Cascade)
 
   // Circular reference
   parentBundleId String?
@@ -409,7 +409,7 @@ model Reservation {
   status ReservationStatus
 
   bundleId String
-  bundle   Bundle @relation(fields: [bundleId], references: [id])
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
 
   allocationId String?
   allocation   Allocation? @relation(fields: [allocationId], references: [id])

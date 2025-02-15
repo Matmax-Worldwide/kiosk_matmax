@@ -9,11 +9,13 @@ import { useMutation } from "@apollo/client";
 import { CREATE_CONSUMER } from "@/lib/graphql/queries"; // Adjust the path as necessary
 import { motion } from "framer-motion";
 import { UserPlus } from "lucide-react";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 function NewUserContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showNewUserOverlay, setShowNewUserOverlay] = useState(false);
   const packageId = searchParams.get("packageId");
   const classId = searchParams.get("classId");
 
@@ -31,6 +33,8 @@ function NewUserContent() {
       const response = await createConsumer({ variables: { input: data } });
       const newUserId = response.data.createConsumer.id;
 
+      setShowNewUserOverlay(true);
+
       // Build URL parameters
       const params = new URLSearchParams();
       if (packageId) params.append("packageId", packageId);
@@ -45,9 +49,11 @@ function NewUserContent() {
         nextRoute = "/buy-packages";
       }
 
-      router.push(
-        `${nextRoute}${params.toString() ? `?${params.toString()}` : ""}`
-      );
+      setTimeout(() => {
+        router.push(
+          `${nextRoute}${params.toString() ? `?${params.toString()}` : ""}`
+        );
+      }, 1500);
     } catch (error) {
       console.error("Registration error:", error);
     } finally {
@@ -58,6 +64,21 @@ function NewUserContent() {
   return (
     <div className="flex-1 pt-16">
       <div className="w-full h-full mx-auto">
+        {/* New User Success Overlay */}
+        <SuccessOverlay
+          show={showNewUserOverlay}
+          title={{
+            en: "Account Created Successfully!",
+            es: "¡Cuenta Creada Exitosamente!"
+          }}
+          message={{
+            en: "Your account has been created. You will be redirected...",
+            es: "Tu cuenta ha sido creada. Serás redirigido..."
+          }}
+          variant="new-user"
+          duration={1500}
+        />
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

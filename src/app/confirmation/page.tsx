@@ -8,11 +8,15 @@ import { CheckCircle2, Package, User, Calendar, Home, ArrowRight } from "lucide-
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 export default function ConfirmationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
+  const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
+  const [showHomeOverlay, setShowHomeOverlay] = React.useState(false);
+  const [showInitialOverlay, setShowInitialOverlay] = React.useState(true);
 
   // Get all parameters
   const purchaseId = searchParams.get('purchaseId');
@@ -62,11 +66,79 @@ export default function ConfirmationPage() {
     }
   };
 
+  const handleScheduleClick = () => {
+    setShowScheduleOverlay(true);
+  };
+
+  const handleHomeClick = () => {
+    setShowHomeOverlay(true);
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-white to-green-50/50">
       <Header title={{ en: "Purchase Confirmation", es: "Confirmación de Compra" }} />
-      <div className="container mx-auto px-4 py-16 md:py-24">
+      
+      {/* Initial Success Overlay */}
+      <SuccessOverlay
+        show={showInitialOverlay}
+        title={{
+          en: classId ? "Purchase and Reservation Successful!" : "Purchase Successful!",
+          es: classId ? "¡Compra y Reserva Exitosa!" : "¡Compra Exitosa!"
+        }}
+        message={{
+          en: classId
+            ? "Your purchase has been confirmed and your class has been successfully reserved."
+            : "Your purchase has been confirmed and processed successfully.",
+          es: classId
+            ? "Tu compra ha sido confirmada y tu clase ha sido reservada exitosamente."
+            : "Tu compra ha sido confirmada y procesada exitosamente."
+        }}
+        variant="payment"
+        duration={3000}
+        onComplete={() => setShowInitialOverlay(false)}
+      />
 
+      {/* Schedule Overlay */}
+      <SuccessOverlay
+        show={showScheduleOverlay}
+        title={{
+          en: "Opening Schedule",
+          es: "Abriendo Horario"
+        }}
+        message={{
+          en: "You will be redirected to view the class schedule",
+          es: "Serás redirigido para ver el horario de clases"
+        }}
+        variant="schedule"
+        duration={1500}
+        onComplete={() => router.push('/schedule')}
+      />
+
+      {/* Home Overlay */}
+      <SuccessOverlay
+        show={showHomeOverlay}
+        title={{
+          en: "Returning Home",
+          es: "Volviendo al Inicio"
+        }}
+        message={{
+          en: "You will be redirected to the home page",
+          es: "Serás redirigido a la página principal"
+        }}
+        variant="home"
+        duration={1500}
+        onComplete={() => router.push('/')}
+      />
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: showInitialOverlay ? 0 : 1,
+          y: showInitialOverlay ? 20 : 0
+        }}
+        transition={{ duration: 0.5 }}
+        className="container mx-auto px-4 py-16 md:py-24"
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -254,7 +326,7 @@ export default function ConfirmationPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
-                onClick={() => router.push('/schedule')}
+                onClick={handleScheduleClick}
                 className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
               >
                 <Calendar className="w-6 h-6 mr-2" />
@@ -263,7 +335,7 @@ export default function ConfirmationPage() {
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <Button
-                onClick={() => router.push('/')}
+                onClick={handleHomeClick}
                 variant="outline"
                 className="border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group"
               >
@@ -274,7 +346,7 @@ export default function ConfirmationPage() {
             </motion.div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </main>
   );
 }

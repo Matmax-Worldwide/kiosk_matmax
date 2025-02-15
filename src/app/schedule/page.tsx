@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Users, Tag, Clock, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Users, Tag, Clock, Calendar, Loader2 } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { 
   format, 
@@ -21,7 +21,7 @@ import {
 } from "date-fns";
 import { enUS, es } from "date-fns/locale";
 import { useApolloClient, useMutation } from "@apollo/client";
-import { GET_POSSIBLE_ALLOCATIONS, CREATE_ALLOCATION, GET_ALLOCATION } from "@/lib/graphql/queries";
+import { GET_POSSIBLE_ALLOCATIONS, CREATE_ALLOCATION } from "@/lib/graphql/queries";
 import { Allocation, GetPossibleAllocationsQuery } from "@/types/graphql";
 import { Header } from "@/components/header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -242,6 +242,7 @@ export default function SchedulePage() {
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(false);
   const [viewMode, setViewMode] = useState<'week' | 'calendar'>('week');
   const [createAllocation] = useMutation(CREATE_ALLOCATION);
+  const [loadingAllocation, setLoadingAllocation] = useState<string | null>(null);
 
   const weekStarts = [0, 1, 2].map(offset => 
     startOfWeek(addWeeks(today, selectedWeek + offset), { weekStartsOn: 1 })
@@ -348,7 +349,7 @@ export default function SchedulePage() {
             status: allocation.status || "AVAILABLE",
             schedule: {
               id: timeSlot?.id || "",
-              name: sessionType?.name || "Class",
+              name: timeSlot?.sessionType?.name || sessionType?.name || "Class",
               description: {
                 en: sessionType?.description?.en || "",
                 es: sessionType?.description?.es || "",
@@ -704,11 +705,14 @@ export default function SchedulePage() {
                                   className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
                                     classInfo.enrolled >= classInfo.room.capacity
                                       ? "bg-gray-400 text-white cursor-not-allowed"
+                                      : loadingAllocation === classInfo.id
+                                      ? "bg-gradient-to-r from-green-600/80 to-teal-600/80 text-white cursor-wait"
                                       : "bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]"
                                   }`}
-                                  disabled={classInfo.enrolled >= classInfo.room.capacity}
+                                  disabled={classInfo.enrolled >= classInfo.room.capacity || loadingAllocation === classInfo.id}
                                   onClick={async () => {
                                     const params = new URLSearchParams();
+                                    setLoadingAllocation(classInfo.id);
                                     
                                     try {
                                       let allocationId = classInfo.id;
@@ -718,38 +722,21 @@ export default function SchedulePage() {
                                         const [timeSlotId, dateTime] = classInfo.id.split('_');
                                         const startTime = new Date(dateTime.replace('_', ' ')).toISOString();
                                         
-                                        // Primero intentamos obtener una allocation existente
-                                        const existingAllocation = await client.query({
-                                          query: GET_ALLOCATION,
+                                        // Creamos una nueva allocation directamente
+                                        const { data: newAllocationData } = await createAllocation({
                                           variables: {
                                             input: {
                                               timeSlotId,
-                                              startTime
+                                              startTime,
+                                              status: "AVAILABLE"
                                             }
-                                          },
-                                          fetchPolicy: 'network-only'
-                                        });
-
-                                        if (existingAllocation.data?.allocation) {
-                                          // Si existe una allocation, usamos su ID
-                                          allocationId = existingAllocation.data.allocation.id;
-                                        } else {
-                                          // Si no existe, creamos una nueva
-                                          const { data: newAllocationData } = await createAllocation({
-                                            variables: {
-                                              input: {
-                                                timeSlotId,
-                                                startTime,
-                                                status: "AVAILABLE"
-                                              }
-                                            }
-                                          });
-                                          
-                                          if (newAllocationData?.createAllocation?.id) {
-                                            allocationId = newAllocationData.createAllocation.id;
-                                          } else {
-                                            throw new Error('Failed to create allocation');
                                           }
+                                        });
+                                        
+                                        if (newAllocationData?.createAllocation?.id) {
+                                          allocationId = newAllocationData.createAllocation.id;
+                                        } else {
+                                          throw new Error('Failed to create allocation');
                                         }
                                       }
 
@@ -765,17 +752,21 @@ export default function SchedulePage() {
                                       }
                                     } catch (error) {
                                       console.error('Error handling allocation:', error);
+                                      setLoadingAllocation(null);
                                       // Aquí podrías mostrar un mensaje de error al usuario
                                     }
                                   }}
                                 >
-                                  {classInfo.enrolled >= classInfo.room.capacity
-                                    ? language === "en"
-                                      ? "Full"
-                                      : "Lleno"
-                                    : language === "en"
-                                    ? "Book Now"
-                                    : "Reservar"}
+                                  {loadingAllocation === classInfo.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                      <span>{language === "en" ? "Processing..." : "Procesando..."}</span>
+                                    </div>
+                                  ) : classInfo.enrolled >= classInfo.room.capacity ? (
+                                    language === "en" ? "Full" : "Lleno"
+                                  ) : (
+                                    language === "en" ? "Book Now" : "Reservar"
+                                  )}
                                 </button>
                               </div>
                             </div>

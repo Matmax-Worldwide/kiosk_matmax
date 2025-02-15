@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/header";
 import { Card } from "@/components/ui/card";
@@ -8,15 +8,19 @@ import { UserSearch } from "@/components/forms/user-search";
 import { PageTransition } from "@/components/page-transition";
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 export default function ExistingUserPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
+  const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const packageId = searchParams.get('packageId');
   const classId = searchParams.get('classId');
 
   const handleUserSelect = (consumer: { id: string }) => {
+    setShowSearchOverlay(true);
+
     const params = new URLSearchParams();
     if (packageId) params.append('packageId', packageId);
     if (classId) params.append('classId', classId);
@@ -30,12 +34,30 @@ export default function ExistingUserPage() {
       nextRoute = '/buy-packages';
     }
 
-    router.push(`${nextRoute}${params.toString() ? `?${params.toString()}` : ''}`);
+    setTimeout(() => {
+      router.push(`${nextRoute}${params.toString() ? `?${params.toString()}` : ''}`);
+    }, 1500);
   };
 
   return (
     <div className="min-h-screen flex flex-col pt-16 bg-gradient-to-b">
       <Header title={{ en: "Find Your Account", es: "Encuentra tu Cuenta" }} />
+      
+      {/* Existing User Success Overlay */}
+      <SuccessOverlay
+        show={showSearchOverlay}
+        title={{
+          en: "Account Found!",
+          es: "¡Cuenta Encontrada!"
+        }}
+        message={{
+          en: "We found your account. You will be redirected...",
+          es: "Hemos encontrado tu cuenta. Serás redirigido..."
+        }}
+        variant="existing-user"
+        duration={1500}
+      />
+
       <PageTransition>
         <div className="flex-1 p-6">
           <div className="max-w-2xl mx-auto">

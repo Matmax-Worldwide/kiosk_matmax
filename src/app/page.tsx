@@ -11,12 +11,29 @@ import {
 //   ShoppingBag,
 //   Calendar,
 } from "lucide-react";
-import Link from "next/link";
-// import { useState, useEffect } from "react";
 import Image from "next/image";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
+import { useRouter } from "next/navigation";
+import React from "react";
+
 export default function Home() {
   const { language, setLanguage } = useLanguageContext();
-//   const [infoIndex, setInfoIndex] = useState(0);
+  const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
+  const [showPackagesOverlay, setShowPackagesOverlay] = React.useState(false);
+  const [showCheckinOverlay, setShowCheckinOverlay] = React.useState(false);
+  const router = useRouter();
+
+  const handleNavigation = (route: string, type: 'schedule' | 'packages' | 'checkin') => {
+    const setters = {
+      schedule: setShowScheduleOverlay,
+      packages: setShowPackagesOverlay,
+      checkin: setShowCheckinOverlay
+    };
+    setters[type](true);
+    setTimeout(() => {
+      router.push(route);
+    }, 1500);
+  };
 
   const mainActions = [
     {
@@ -27,6 +44,7 @@ export default function Home() {
       descriptionEn: "Book your next class or check schedule",
       href: "/class-pass",
       gradient: "from-green-600 to-teal-600",
+      overlayType: 'schedule' as const
     },
     {
       icon: <Package2 className="w-8 h-8" />,
@@ -36,6 +54,7 @@ export default function Home() {
       descriptionEn: "View and purchase class packages",
       href: "/buy-packages",
       gradient: "from-green-600 to-teal-600",
+      overlayType: 'packages' as const
     },
   ];
 
@@ -69,6 +88,51 @@ export default function Home() {
 
   return (    
     <main className="min-h-screen">
+      {/* Schedule Overlay */}
+      <SuccessOverlay
+        show={showScheduleOverlay}
+        title={{
+          en: "Opening Schedule",
+          es: "Abriendo Horario"
+        }}
+        message={{
+          en: "You will be redirected to view available classes",
+          es: "Serás redirigido para ver las clases disponibles"
+        }}
+        variant="schedule"
+        duration={1500}
+      />
+
+      {/* Packages Overlay */}
+      <SuccessOverlay
+        show={showPackagesOverlay}
+        title={{
+          en: "Opening Packages",
+          es: "Abriendo Paquetes"
+        }}
+        message={{
+          en: "You will be redirected to view available packages",
+          es: "Serás redirigido para ver los paquetes disponibles"
+        }}
+        variant="packages"
+        duration={1500}
+      />
+
+      {/* Check-in Overlay */}
+      <SuccessOverlay
+        show={showCheckinOverlay}
+        title={{
+          en: "Opening Check-in",
+          es: "Abriendo Check-in"
+        }}
+        message={{
+          en: "You will be redirected to the check-in page",
+          es: "Serás redirigido a la página de check-in"
+        }}
+        variant="checkin"
+        duration={1500}
+      />
+
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="flex justify-center mb-8">
           <Image
@@ -102,7 +166,10 @@ export default function Home() {
               whileHover={{ scale: 1.02 }}
               className="relative group h-full"
             >
-              <Link href={action.href} className="h-full block">
+              <div 
+                onClick={() => handleNavigation(action.href, action.overlayType)}
+                className="h-full cursor-pointer"
+              >
                 <div
                   className={`bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl
 transition-all duration-300 border-2 border-transparent
@@ -130,7 +197,7 @@ group-hover:opacity-100 transition-opacity"
                     <ArrowRight className="w-6 h-6 text-gray-400" />
                   </div>
                 </div>
-              </Link>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -158,21 +225,19 @@ to-teal-600 bg-clip-text text-transparent"
             </p>
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-            <Link href="/check-in">
-              <div
-                className="bg-gradient-to-r from-green-600 to-teal-600 text-white
-p-6 rounded-2xl
-shadow-lg hover:shadow-xl transition-all duration-300 flex items-center
-justify-center gap-3 group"
-              >
-                <UserCheck className="w-8 h-8 transition-transform group-hover:scale-110" />
-                <span className="text-xl font-semibold">Check-in</span>
-                <ArrowRight
-                  className="w-6 h-6 opacity-0 group-hover:opacity-100
+            <div
+              onClick={() => handleNavigation('/check-in', 'checkin')}
+              className="bg-gradient-to-r from-green-600 to-teal-600 text-white
+                p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 
+                flex items-center justify-center gap-3 group cursor-pointer"
+            >
+              <UserCheck className="w-8 h-8 transition-transform group-hover:scale-110" />
+              <span className="text-xl font-semibold">Check-in</span>
+              <ArrowRight
+                className="w-6 h-6 opacity-0 group-hover:opacity-100
 transition-all"
-                />
-              </div>
-            </Link>
+              />
+            </div>
           </motion.div>
         </motion.div>
 
