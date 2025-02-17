@@ -16,8 +16,13 @@ function NewUserContent() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showNewUserOverlay, setShowNewUserOverlay] = useState(false);
-  const packageId = searchParams.get("packageId");
+  
+  const bundleTypeId = searchParams.get("bundleTypeId");
   const classId = searchParams.get("classId");
+  const activity = searchParams.get("activity");
+  const instructor = searchParams.get("instructor");
+  const time = searchParams.get("time");
+  const day = searchParams.get("day");
 
   const [createConsumer] = useMutation(CREATE_CONSUMER);
 
@@ -37,23 +42,47 @@ function NewUserContent() {
 
       // Build URL parameters
       const params = new URLSearchParams();
-      if (packageId) params.append("packageId", packageId);
-      if (classId) params.append("classId", classId);
-      if (newUserId) params.append("userId", newUserId);
-
-      // Determine next route based on parameters
-      let nextRoute = "/class-pass"; // Default route
-      if (packageId) {
-        nextRoute = "/payment";
-      } else if (classId) {
-        nextRoute = "/buy-packages";
+      
+      // Si hay bundleTypeId, ir a payment con el userId y bundleTypeId
+      if (bundleTypeId) {
+        params.append("bundleTypeId", bundleTypeId);
+        params.append("consumerId", newUserId);
+        
+        // Agregar parámetros adicionales si hay una clase seleccionada
+        if (classId) {
+          params.append("classId", classId);
+          if (activity) params.append("activity", activity);
+          if (instructor) params.append("instructor", instructor);
+          if (time) params.append("time", time);
+          if (day) params.append("day", day);
+        }
+        
+        setTimeout(() => {
+          router.push(`/payment?${params.toString()}`);
+        }, 1500);
+        return;
       }
 
+      // Si solo hay classId, ir a buy-packages
+      if (classId) {
+        params.append("classId", classId);
+        params.append("consumerId", newUserId);
+        if (activity) params.append("activity", activity);
+        if (instructor) params.append("instructor", instructor);
+        if (time) params.append("time", time);
+        if (day) params.append("day", day);
+        
+        setTimeout(() => {
+          router.push(`/buy-packages?${params.toString()}`);
+        }, 1500);
+        return;
+      }
+
+      // Si no hay parámetros, ir a class-pass
       setTimeout(() => {
-        router.push(
-          `${nextRoute}${params.toString() ? `?${params.toString()}` : ""}`
-        );
+        router.push(`/class-pass?consumerId=${newUserId}`);
       }, 1500);
+
     } catch (error) {
       console.error("Registration error:", error);
     } finally {

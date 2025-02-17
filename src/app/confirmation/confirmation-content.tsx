@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { CheckCircle2, Package, User, Calendar, Home, ArrowRight, Clock } from "lucide-react";
+import { CheckCircle2, Package, User, Calendar, Home, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
@@ -26,6 +26,7 @@ export function ConfirmationContent() {
   const email = searchParams.get('email');
   const packageName = searchParams.get('packageName');
   const packagePrice = searchParams.get('packagePrice');
+  const remainingUses = searchParams.get('remainingUses');
   
   // Class information
   const classId = searchParams.get('classId');
@@ -247,9 +248,17 @@ export function ConfirmationContent() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    {language === "en" ? "Price" : "Precio"}
+                    {remainingUses 
+                      ? (language === "en" ? "Remaining Uses" : "Usos Restantes")
+                      : (language === "en" ? "Price" : "Precio")
+                    }
                   </p>
-                  <p className="font-semibold text-gray-700">S/. {packagePrice}</p>
+                  <p className="font-semibold text-gray-700">
+                    {remainingUses 
+                      ? `${remainingUses} ${language === "en" ? "uses" : "usos"}`
+                      : `S/. ${packagePrice}`
+                    }
+                  </p>
                 </div>
               </div>
               <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -324,15 +333,6 @@ export function ConfirmationContent() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {classId ? (
               <>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    onClick={() => router.push('/check-in')}
-                    className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-                  >
-                    <Clock className="w-6 h-6 mr-2" />
-                    {language === "en" ? "Go to Check-in" : "Ir a Check-in"}
-                  </Button>
-                </motion.div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     onClick={handleScheduleClick}

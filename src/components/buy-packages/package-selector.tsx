@@ -32,7 +32,7 @@ export function PackageSelector() {
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
 
-  const userId = searchParams.get('userId');
+  const consumerId = searchParams.get('consumerId');
   const classId = searchParams.get('classId');
   const activity = searchParams.get('activity');
   const instructor = searchParams.get('instructor');
@@ -45,14 +45,25 @@ export function PackageSelector() {
   
   const bundleTypes = data?.bundleTypes;
 
-  const handlePackageSelection = (packageId: string) => {
+  const handlePackageSelection = (bundleTypeId: string) => {
     const params = new URLSearchParams();
-    params.append('packageId', packageId);
+    params.append('bundleTypeId', bundleTypeId);
 
-    if (userId) {
-      params.append('userId', userId);
+    // Si ya hay consumerId, ir directamente a payment
+    if (consumerId) {
+      params.append('consumerId', consumerId);
+      if (classId) {
+        params.append('classId', classId);
+        if (activity) params.append('activity', activity);
+        if (instructor) params.append('instructor', instructor);
+        if (time) params.append('time', time);
+        if (day) params.append('day', day);
+      }
+      router.push(`/payment?${params.toString()}`);
+      return;
     }
 
+    // Si no hay consumerId, ir a user-selection
     if (classId) {
       params.append('classId', classId);
       if (activity) params.append('activity', activity);
@@ -61,11 +72,7 @@ export function PackageSelector() {
       if (day) params.append('day', day);
     }
 
-    if (userId) {
-      router.push(`/payment?${params.toString()}`);
-    } else {
-      router.push(`/user-selection?${params.toString()}`);
-    }
+    router.push(`/user-selection?${params.toString()}`);
   };
 
   if (loading) {

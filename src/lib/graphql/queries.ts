@@ -74,6 +74,16 @@ export const GET_CONSUMER = gql`
       lastName
       email
       phoneNumber
+      bundles {
+        id
+        status
+        remainingUses
+        bundleType {
+          id
+          name
+          price
+        }
+      }
       reservations {
         id
         createdAt
@@ -259,6 +269,103 @@ export const CREATE_RESERVATION = gql`
         firstName
         lastName
         email
+      }
+    }
+  }
+`;
+
+export const SEARCH_CONSUMER_BY_PHONE = gql`
+  query SearchConsumerByPhone($phone: String!) {
+    searchConsumerByPhone(phone: $phone) {
+      id
+      firstName
+      lastName
+      fullName
+      email
+      phoneNumber
+      status
+      bundles {
+        id
+        status
+        validFrom
+        validTo
+        bundleType {
+          id
+          name
+          price
+        }
+      }
+    }
+  }
+`;
+
+export const SEARCH_CONSUMER_BY_EMAIL = gql`
+  query SearchConsumerByEmail($email: String!) {
+    searchConsumerByEmail(email: $email) {
+      id
+      firstName
+      lastName
+      email
+      phoneNumber
+      bundles {
+        id
+        status
+        remainingUses
+        bundleType {
+          id
+          name
+          price
+        }
+      }
+    }
+  }
+`;
+
+export const GET_BUNDLE = gql`
+  query GetBundle($id: ID!) {
+    bundle(id: $id) {
+      id
+      status
+      validFrom
+      validTo
+      remainingUses
+      note
+      bundleType {
+        id
+        name
+        price
+      }
+      consumer {
+        id
+        firstName
+        lastName
+        email
+      }
+    }
+  }
+`;
+
+export const GET_CONSUMER_RESERVATIONS = gql`
+  query GetConsumerReservations($consumerId: ID!, $allocationId: ID!) {
+    consumer(id: $consumerId) {
+      reservations(where: { 
+        timeSlot: {
+          allocation: {
+            id: $allocationId
+          }
+        }
+      }) {
+        id
+        status
+        timeSlot {
+          id
+          allocation {
+            id
+            startTime
+            endTime
+            status
+          }
+        }
       }
     }
   }

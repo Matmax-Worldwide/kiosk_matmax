@@ -18,6 +18,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" href="/pwa.png" />
       </head>
       <body className="h-screen">
         <ApolloProvider client={client}>
