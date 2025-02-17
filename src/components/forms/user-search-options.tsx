@@ -6,12 +6,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { AlertCircle, Search } from "lucide-react";
+import { AlertCircle, Search, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLazyQuery } from "@apollo/client";
 import { SEARCH_CONSUMERS } from "@/lib/graphql/queries";
 import { useRouter, useSearchParams } from "next/navigation";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
+import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 
 interface Consumer {
   id: string;
@@ -44,7 +44,7 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
   const [error, setError] = useState<string | null>(null);
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
   const [selectedConsumer, setSelectedConsumer] = useState<Consumer | null>(null);
-  const [showOverlay, setShowOverlay] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const classId = searchParams.get('classId');
   const bundleTypeId = searchParams.get('bundleTypeId');
@@ -52,6 +52,7 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
 
   const [searchConsumers] = useLazyQuery(SEARCH_CONSUMERS, {
     onCompleted: (data) => {
+      setIsSearching(false);
       if (data.searchConsumers && data.searchConsumers.length > 0) {
         setSearchResults(data.searchConsumers);
         setError(null);
@@ -63,6 +64,7 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
       }
     },
     onError: () => {
+      setIsSearching(false);
       setError(language === "en" 
         ? "Error searching for users" 
         : "Error al buscar usuarios");
@@ -72,7 +74,6 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
   const handleConsumerSelect = (consumer: Consumer) => {
     setSelectedConsumer(consumer);
     onSelect(consumer, "unified");
-    setShowOverlay(true);
 
     setTimeout(() => {
       const params = new URLSearchParams();
@@ -107,23 +108,21 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
     bundle.status === 'ACTIVE' && bundle.remainingUses > 0
   ) || [];
 
+  const handleSearch = () => {
+    if (inputValue.length >= 2) {
+      setIsSearching(true);
+      searchConsumers({ 
+        variables: { 
+          query: inputValue,
+          limit: 10
+        } 
+      });
+    }
+  };
+
   return (
     <div className="w-full space-y-4">
-      <SuccessOverlay
-        show={showOverlay}
-        title={{
-          en: "Account Found!",
-          es: "¡Cuenta Encontrada!"
-        }}
-        message={{
-          en: "We found your account. You will be redirected...",
-          es: "Hemos encontrado tu cuenta. Serás redirigido..."
-        }}
-        variant="existing-user"
-        duration={1500}
-      />
-
-      <div className="relative">
+      <div className="space-y-3">
         <Input
           type="text"
           placeholder={language === "en" 
@@ -139,45 +138,39 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
           onKeyDown={(e) => {
             if (e.key === 'Enter' && inputValue.length >= 2) {
               e.preventDefault();
-              searchConsumers({ 
-                variables: { 
-                  query: inputValue,
-                  limit: 10
-                } 
-              });
+              handleSearch();
             }
           }}
           className={cn(
-            "text-lg py-6 pl-6 pr-16 rounded-2xl border-2 focus-visible:ring-offset-0",
+            "text-lg py-6 pl-6 pr-6 rounded-2xl border-2 focus-visible:ring-offset-0",
             error ? "border-red-500 focus-visible:ring-red-500" : "border-gray-200 focus-visible:border-green-500 focus-visible:ring-green-500",
             "transition-all duration-200"
           )}
         />
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-          <Button
-            size="icon"
-            type="button"
-            className={cn(
-              "h-11 w-11 rounded-xl transition-all duration-200",
-              inputValue.length < 2 
-                ? "bg-gray-100 text-gray-400" 
-                : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg"
-            )}
-            disabled={inputValue.length < 2}
-            onClick={() => {
-              if (inputValue.length >= 2) {
-                searchConsumers({ 
-                  variables: { 
-                    query: inputValue,
-                    limit: 10
-                  } 
-                });
-              }
-            }}
-          >
-            <Search className="h-5 w-5" />
-          </Button>
-        </div>
+        <Button
+          size="lg"
+          type="button"
+          className={cn(
+            "w-full h-14 rounded-xl text-lg font-medium transition-all duration-200",
+            inputValue.length < 2 
+              ? "bg-gray-100 text-gray-400" 
+              : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg"
+          )}
+          disabled={inputValue.length < 2 || isSearching}
+          onClick={handleSearch}
+        >
+          {isSearching ? (
+            <>
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              {language === "en" ? "Searching..." : "Buscando..."}
+            </>
+          ) : (
+            <>
+              <Search className="h-5 w-5 mr-2" />
+              {language === "en" ? "Search User" : "Buscar Usuario"}
+            </>
+          )}
+        </Button>
       </div>
 
       {error && (
@@ -199,18 +192,27 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
             exit={{ opacity: 0, y: -10 }}
             className="space-y-2"
           >
-            {searchResults.map((consumer) => (
+            {searchResults.map((user) => (
               <Card
-                key={consumer.id}
+                key={user.id}
+                onClick={() => handleConsumerSelect(user)}
                 className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                onClick={() => handleConsumerSelect(consumer)}
               >
-                <div className="flex flex-col">
-                  <span className="font-medium">{`${consumer.firstName} ${consumer.lastName}`}</span>
-                  <span className="text-sm text-gray-500">{consumer.email}</span>
-                  {consumer.phoneNumber && (
-                    <span className="text-sm text-gray-500">{consumer.phoneNumber}</span>
-                  )}
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">
+                      {`${user.firstName} ${user.lastName}`}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {maskEmail(user.email)}
+                    </p>
+                    {user.phoneNumber && (
+                      <p className="text-sm text-gray-500">
+                        {maskPhoneNumber(user.phoneNumber)}
+                      </p>
+                    )}
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400" />
                 </div>
               </Card>
             ))}
@@ -238,7 +240,10 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
                   {language === "en" ? "Remaining uses:" : "Usos restantes:"} {bundle.remainingUses}
                 </p>
                 <Button
-                  onClick={() => handleBundleSelection(bundle.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBundleSelection(bundle.id);
+                  }}
                   className="w-full bg-gradient-to-r from-green-600 to-teal-600 
                     hover:from-green-700 hover:to-teal-700 text-white"
                 >

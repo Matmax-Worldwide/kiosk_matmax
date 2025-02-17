@@ -4,13 +4,16 @@ import { useQuery } from "@apollo/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { GET_CONSUMER, GET_CONSUMER_RESERVATIONS } from "@/lib/graphql/queries";
+import { GET_CONSUMER, GET_CONSUMER_RESERVATIONS, GET_ALLOCATION } from "@/lib/graphql/queries";
 import { Spinner } from "@/components/spinner";
-import { ArrowLeft, Package2, Clock, ChevronRight, Calendar, Home } from "lucide-react";
+import { Package2, Clock, ChevronRight, Calendar, Home, User } from "lucide-react";
 import type { Bundle } from "@/types/bundle";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { useLanguageContext } from "@/contexts/LanguageContext";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 
 interface Reservation {
   status: string;
@@ -44,6 +47,11 @@ export function UserDetailsContent() {
     skip: !consumerId,
   });
 
+  const { data: allocationData, loading: allocationLoading } = useQuery(GET_ALLOCATION, {
+    variables: { id: classId },
+    skip: !classId,
+  });
+
   if (consumerError) {
     toast({
       title: "Error",
@@ -54,10 +62,12 @@ export function UserDetailsContent() {
     });
   }
 
-  if (consumerLoading || reservationsLoading) {
+  if (consumerLoading || reservationsLoading || allocationLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Spinner size="lg" />
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 mt-16">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Spinner size="lg" />
+        </div>
       </div>
     );
   }
@@ -72,17 +82,8 @@ export function UserDetailsContent() {
   // Si hay una reserva existente, mostrar mensaje y opciones alternativas
   if (existingReservation) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 mt-16">
         <div className="container mx-auto px-4 py-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => router.back()}
-            className="mb-8 hover:bg-gray-100"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            {language === "en" ? "Back" : "Volver"}
-          </Button>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,10 +143,6 @@ export function UserDetailsContent() {
   const activeBundles = (consumer?.bundles as Bundle[])?.filter(bundle => bundle.status === 'ACTIVE') || [];
   const recentBundles = activeBundles.slice(0, 3);
 
-  const handleBack = () => {
-    router.back();
-  };
-
   const handleBundleSelection = (bundle: Bundle) => {
     const queryParams = new URLSearchParams({
       consumerId: consumerId as string,
@@ -164,76 +161,149 @@ export function UserDetailsContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 mt-16">
       <div className="container mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          onClick={handleBack}
-          className="mb-8 hover:bg-gray-100"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {language === "en" ? "Back" : "Volver"}
-        </Button>
 
+        {/* Class Details Card */}
+        {allocationData?.allocation && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-amber-500 to-orange-500">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white mb-6">
+                <Calendar className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">
+                {language === "en" ? "Class Information" : "Información de la Clase"}
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Class Name" : "Nombre de la Clase"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {allocationData.allocation.timeSlot.sessionType.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Professor" : "Profesor"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {allocationData.allocation.timeSlot.agent.name}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Date & Time" : "Fecha y Hora"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {format(new Date(allocationData.allocation.startTime), "EEEE d 'de' MMMM, HH:mm", {
+                        locale: language === 'es' ? es : undefined
+                      })}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Duration" : "Duración"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {allocationData.allocation.timeSlot.sessionType.defaultDuration} {language === "en" ? "minutes" : "minutos"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* User Details Card */}
         {consumer && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
           >
-            <Card className="p-8 mb-12 bg-white/95 backdrop-blur-sm border-green-100 shadow-lg">
-              <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                {consumer.firstName} {consumer.lastName}
-              </h2>
-              <div className="space-y-2 text-gray-600">
-                <p className="flex items-center">
-                  <span className="w-24 text-gray-500">{language === "en" ? "Email:" : "Correo:"}</span>
-                  {consumer.email}
-                </p>
-                <p className="flex items-center">
-                  <span className="w-24 text-gray-500">{language === "en" ? "Phone:" : "Teléfono:"}</span>
-                  {consumer.phoneNumber}
-                </p>
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-purple-600 to-pink-600">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white mb-6">
+                <User className="w-8 h-8" />
               </div>
-            </Card>
+              <h3 className="text-2xl font-bold mb-4">
+                {`${consumer.firstName} ${consumer.lastName}`}
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Email" : "Correo"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {maskEmail(consumer.email)}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Phone" : "Teléfono"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {maskPhoneNumber(consumer.phoneNumber)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         )}
 
-        <div className="space-y-12">
+        {/* Active Packages Section */}
+        <div className="space-y-6">
           {recentBundles.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-4">
                 <h3 className="text-2xl font-semibold text-gray-800">
-                  {language === "en" ? "Active Packages" : "Paquetes Activos"}
+                  {language === "en" ? "Use Active Package" : "Usar Paquete Activo"}
                 </h3>
                 <Clock className="h-6 w-6 text-green-600" />
               </div>
-              <div className="grid gap-6 md:grid-cols-3">
+              <div className="space-y-4">
                 {recentBundles.map((bundle, index) => (
                   <motion.div
                     key={bundle.id}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <Card className="p-6 hover:shadow-lg transition-all duration-300 bg-white/95 backdrop-blur-sm border-green-50">
-                      <h4 className="font-semibold text-lg mb-3">{bundle.bundleType.name}</h4>
-                      <p className="text-gray-600 mb-4">
-                        {language === "en" ? "Remaining uses:" : "Usos restantes:"} {bundle.remainingUses}
-                      </p>
-                      <Button 
-                        onClick={() => handleBundleSelection(bundle)}
-                        className="w-full bg-gradient-to-r from-green-600 to-teal-600 
-                          hover:from-green-700 hover:to-teal-700 text-white"
-                        disabled={bundle.remainingUses <= 0}
-                      >
-                        {bundle.remainingUses > 0 
-                          ? (language === "en" ? "Use this package" : "Usar este paquete")
-                          : (language === "en" ? "Package depleted" : "Paquete agotado")}
-                      </Button>
+                    <Card className="p-4 hover:shadow-lg transition-all duration-300 bg-white/95 backdrop-blur-sm border-green-50">
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-lg text-gray-800">{bundle.bundleType.name}</h4>
+                          <span className="text-green-600 text-sm font-medium">
+                            {language === "en" ? "Remaining:" : "Restantes:"} {bundle.remainingUses}
+                          </span>
+                        </div>
+                        <Button 
+                          onClick={() => handleBundleSelection(bundle)}
+                          className="bg-gradient-to-r from-green-600 to-teal-600 
+                            hover:from-green-700 hover:to-teal-700 text-white px-4"
+                          disabled={bundle.remainingUses <= 0}
+                          size="sm"
+                        >
+                          {bundle.remainingUses > 0 
+                            ? (language === "en" ? "Use" : "Usar")
+                            : (language === "en" ? "Empty" : "Vacío")}
+                        </Button>
+                      </div>
                     </Card>
                   </motion.div>
                 ))}
@@ -241,21 +311,22 @@ export function UserDetailsContent() {
             </motion.div>
           )}
 
+          {/* Buy More Packages Button */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-center"
+            className="mt-8"
           >
             <Button 
               onClick={handleViewAllPackages}
-              className="px-8 py-6 text-lg bg-gradient-to-r from-green-600 to-teal-600 
+              className="w-full h-16 text-lg bg-gradient-to-r from-green-600 to-teal-600 
                 hover:from-green-700 hover:to-teal-700 text-white shadow-lg 
                 hover:shadow-xl transition-all duration-300 group"
             >
-              <Package2 className="h-5 w-5 mr-2" />
-              {language === "en" ? "Buy more packages" : "Comprar más paquetes"}
-              <ChevronRight className="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform" />
+              <Package2 className="h-6 w-6 mr-2" />
+              {language === "en" ? "Buy More Packages" : "Comprar Más Paquetes"}
+              <ChevronRight className="h-6 w-6 ml-2 transform group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>
         </div>

@@ -16,7 +16,6 @@ import {
   XCircle,
   ArrowLeft,
   CalendarPlus,
-  Ticket,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -150,6 +149,9 @@ export default function CheckInDetailsPage() {
         title: "Check-in exitoso",
         description: `${data.updateReservation.forConsumer.fullName} ha sido registrado para la clase de ${data.updateReservation.allocation.timeSlot.sessionType.name}`,
       });
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
     },
     onError: () => {
       toast({
@@ -190,6 +192,16 @@ export default function CheckInDetailsPage() {
     return bundles.filter(
       (bundle) => bundle.status === "ACTIVE" && bundle.remainingUses > 0
     );
+  };
+
+  const isValidDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+
+  const formatDate = (dateString: string, formatStr: string) => {
+    if (!isValidDate(dateString)) return "Fecha inválida";
+    return format(new Date(dateString), formatStr, { locale: es });
   };
 
   if (loading) {
@@ -240,7 +252,7 @@ export default function CheckInDetailsPage() {
                 <Package className="w-8 h-8 text-gray-400" />
               </div>
 
-              {/* Active Bundles Section */}
+              {/* Active Bundles Section
               {activeBundles.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">
@@ -267,13 +279,13 @@ export default function CheckInDetailsPage() {
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>
-                              Desde: {format(new Date(bundle.validFrom), "d MMM yyyy", { locale: es })}
+                              Desde: {formatDate(bundle.validFrom, "d MMM yyyy")}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>
-                              Hasta: {format(new Date(bundle.validTo), "d MMM yyyy", { locale: es })}
+                              Hasta: {formatDate(bundle.validTo, "d MMM yyyy")}
                             </span>
                           </div>
                         </div>
@@ -281,7 +293,7 @@ export default function CheckInDetailsPage() {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
             </Card>
 
             {/* Today's Reservations */}
@@ -302,29 +314,17 @@ export default function CheckInDetailsPage() {
                         <Calendar className="w-5 h-5 text-blue-500" />
                         <div className="flex flex-col">
                           <span className="font-medium capitalize">
-                            {format(
-                              new Date(reservation.allocation.startTime),
-                              "eee",
-                              { locale: es }
-                            )}
+                            {formatDate(reservation.allocation.startTime, "eee")}
                           </span>
                           <span className="text-sm text-gray-600">
-                            {format(
-                              new Date(reservation.allocation.startTime),
-                              "d 'de' MMMM",
-                              { locale: es }
-                            )}
+                            {formatDate(reservation.allocation.startTime, "d 'de' MMMM")}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-green-500" />
                         <span>
-                          {format(
-                            new Date(reservation.allocation.startTime),
-                            "HH:mm"
-                          )}{" "}
-                          hrs
+                          {formatDate(reservation.allocation.startTime, "HH:mm")} hrs
                         </span>
                       </div>
                       <div className="flex items-center gap-2">

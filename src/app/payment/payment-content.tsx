@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
 import { useToast } from "@/hooks/use-toast";
+import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 
 type PaymentMethod = "CARD" | "CASH" | "QR";
 
@@ -543,20 +544,30 @@ export function PaymentContent() {
             <h3 className="text-xl font-bold mb-3">
               {language === "en" ? "Consumer Information" : "Información del Usuario"}
             </h3>
-            <div className="space-y-2">
+            <div className="space-y-4">
               <div>
                 <p className="text-sm text-gray-500">
-                  {language === "en" ? "Full Name" : "Nombre Completo"}
+                  {language === "en" ? "Customer" : "Cliente"}
                 </p>
                 <p className="font-semibold text-gray-700">
-                  {consumer.firstName} {consumer.lastName}
+                  {consumer.firstName + " " + consumer.lastName}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">
                   {language === "en" ? "Email" : "Correo"}
                 </p>
-                <p className="font-semibold text-gray-700">{consumer.email}</p>
+                <p className="font-semibold text-gray-700">
+                  {maskEmail(consumer.email)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">
+                  {language === "en" ? "Phone" : "Teléfono"}
+                </p>
+                <p className="font-semibold text-gray-700">
+                  {maskPhoneNumber(consumer.phoneNumber)}
+                </p>
               </div>
             </div>
           </motion.div>

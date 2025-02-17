@@ -14,7 +14,6 @@ function SelectContent() {
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
   const [showNewUserOverlay, setShowNewUserOverlay] = React.useState(false);
-  const [showExistingUserOverlay, setShowExistingUserOverlay] = React.useState(false);
 
   const classId = searchParams.get('classId');
   const bundleTypeId = searchParams.get('bundleTypeId');
@@ -32,7 +31,6 @@ function SelectContent() {
 
     // Si es usuario existente
     if (type === 'existing') {
-      setShowExistingUserOverlay(true);
       setTimeout(() => {
         const params = new URLSearchParams(searchParams.toString());
         // Si hay bundleTypeId, navegar a existing manteniendo el bundleTypeId
@@ -63,21 +61,6 @@ function SelectContent() {
         message={{
           en: "You will be redirected to create a new account",
           es: "Serás redirigido para crear una nueva cuenta"
-        }}
-        variant="user"
-        duration={1500}
-      />
-
-      {/* Existing User Overlay */}
-      <SuccessOverlay
-        show={showExistingUserOverlay}
-        title={{
-          en: "Finding Your Account",
-          es: "Buscando Tu Cuenta"
-        }}
-        message={{
-          en: "You will be redirected to find your account",
-          es: "Serás redirigido para buscar tu cuenta"
         }}
         variant="user"
         duration={1500}
