@@ -6,9 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
-import { useLanguageContext } from "@/contexts/LanguageContext";
 import {
   Calendar,
   User2,
@@ -133,8 +131,6 @@ function CheckInSkeletonLoader() {
 export default function CheckInDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
-  const { language } = useLanguageContext();
   const consumerId = params.slug as string;
   const [showSuccessOverlay, setShowSuccessOverlay] = React.useState(false);
 
@@ -147,15 +143,6 @@ export default function CheckInDetailsPage() {
   const [updateReservation] = useMutation(UPDATE_RESERVATION_STATUS, {
     onCompleted: () => {
       setShowSuccessOverlay(true);
-    },
-    onError: () => {
-      toast({
-        title: language === "en" ? "Error" : "Error",
-        description: language === "en"
-          ? "Could not complete check-in. Please try again."
-          : "No se pudo realizar el check-in. Por favor, intenta nuevamente.",
-        variant: "destructive",
-      });
     },
   });
 

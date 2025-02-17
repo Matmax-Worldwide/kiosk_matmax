@@ -1,12 +1,11 @@
 module.exports = {
   plugins: {
+    'postcss-preset-env': {
+      features: { 'nesting-rules': false }
+    },
     'tailwindcss/nesting': {},
     tailwindcss: {},
-    autoprefixer: {
-      flexbox: true,
-      grid: true,
-      browsers: ['> 1%', 'last 2 versions', 'Safari >= 9', 'iOS >= 9']
-    },
+    autoprefixer: {},
     ...(process.env.NODE_ENV === 'production' ? { cssnano: {} } : {})
   }
 } 

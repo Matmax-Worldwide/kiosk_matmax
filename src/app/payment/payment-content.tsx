@@ -13,7 +13,6 @@ import { es } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
-import { useToast } from "@/hooks/use-toast";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 
 type PaymentMethod = "CARD" | "CASH" | "QR";
@@ -163,7 +162,6 @@ function PaymentSkeletonLoader() {
 export function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { toast } = useToast();
   const { language } = useLanguageContext();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -186,12 +184,12 @@ export function PaymentContent() {
     fetchPolicy: 'network-only'
   });
 
-  const { data: consumerData, loading: consumerLoading, error: consumerError } = useQuery(GET_CONSUMER, {
+  const { data: consumerData, loading: consumerLoading } = useQuery(GET_CONSUMER, {
     variables: { id: consumerId },
     skip: !consumerId,
   });
 
-  const { data: bundleData, loading: bundleLoading, error: bundleError } = useQuery(
+  const { data: bundleData, loading: bundleLoading } = useQuery(
     bundleId ? GET_BUNDLE : GET_BUNDLE_TYPE,
     {
       variables: { id: bundleId || bundleTypeId },
@@ -218,40 +216,12 @@ export function PaymentContent() {
 
       if (existingReservation) {
         setHasExistingReservation(true);
-        toast({
-          title: language === "en" ? "Existing Reservation" : "Reserva Existente",
-          description: language === "en" 
-            ? "You already have a reservation for this class."
-            : "Ya tienes una reserva para esta clase.",
-          variant: "default",
-        });
+
       }
     }
-  }, [reservationsData, reservationsLoading, classId, language, toast]);
+  }, [reservationsData, reservationsLoading, classId, language]);
 
-  useEffect(() => {
-    if (bundleError) {
-      toast({
-        title: "Error",
-        description: language === "en" 
-          ? "Could not load package information. Please try again."
-          : "No se pudo cargar la información del paquete. Por favor intente de nuevo.",
-        variant: "destructive",
-      });
-    }
-  }, [bundleError, language, toast]);
 
-  useEffect(() => {
-    if (consumerError) {
-      toast({
-        title: "Error",
-        description: language === "en" 
-          ? "Could not load user information. Please try again."
-          : "No se pudo cargar la información del usuario. Por favor intente de nuevo.",
-        variant: "destructive",
-      });
-    }
-  }, [consumerError, language, toast]);
 
   useEffect(() => {
     if (!consumerId || (!bundleId && !bundleTypeId)) {

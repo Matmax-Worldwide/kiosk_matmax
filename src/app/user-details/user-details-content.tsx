@@ -8,7 +8,6 @@ import { GET_CONSUMER, GET_CONSUMER_RESERVATIONS, GET_ALLOCATION } from "@/lib/g
 import { Spinner } from "@/components/spinner";
 import { Package2, Clock, ChevronRight, Calendar, Home, User } from "lucide-react";
 import type { Bundle } from "@/types/bundle";
-import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
@@ -26,7 +25,6 @@ interface Reservation {
 
 export function UserDetailsContent() {
   const router = useRouter();
-  const { toast } = useToast();
   const { language } = useLanguageContext();
   const searchParams = useSearchParams();
   const consumerId = searchParams.get('consumerId');
@@ -42,7 +40,7 @@ export function UserDetailsContent() {
     fetchPolicy: 'network-only'
   });
 
-  const { data: consumerData, loading: consumerLoading, error: consumerError } = useQuery(GET_CONSUMER, {
+  const { data: consumerData, loading: consumerLoading } = useQuery(GET_CONSUMER, {
     variables: { id: consumerId },
     skip: !consumerId,
   });
@@ -52,15 +50,6 @@ export function UserDetailsContent() {
     skip: !classId,
   });
 
-  if (consumerError) {
-    toast({
-      title: "Error",
-      description: language === "en" 
-        ? "Could not load user information"
-        : "No se pudo cargar la información del usuario",
-      variant: "destructive",
-    });
-  }
 
   if (consumerLoading || reservationsLoading || allocationLoading) {
     return (
