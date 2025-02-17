@@ -1,0 +1,33 @@
+{
+  "presets": [
+    [
+      "next/babel",
+      {
+        "preset-env": {
+          "targets": {
+            "browsers": [
+              "Safari >= 8",
+              "iOS >= 8",
+              "Chrome >= 30",
+              "Firefox >= 30",
+              "Explorer >= 10"
+            ]
+          },
+          "useBuiltIns": "usage",
+          "corejs": 3,
+          "loose": true,
+          "bugfixes": true
+        }
+      }
+    ]
+  ],
+  "plugins": [
+    ["@babel/plugin-transform-runtime", {
+      "regenerator": true,
+      "helpers": true,
+      "useESModules": false
+    }],
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-proposal-object-rest-spread"
+  ]
+} 

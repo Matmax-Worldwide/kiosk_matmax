@@ -36,10 +36,9 @@ const nextConfig = {
     'tailwind-merge'
   ],
 
-  // Compiler options for better browser support
+  // Compiler options
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
-    legacyBrowsers: true,
   },
 
   // Enable webpack 5 features
@@ -69,7 +68,7 @@ const nextConfig = {
 
   // Image optimization settings
   images: {
-    formats: ['image/avif', 'image/webp'],
+    formats: ['image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
@@ -80,10 +79,17 @@ const nextConfig = {
   // Performance optimizations
   experimental: {
     optimizeCss: true,
-    legacyBrowsers: true,
-    browsersListForSwc: true,
-    swcMinify: true,
     forceSwcTransforms: true,
+    optimizePackageImports: [
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-alert-dialog',
+      'lucide-react',
+      'class-variance-authority',
+      'framer-motion'
+    ],
+    craCompat: false,
+    esmExternals: false
   },
 
   // Enable strict mode for better error catching
@@ -97,9 +103,6 @@ const nextConfig = {
 
   // Asset prefix for CDN support
   assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || '',
-
-  // Enable source maps in production for better debugging
-  productionBrowserSourceMaps: true,
 
   // Configure headers for security and caching
   async headers() {
@@ -126,6 +129,19 @@ const nextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'origin-when-cross-origin'
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, must-revalidate'
+          }
+        ]
+      },
+      {
+        source: '/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
           }
         ]
       }
