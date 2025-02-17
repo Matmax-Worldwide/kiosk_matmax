@@ -6,9 +6,13 @@ import { useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Search, User2 } from "lucide-react";
+import { Search, User2, Loader2 } from "lucide-react";
 import { SEARCH_CONSUMERS } from "@/lib/graphql/queries";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useLanguageContext } from "@/contexts/LanguageContext";
+import { cn } from "@/lib/utils";
+import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 
 interface Consumer {
   id: string;
@@ -47,6 +51,8 @@ function SearchSkeletonLoader() {
 export function CheckInContent() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const { language } = useLanguageContext();
+  const [isSearching, setIsSearching] = useState(false);
 
   // Search consumers query
   const { data: searchData, loading: searchLoading } = useQuery(SEARCH_CONSUMERS, {
@@ -59,29 +65,63 @@ export function CheckInContent() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Search Section */}
+    <div className="mx-auto px-4 py-8 mt-16">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-2xl mx-auto"
       >
-        <Card className="p-6">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2">Buscar Alumno</h2>
-            <p className="text-gray-600">
-              Ingresa el nombre o email del alumno para realizar el check-in
-            </p>
-          </div>
+        <Card className="p-10 bg-white/95 backdrop-blur-sm hover:shadow-2xl transition-all duration-500 rounded-2xl">
 
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+
+          <div className="space-y-3">
             <Input
-              placeholder="Buscar por nombre o email..."
-              className="pl-10"
+              type="text"
+              placeholder={language === "en" 
+                ? "Search by name, email or phone" 
+                : "Buscar por nombre, correo o teléfono"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.length >= 2) {
+                  e.preventDefault();
+                  setIsSearching(true);
+                }
+              }}
+              className={cn(
+                "text-lg py-6 pl-6 pr-6 rounded-2xl border-2 focus-visible:ring-offset-0",
+                "border-gray-200 focus-visible:border-green-500 focus-visible:ring-green-500",
+                "transition-all duration-200"
+              )}
             />
+            <Button
+              size="lg"
+              type="button"
+              className={cn(
+                "w-full h-14 rounded-xl text-lg font-medium transition-all duration-200",
+                searchQuery.length < 2 
+                  ? "bg-gray-100 text-gray-400" 
+                  : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg"
+              )}
+              disabled={searchQuery.length < 2 || isSearching}
+              onClick={() => {
+                if (searchQuery.length >= 2) {
+                  setIsSearching(true);
+                }
+              }}
+            >
+              {isSearching ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  {language === "en" ? "Searching..." : "Buscando..."}
+                </>
+              ) : (
+                <>
+                  <Search className="h-5 w-5 mr-2" />
+                  {language === "en" ? "Search User" : "Buscar Usuario"}
+                </>
+              )}
+            </Button>
           </div>
 
           {/* Search Results with Loading State */}
@@ -101,7 +141,7 @@ export function CheckInContent() {
                       <motion.div
                         key={consumer.id}
                         whileHover={{ scale: 1.02 }}
-                        className="p-3 rounded-lg bg-white shadow-sm hover:shadow-md
+                        className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md
                         cursor-pointer border border-gray-100"
                         onClick={() => handleConsumerSelect(consumer.id)}
                       >
@@ -109,9 +149,14 @@ export function CheckInContent() {
                           <User2 className="w-5 h-5 text-gray-400" />
                           <div>
                             <p className="font-medium">
-                              {consumer.firstName} {consumer.lastName}
+                              {`${consumer.firstName} ${consumer.lastName}`}
                             </p>
-                            <p className="text-sm text-gray-500">{consumer.email}</p>
+                            <p className="text-sm text-gray-500">{maskEmail(consumer.email)}</p>
+                            {consumer.phoneNumber && (
+                              <p className="text-sm text-gray-500">
+                                {maskPhoneNumber(consumer.phoneNumber)}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </motion.div>

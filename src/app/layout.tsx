@@ -4,6 +4,7 @@ import { AnimatedLayout } from "@/components/animated-layout";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { NotificationList } from "@/components/notification-list";
 import "./globals.css";
+import "@/styles/safari-fixes.css";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ApolloProvider } from "@apollo/client";
 import { client } from "@/lib/apolloClient";

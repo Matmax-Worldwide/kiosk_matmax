@@ -7,6 +7,8 @@ import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
+import { useLanguageContext } from "@/contexts/LanguageContext";
 import {
   Calendar,
   User2,
@@ -14,13 +16,13 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  ArrowLeft,
   CalendarPlus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { GET_CONSUMER, UPDATE_RESERVATION_STATUS } from "@/lib/graphql/queries";
 import { Skeleton } from "@/components/ui/skeleton";
+import React from "react";
 
 interface Bundle {
   id: string;
@@ -60,11 +62,8 @@ interface Reservation {
 
 function CheckInSkeletonLoader() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-16">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button Skeleton */}
-        <Skeleton className="h-10 w-24 mb-6" />
-
         {/* Consumer Info Card Skeleton */}
         <Card className="p-6 mb-6">
           <div className="flex items-start justify-between">
@@ -135,7 +134,9 @@ export default function CheckInDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const { language } = useLanguageContext();
   const consumerId = params.slug as string;
+  const [showSuccessOverlay, setShowSuccessOverlay] = React.useState(false);
 
   // Get consumer details query
   const { data: consumerData, loading } = useQuery(GET_CONSUMER, {
@@ -144,20 +145,15 @@ export default function CheckInDetailsPage() {
 
   // Update reservation mutation
   const [updateReservation] = useMutation(UPDATE_RESERVATION_STATUS, {
-    onCompleted: (data) => {
-      toast({
-        title: "Check-in exitoso",
-        description: `${data.updateReservation.forConsumer.fullName} ha sido registrado para la clase de ${data.updateReservation.allocation.timeSlot.sessionType.name}`,
-      });
-      setTimeout(() => {
-        router.push('/');
-      }, 1500);
+    onCompleted: () => {
+      setShowSuccessOverlay(true);
     },
     onError: () => {
       toast({
-        title: "Error",
-        description:
-          "No se pudo realizar el check-in. Por favor, intenta nuevamente.",
+        title: language === "en" ? "Error" : "Error",
+        description: language === "en"
+          ? "Could not complete check-in. Please try again."
+          : "No se pudo realizar el check-in. Por favor, intenta nuevamente.",
         variant: "destructive",
       });
     },
@@ -208,7 +204,7 @@ export default function CheckInDetailsPage() {
     return (
       <>
         <Header title={{ en: "Check-in", es: "Check-in" }} />
-        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white mt-16">
           <CheckInSkeletonLoader />
         </main>
       </>
@@ -223,20 +219,25 @@ export default function CheckInDetailsPage() {
   return (
     <>
       <Header title={{ en: "Check-in", es: "Check-in" }} />
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <SuccessOverlay
+        show={showSuccessOverlay}
+        title={{
+          en: "Check-in Successful!",
+          es: "¡Check-in Exitoso!"
+        }}
+        message={{
+          en: "You have been successfully checked in for your class.",
+          es: "Has sido registrado exitosamente para tu clase."
+        }}
+        variant="checkin"
+        duration={2000}
+        onComplete={() => router.push('/')}
+        className="bg-gradient-to-br from-teal-900/95 to-cyan-900/95 backdrop-blur-md"
+      />
+      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
-            {/* Back Button */}
-            <Button
-              variant="ghost"
-              className="mb-6"
-              onClick={() => router.push("/check-in")}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver a búsqueda
-            </Button>
-
-            {/* Consumer Info Card */}
+                    {/* Consumer Info Card */}
             <Card className="p-6 mb-6">
               <div className="flex items-start justify-between">
                 <div>
