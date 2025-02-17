@@ -19,6 +19,12 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" href="/pwa.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="MATMAX Studio" />
+        <link rel="apple-touch-icon" href="/pwa.png" />
       </head>
       <body className="h-screen">
         <ApolloProvider client={client}>
