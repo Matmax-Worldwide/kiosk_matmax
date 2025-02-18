@@ -18,6 +18,27 @@ export function ConfirmationContent() {
   const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
   const [showHomeOverlay, setShowHomeOverlay] = React.useState(false);
   const [showInitialOverlay, setShowInitialOverlay] = React.useState(true);
+  const [countdown, setCountdown] = React.useState(30);
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
+
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    
+    if (!showInitialOverlay && countdown > 0 && !isRedirecting) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+
+    if (countdown === 0 && !isRedirecting) {
+      setIsRedirecting(true);
+      handleHomeClick();
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown, showInitialOverlay, isRedirecting]);
 
   // Get all parameters
   const purchaseId = searchParams.get('purchaseId');
@@ -51,10 +72,12 @@ export function ConfirmationContent() {
   };
 
   const handleScheduleClick = () => {
+    setIsRedirecting(true);
     setShowScheduleOverlay(true);
   };
 
   const handleHomeClick = () => {
+    setIsRedirecting(true);
     setShowHomeOverlay(true);
   };
 
@@ -353,6 +376,7 @@ export function ConfirmationContent() {
                   >
                     <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
                     {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                    <span className="ml-2 text-sm text-green-600">({countdown}s)</span>
                     <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
                   </Button>
                 </motion.div>
@@ -376,6 +400,7 @@ export function ConfirmationContent() {
                   >
                     <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
                     {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                    <span className="ml-2 text-sm text-green-600">({countdown}s)</span>
                     <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
                   </Button>
                 </motion.div>
