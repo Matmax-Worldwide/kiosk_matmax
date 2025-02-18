@@ -45,7 +45,7 @@ function SelectContent() {
 
   // Si no hay ni classId ni bundleTypeId, redirigir a buy-packages
   if (!classId && !bundleTypeId) {
-    router.push('/buy-packages');
+    router.push("/buy-packages");
     return null;
   }
 
@@ -67,7 +67,6 @@ function SelectContent() {
         duration={1500}
       />
 
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
@@ -77,7 +76,7 @@ function SelectContent() {
           className="relative group"
         >
           <div
-            onClick={() => handleNavigation('/new', 'new')}
+            onClick={() => handleNavigation("/new", "new")}
             className="cursor-pointer"
           >
             <Card className="p-8 hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group">
@@ -109,7 +108,7 @@ function SelectContent() {
           className="relative group"
         >
           <div
-            onClick={() => handleNavigation('/existing', 'existing')}
+            onClick={() => handleNavigation("/existing", "existing")}
             className="cursor-pointer"
           >
             <Card className="p-8 hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 group">

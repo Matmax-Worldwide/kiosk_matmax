@@ -50,7 +50,7 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
 
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config, { dev, isServer, webpack }) => {
     // Optimize CSS
     if (!dev && !isServer) {
       config.optimization.splitChunks.cacheGroups.styles = {
