@@ -2,12 +2,27 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { Banknote, CreditCard, QrCode, Calendar, User2, Package, Loader2, Home } from "lucide-react";
-import { useQuery, useMutation } from '@apollo/client';
-import { GET_CONSUMER, GET_BUNDLE_TYPE, GET_BUNDLE, CREATE_BUNDLE, GET_ALLOCATION, BundleStatus, CREATE_RESERVATION, GET_CONSUMER_RESERVATIONS } from '@/lib/graphql/queries';
+import {
+  Banknote,
+  CreditCard,
+  QrCode,
+  Calendar,
+  User2,
+  Package,
+  Loader2,
+} from "lucide-react";
+import { useQuery, useMutation } from "@apollo/client";
+import {
+  GET_CONSUMER,
+  GET_BUNDLE_TYPE,
+  GET_BUNDLE,
+  CREATE_BUNDLE,
+  GET_ALLOCATION,
+  BundleStatus,
+  CREATE_RESERVATION,
+} from "@/lib/graphql/queries";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,61 +32,74 @@ import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 
 type PaymentMethod = "CARD" | "CASH" | "QR";
 
-interface Reservation {
-  id: string;
-  status: "PENDING" | "CONFIRMED" | "VALIDATED" | "CANCELLED";
-  timeSlot: {
-    id: string;
-    allocation: {
-      id: string;
-      startTime: string;
-      endTime: string;
-      status: string;
-      currentReservations: number;
-    };
-  };
-  bundle: {
-    id: string;
-    remainingUses: number;
-  };
-  forConsumer: {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  } | null;
-}
-
 interface PaymentMethodCardProps {
   method: PaymentMethod;
-  icon: React.ReactNode;
+  icon: React.ReactElement;
   title: { en: string; es: string };
   subtitle: string | { en: string; es: string };
   selected: boolean;
   onClick: () => void;
 }
 
-function PaymentMethodCard({ icon, title, subtitle, selected, onClick }: PaymentMethodCardProps) {
+function PaymentMethodCard({
+  icon,
+  title,
+  subtitle,
+  selected,
+  onClick,
+}: PaymentMethodCardProps) {
   const { language } = useLanguageContext();
 
   return (
-    <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-      <Card 
-        className={`p-6 cursor-pointer transition-all duration-300 bg-white/90 backdrop-blur-sm border border-gray-100 shadow-lg hover:shadow-xl ${
-          selected ? 'border-green-500 bg-green-50' : ''
-        }`}
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="w-full"
+    >
+      <div
+        className={`p-4 cursor-pointer transition-all duration-300 bg-white rounded-xl border ${
+          selected ? "border-green-500 bg-green-50/50" : "border-gray-100"
+        } hover:shadow-md`}
         onClick={onClick}
       >
-        <div className="flex flex-col items-center text-center space-y-3">
-          {icon}
-          <div>
-            <h3 className="text-xl font-bold mb-2">{title[language]}</h3>
-            <p className="text-gray-600">
-              {typeof subtitle === 'string' ? subtitle : subtitle[language]}
-            </p>
+        <div className="flex items-center space-x-4">
+          {/* Radio Button */}
+          <div
+            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+              selected ? "border-green-500" : "border-gray-300"
+            }`}
+          >
+            {selected && <div className="w-3 h-3 rounded-full bg-green-500" />}
+          </div>
+
+          {/* Content */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {title[language]}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {typeof subtitle === "string" ? subtitle : subtitle[language]}
+                </p>
+              </div>
+              <div
+                className={`w-10 h-10 rounded-lg ${
+                  selected ? "bg-green-500" : "bg-gray-100"
+                } flex items-center justify-center transition-colors duration-300`}
+              >
+                <div
+                  className={`w-5 h-5 ${
+                    selected ? "text-white" : "text-gray-600"
+                  }`}
+                >
+                  {icon}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </Card>
+      </div>
     </motion.div>
   );
 }
@@ -163,31 +191,25 @@ export function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(
+    null
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [hasExistingReservation, setHasExistingReservation] = useState(false);
 
-  const consumerId = searchParams.get('consumerId');
-  const bundleId = searchParams.get('bundleId');
-  const bundleTypeId = searchParams.get('bundleTypeId');
-  const classId = searchParams.get('classId');
+  const consumerId = searchParams.get("consumerId");
+  const bundleId = searchParams.get("bundleId");
+  const bundleTypeId = searchParams.get("bundleTypeId");
+  const classId = searchParams.get("classId");
 
-  // Verificar primero si existe una reserva
-  const { data: reservationsData, loading: reservationsLoading } = useQuery(GET_CONSUMER_RESERVATIONS, {
-    variables: { 
-      consumerId,
-      allocationId: classId 
-    },
-    skip: !consumerId || !classId,
-    fetchPolicy: 'network-only'
-  });
-
-  const { data: consumerData, loading: consumerLoading } = useQuery(GET_CONSUMER, {
-    variables: { id: consumerId },
-    skip: !consumerId,
-  });
+  const { data: consumerData, loading: consumerLoading } = useQuery(
+    GET_CONSUMER,
+    {
+      variables: { id: consumerId },
+      skip: !consumerId,
+    }
+  );
 
   const { data: bundleData, loading: bundleLoading } = useQuery(
     bundleId ? GET_BUNDLE : GET_BUNDLE_TYPE,
@@ -197,124 +219,49 @@ export function PaymentContent() {
     }
   );
 
-  const { data: allocationData, loading: allocationLoading } = useQuery(GET_ALLOCATION, {
-    variables: { id: classId },
-    skip: !classId,
-  });
+  const { data: allocationData, loading: allocationLoading } = useQuery(
+    GET_ALLOCATION,
+    {
+      variables: { id: classId },
+      skip: !classId,
+    }
+  );
 
   const [createBundle] = useMutation(CREATE_BUNDLE);
   const [createReservation] = useMutation(CREATE_RESERVATION);
 
-  // Todos los useEffect al inicio
-  useEffect(() => {
-    if (!reservationsLoading && reservationsData?.consumer?.reservations) {
-      const existingReservation = reservationsData.consumer.reservations.find(
-        (reservation: Reservation) => 
-          reservation.timeSlot.allocation.id === classId && 
-          ['PENDING', 'CONFIRMED'].includes(reservation.status)
-      );
-
-      if (existingReservation) {
-        setHasExistingReservation(true);
-
-      }
-    }
-  }, [reservationsData, reservationsLoading, classId, language]);
-
-
-
   useEffect(() => {
     if (!consumerId || (!bundleId && !bundleTypeId)) {
-      router.push('/class-pass');
+      router.push("/class-pass");
     }
   }, [consumerId, bundleId, bundleTypeId, router]);
 
   // Loading state
-  const isLoading = reservationsLoading || consumerLoading || bundleLoading || (classId && allocationLoading);
+  const isLoading =
+    consumerLoading || bundleLoading || (classId && allocationLoading);
   if (isLoading) {
     return <PaymentSkeletonLoader />;
   }
 
-  // Si hay una reserva existente, mostrar opciones alternativas
-  if (hasExistingReservation) {
-    return (
-      <div className="container mx-auto px-4 py-16 md:py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-4xl mx-auto mb-12"
-        >
-          <div className="w-24 h-24 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <Calendar className="w-14 h-14 text-white" />
-          </div>
-          <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-            {language === "en" ? "Existing Reservation" : "Reserva Existente"}
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            {language === "en"
-              ? "You already have a reservation for this time slot. What would you like to do?"
-              : "Ya tienes una reserva para este horario. ¿Qué te gustaría hacer?"}
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={() => router.push('/schedule')}
-                className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-              >
-                <Calendar className="w-6 h-6 mr-2" />
-                {language === "en" ? "View Other Times" : "Ver Otros Horarios"}
-              </Button>
-            </motion.div>
-
-            {bundleTypeId && (
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  onClick={() => {
-                    const params = new URLSearchParams({
-                      bundleTypeId,
-                      consumerId: consumerId as string
-                    });
-                    router.push(`/payment?${params.toString()}`);
-                  }}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-                >
-                  <Package className="w-6 h-6 mr-2" />
-                  {language === "en" ? "Just Buy Package" : "Solo Comprar Paquete"}
-                </Button>
-              </motion.div>
-            )}
-
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={() => router.push('/')}
-                variant="outline"
-                className="w-full sm:w-auto border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group"
-              >
-                <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
-                {language === "en" ? "Return to Home" : "Volver al Inicio"}
-              </Button>
-            </motion.div>
-          </div>
-        </motion.div>
-      </div>
-    );
-  }
-
   const getPaymentMethodText = () => {
     switch (selectedMethod) {
-      case 'CARD':
-        return 'Tarjeta de Crédito/Débito / Credit/Debit Card';
-      case 'QR':
-        return 'Pago con QR / QR Payment';
-      case 'CASH':
-        return 'Efectivo / Cash';
+      case "CARD":
+        return "Tarjeta de Crédito/Débito / Credit/Debit div";
+      case "QR":
+        return "Pago con QR / QR Payment";
+      case "CASH":
+        return "Efectivo / Cash";
     }
   };
-  
+
   const handlePayment = async () => {
     // Si es bundleTypeId necesitamos método de pago, si es bundleId no
-    if ((!selectedMethod && !bundleId) || !consumerId || (!bundleId && !bundleTypeId)) return;
+    if (
+      (!selectedMethod && !bundleId) ||
+      !consumerId ||
+      (!bundleId && !bundleTypeId)
+    )
+      return;
 
     try {
       setIsProcessing(true);
@@ -326,7 +273,7 @@ export function PaymentContent() {
       // Caso 1: Usar bundle existente
       if (bundleId) {
         finalBundleId = bundleId;
-      } 
+      }
       // Caso 2: Crear nuevo bundle
       else if (bundleTypeId) {
         const validFrom = new Date();
@@ -341,9 +288,16 @@ export function PaymentContent() {
               bundleTypeId: bundleTypeId,
               validFrom: validFrom.toISOString(),
               validTo: validTo.toISOString(),
-              note: `Método de pago: ${getPaymentMethodText()}${classId ? ` - Clase reservada: ${allocationData?.allocation?.timeSlot?.sessionType?.name || 'N/A'}` : ''}`,
-            }
-          }
+              note: `Método de pago: ${getPaymentMethodText()}${
+                classId
+                  ? ` - Clase reservada: ${
+                      allocationData?.allocation?.timeSlot?.sessionType?.name ||
+                      "N/A"
+                    }`
+                  : ""
+              }`,
+            },
+          },
         });
         finalBundleId = newBundleData.createBundle.id;
       }
@@ -355,33 +309,37 @@ export function PaymentContent() {
             input: {
               bundleId: finalBundleId,
               timeSlotId: allocationData.allocation.timeSlot.id,
-              startTime: new Date(allocationData.allocation.startTime).toISOString(),
+              startTime: new Date(
+                allocationData.allocation.startTime
+              ).toISOString(),
               forConsumerId: consumerId,
-              status: "CONFIRMED"
-            }
-          }
+              status: "CONFIRMED",
+            },
+          },
         });
         reservationData = reservationResponse?.createReservation;
       }
 
       // Show success message before navigation
       setShowSuccess(true);
-      
+
       // Construct URL with params
       const params = new URLSearchParams({
-        ...(bundleId ? {
-          reservationId: reservationData?.id,
-          bundleId: finalBundleId,
-          consumerId,
-          remainingUses: bundleData.bundle.remainingUses.toString(),
-        } : {
-          purchaseId: finalBundleId,
-          bundleId: finalBundleId,
-          consumerId,
-          paymentMethod: selectedMethod,
-          packagePrice: bundleData.bundleType.price.toString(),
-        }),
-        ...(classId && { 
+        ...(bundleId
+          ? {
+              reservationId: reservationData?.id,
+              bundleId: finalBundleId,
+              consumerId,
+              remainingUses: bundleData.bundle.remainingUses.toString(),
+            }
+          : {
+              purchaseId: finalBundleId,
+              bundleId: finalBundleId,
+              consumerId,
+              paymentMethod: selectedMethod,
+              packagePrice: bundleData.bundleType.price.toString(),
+            }),
+        ...(classId && {
           classId,
           className: allocationData?.allocation?.timeSlot?.sessionType?.name,
           classDate: allocationData?.allocation?.startTime,
@@ -390,9 +348,9 @@ export function PaymentContent() {
         ...(consumerData?.consumer && {
           firstName: consumerData.consumer.firstName,
           lastName: consumerData.consumer.lastName,
-          email: consumerData.consumer.email
+          email: consumerData.consumer.email,
         }),
-        packageName: bundleData.bundleType.name
+        packageName: bundleData.bundleType.name,
       });
 
       // Wait for 2 seconds before navigating
@@ -400,15 +358,15 @@ export function PaymentContent() {
         router.push(`/confirmation?${params.toString()}`);
       }, 2000);
     } catch (err) {
-      console.error('Payment error:', err);
+      console.error("Payment error:", err);
       setError(
         language === "en"
-          ? bundleId 
+          ? bundleId
             ? "Failed to create reservation. Please try again."
             : "Failed to process payment. Please try again."
           : bundleId
-            ? "Error al crear la reserva. Por favor intente de nuevo."
-            : "Error al procesar el pago. Por favor intente de nuevo."
+          ? "Error al crear la reserva. Por favor intente de nuevo."
+          : "Error al procesar el pago. Por favor intente de nuevo."
       );
       setIsProcessing(false);
       setShowSuccess(false);
@@ -420,14 +378,11 @@ export function PaymentContent() {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-red-600">
-          {language === "en" 
-            ? "Unable to load user information. Please try again." 
+          {language === "en"
+            ? "Unable to load user information. Please try again."
             : "No se pudo cargar la información del usuario. Por favor intente de nuevo."}
         </p>
-        <Button 
-          onClick={() => router.back()} 
-          className="mt-4"
-        >
+        <Button onClick={() => router.back()} className="mt-4">
           {language === "en" ? "Go Back" : "Volver"}
         </Button>
       </div>
@@ -436,18 +391,18 @@ export function PaymentContent() {
 
   // Verificar si tenemos la información del bundle o bundleType
   const isExistingBundle = bundleId?.length === 36;
-  if ((isExistingBundle && !bundleData?.bundle) || (!isExistingBundle && !bundleData?.bundleType)) {
+  if (
+    (isExistingBundle && !bundleData?.bundle) ||
+    (!isExistingBundle && !bundleData?.bundleType)
+  ) {
     return (
       <div className="container mx-auto px-4 py-16 text-center">
         <p className="text-red-600">
-          {language === "en" 
-            ? "Unable to load package information. Please try again." 
+          {language === "en"
+            ? "Unable to load package information. Please try again."
             : "No se pudo cargar la información del paquete. Por favor intente de nuevo."}
         </p>
-        <Button 
-          onClick={() => router.back()} 
-          className="mt-4"
-        >
+        <Button onClick={() => router.back()} className="mt-4">
           {language === "en" ? "Go Back" : "Volver"}
         </Button>
       </div>
@@ -456,7 +411,9 @@ export function PaymentContent() {
 
   const consumer = consumerData.consumer;
   // Si es un bundle existente, usar bundleType del bundle, si no, usar bundleType directamente
-  const bundleType = isExistingBundle ? bundleData.bundle.bundleType : bundleData.bundleType;
+  const bundleType = isExistingBundle
+    ? bundleData.bundle.bundleType
+    : bundleData.bundleType;
   const allocation = allocationData?.allocation;
   const classDate = allocation ? new Date(allocation.startTime) : null;
 
@@ -466,42 +423,19 @@ export function PaymentContent() {
         show={showSuccess}
         title={{
           en: "Payment Processing",
-          es: "Procesando Pago"
+          es: "Procesando Pago",
         }}
         message={{
           en: "Your payment is being processed. Please wait a moment...",
-          es: "Tu pago está siendo procesado. Por favor espera un momento..."
+          es: "Tu pago está siendo procesado. Por favor espera un momento...",
         }}
         variant="payment"
         duration={2000}
       />
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center max-w-4xl mx-auto mb-8"
-      >
-        <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-          {isExistingBundle 
-            ? (language === "en" ? "Confirm Reservation" : "Confirmar Reserva")
-            : (language === "en" ? "Select Payment Method" : "Seleccionar Método de Pago")
-          }
-        </h2>
-        <p className="text-xl text-gray-600">
-          {isExistingBundle
-            ? (language === "en" 
-                ? "Please review and confirm your class reservation"
-                : "Por favor revisa y confirma tu reserva de clase")
-            : (language === "en"
-                ? "Choose your preferred payment method to complete your purchase"
-                : "Elige tu método de pago preferido para completar tu compra")
-          }
-        </p>
-      </motion.div>
-
       <div className="max-w-4xl mx-auto">
         {/* Información del Usuario y del Paquete */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          {/* Consumer Info Card */}
+          {/* Consumer Info div */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -512,7 +446,9 @@ export function PaymentContent() {
               <User2 className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-bold mb-3">
-              {language === "en" ? "Consumer Information" : "Información del Usuario"}
+              {language === "en"
+                ? "Consumer Information"
+                : "Información del Usuario"}
             </h3>
             <div className="space-y-4">
               <div>
@@ -542,7 +478,7 @@ export function PaymentContent() {
             </div>
           </motion.div>
 
-          {/* Package Info Card */}
+          {/* Package Info div */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -553,7 +489,9 @@ export function PaymentContent() {
               <Package className="w-7 h-7" />
             </div>
             <h3 className="text-xl font-bold mb-3">
-              {language === "en" ? "Package Information" : "Información del Paquete"}
+              {language === "en"
+                ? "Package Information"
+                : "Información del Paquete"}
             </h3>
             <div className="space-y-2">
               <div>
@@ -564,16 +502,20 @@ export function PaymentContent() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">
-                  {isExistingBundle 
-                    ? (language === "en" ? "Remaining Uses" : "Usos Restantes")
-                    : (language === "en" ? "Price" : "Precio")
-                  }
+                  {isExistingBundle
+                    ? language === "en"
+                      ? "Remaining Uses"
+                      : "Usos Restantes"
+                    : language === "en"
+                    ? "Price"
+                    : "Precio"}
                 </p>
                 <p className="font-semibold text-gray-700">
-                  {isExistingBundle 
-                    ? `${bundleData.bundle.remainingUses} ${language === "en" ? "uses" : "usos"}`
-                    : `S/. ${bundleType.price.toFixed(2)}`
-                  }
+                  {isExistingBundle
+                    ? `${bundleData.bundle.remainingUses} ${
+                        language === "en" ? "uses" : "usos"
+                      }`
+                    : `S/. ${bundleType.price.toFixed(2)}`}
                 </p>
               </div>
             </div>
@@ -586,7 +528,7 @@ export function PaymentContent() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent mb-8"
+            className="bg-white p-6 rounded-2xl shadow-lg border-2 border-transparent"
           >
             <div className="flex items-center gap-4 mb-4">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
@@ -594,9 +536,13 @@ export function PaymentContent() {
               </div>
               <div>
                 <h3 className="text-xl font-bold">
-                  {language === "en" ? "Class Information" : "Información de la Clase"}
+                  {language === "en"
+                    ? "Class Information"
+                    : "Información de la Clase"}
                 </h3>
-                <p className="text-gray-600">{allocation.timeSlot.sessionType.name}</p>
+                <p className="text-gray-600">
+                  {allocation.timeSlot.sessionType.name}
+                </p>
               </div>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
@@ -604,7 +550,9 @@ export function PaymentContent() {
                 <p className="text-sm text-gray-500">
                   {language === "en" ? "Professor" : "Profesor"}
                 </p>
-                <p className="font-semibold text-gray-700">{allocation.timeSlot.agent.name}</p>
+                <p className="font-semibold text-gray-700">
+                  {allocation.timeSlot.agent.name}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">
@@ -612,7 +560,7 @@ export function PaymentContent() {
                 </p>
                 <p className="font-semibold text-gray-700">
                   {format(classDate, "EEEE d 'de' MMMM, HH:mm", {
-                    locale: language === 'es' ? es : undefined
+                    locale: language === "es" ? es : undefined,
                   })}
                 </p>
               </div>
@@ -621,130 +569,126 @@ export function PaymentContent() {
                   {language === "en" ? "Availability" : "Disponibilidad"}
                 </p>
                 <p className="font-semibold text-gray-700">
-                  {allocation.currentReservations}/{allocation.timeSlot.sessionType.maxConsumers} {language === "en" ? "spots taken" : "lugares ocupados"}
+                  {allocation.currentReservations}/
+                  {allocation.timeSlot.sessionType.maxConsumers}{" "}
+                  {language === "en" ? "spots taken" : "lugares ocupados"}
                 </p>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* Separador visual y botones de pago/confirmación */}
-        {!hasExistingReservation && (
-          <>
-            <hr className="my-8 border-gray-200" />
+        <hr className="my-8 border-gray-200" />
 
-            {/* Sección de Métodos de Pago o Botón de Confirmación */}
-            {isExistingBundle ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="mt-8"
-              >
-                <Button
-                  onClick={handlePayment}
-                  className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 h-14 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl"
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      <span>{language === "en" ? "Processing..." : "Procesando..."}</span>
-                    </div>
-                  ) : (
-                    language === "en" ? "Confirm Reservation" : "Confirmar Reserva"
-                  )}
-                </Button>
-              </motion.div>
-            ) : (
-              <div className="bg-gray-50 p-6 rounded-2xl shadow-md mb-8">
-                <h3 className="text-2xl font-bold text-center mb-4">
-                  {language === "en" ? "Payment Methods" : "Métodos de Pago"}
-                </h3>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-4"
-                >
-                  <PaymentMethodCard
-                    method="CARD"
-                    icon={
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
-                        <CreditCard className="w-7 h-7" />
-                      </div>
-                    }
-                    title={{ en: "Credit/Debit Card", es: "Tarjeta Crédito/Débito" }}
-                    subtitle={{ 
-                      en: "Pay securely with your card",
-                      es: "Paga de forma segura con tu tarjeta"
-                    }}
-                    selected={selectedMethod === "CARD"}
-                    onClick={() => setSelectedMethod("CARD")}
-                  />
+        {/* Sección de Métodos de Pago o Botón de Confirmación */}
+        {isExistingBundle ? (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-8"
+          >
+            <Button
+              onClick={handlePayment}
+              className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 h-14 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl"
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>
+                    {language === "en" ? "Processing..." : "Procesando..."}
+                  </span>
+                </div>
+              ) : language === "en" ? (
+                "Confirm Reservation"
+              ) : (
+                "Confirmar Reserva"
+              )}
+            </Button>
+          </motion.div>
+        ) : (
+          <div className="p-6 rounded-2xl mb-8">
+            <h3 className="text-2xl font-bold text-center mb-6">
+              {language === "en" ? "Payment Methods" : "Métodos de Pago"}
+            </h3>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="space-y-3 max-w-2xl mx-auto"
+            >
+              <PaymentMethodCard
+                method="CARD"
+                icon={<CreditCard className="w-full h-full" />}
+                title={{
+                  en: "Credit/Debit Card",
+                  es: "Tarjeta Crédito/Débito",
+                }}
+                subtitle={{
+                  en: "Pay securely with your card",
+                  es: "Paga de forma segura con tu tarjeta",
+                }}
+                selected={selectedMethod === "CARD"}
+                onClick={() => setSelectedMethod("CARD")}
+              />
 
-                  <PaymentMethodCard
-                    method="CASH"
-                    icon={
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
-                        <Banknote className="w-7 h-7" />
-                      </div>
-                    }
-                    title={{ en: "Cash", es: "Efectivo" }}
-                    subtitle={{ 
-                      en: "Pay with cash",
-                      es: "Paga con efectivo"
-                    }}
-                    selected={selectedMethod === "CASH"}
-                    onClick={() => setSelectedMethod("CASH")}
-                  />
+              <PaymentMethodCard
+                method="CASH"
+                icon={<Banknote className="w-full h-full" />}
+                title={{ en: "Cash", es: "Efectivo" }}
+                subtitle={{
+                  en: "Pay with cash",
+                  es: "Paga con efectivo",
+                }}
+                selected={selectedMethod === "CASH"}
+                onClick={() => setSelectedMethod("CASH")}
+              />
 
-                  <PaymentMethodCard
-                    method="QR"
-                    icon={
-                      <div className="w-14 h-14 rounded-xl bg-gradient-to-r from-green-600 to-teal-600 flex items-center justify-center text-white">
-                        <QrCode className="w-7 h-7" />
-                      </div>
-                    }
-                    title={{ en: "Yape / Plin", es: "Yape / Plin" }}
-                    subtitle={{ 
-                      en: "Pay using QR",
-                      es: "Paga usando QR"
-                    }}
-                    selected={selectedMethod === "QR"}
-                    onClick={() => setSelectedMethod("QR")}
-                  />
-                </motion.div>
-              </div>
-            )}
+              <PaymentMethodCard
+                method="QR"
+                icon={<QrCode className="w-full h-full" />}
+                title={{ en: "Yape / Plin", es: "Yape / Plin" }}
+                subtitle={{
+                  en: "Pay using QR",
+                  es: "Paga usando QR",
+                }}
+                selected={selectedMethod === "QR"}
+                onClick={() => setSelectedMethod("QR")}
+              />
+            </motion.div>
+          </div>
+        )}
 
-            {error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm text-center">{error}</p>
-              </div>
-            )}
+        {error && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-red-600 text-sm text-center">{error}</p>
+          </div>
+        )}
 
-            {!isExistingBundle && selectedMethod && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="mt-8"
-              >
-                <Button
-                  onClick={handlePayment}
-                  className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 h-14 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl"
-                  disabled={isProcessing}
-                >
-                  {language === "en" 
-                    ? isProcessing ? "Processing..." : "Complete Payment"
-                    : isProcessing ? "Procesando..." : "Completar Pago"}
-                </Button>
-              </motion.div>
-            )}
-          </>
+        {!isExistingBundle && selectedMethod && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8"
+          >
+            <Button
+              onClick={handlePayment}
+              className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 h-14 text-lg font-semibold rounded-2xl shadow-lg hover:shadow-xl"
+              disabled={isProcessing}
+            >
+              {language === "en"
+                ? isProcessing
+                  ? "Processing..."
+                  : "Complete Payment"
+                : isProcessing
+                ? "Procesando..."
+                : "Completar Pago"}
+            </Button>
+          </motion.div>
         )}
       </div>
     </div>
   );
-} 
+}
