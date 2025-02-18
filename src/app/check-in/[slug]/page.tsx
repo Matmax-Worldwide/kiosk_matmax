@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { SuccessOverlay } from "@/components/ui/success-overlay";
 import {
   Calendar,
   User2,
@@ -14,14 +14,13 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  ArrowLeft,
   CalendarPlus,
-  Ticket,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { GET_CONSUMER, UPDATE_RESERVATION_STATUS } from "@/lib/graphql/queries";
 import { Skeleton } from "@/components/ui/skeleton";
+import React from "react";
 
 interface Bundle {
   id: string;
@@ -61,11 +60,8 @@ interface Reservation {
 
 function CheckInSkeletonLoader() {
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-16">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button Skeleton */}
-        <Skeleton className="h-10 w-24 mb-6" />
-
         {/* Consumer Info Card Skeleton */}
         <Card className="p-6 mb-6">
           <div className="flex items-start justify-between">
@@ -135,8 +131,8 @@ function CheckInSkeletonLoader() {
 export default function CheckInDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { toast } = useToast();
   const consumerId = params.slug as string;
+  const [showSuccessOverlay, setShowSuccessOverlay] = React.useState(false);
 
   // Get consumer details query
   const { data: consumerData, loading } = useQuery(GET_CONSUMER, {
@@ -145,19 +141,8 @@ export default function CheckInDetailsPage() {
 
   // Update reservation mutation
   const [updateReservation] = useMutation(UPDATE_RESERVATION_STATUS, {
-    onCompleted: (data) => {
-      toast({
-        title: "Check-in exitoso",
-        description: `${data.updateReservation.forConsumer.fullName} ha sido registrado para la clase de ${data.updateReservation.allocation.timeSlot.sessionType.name}`,
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description:
-          "No se pudo realizar el check-in. Por favor, intenta nuevamente.",
-        variant: "destructive",
-      });
+    onCompleted: () => {
+      setShowSuccessOverlay(true);
     },
   });
 
@@ -192,11 +177,21 @@ export default function CheckInDetailsPage() {
     );
   };
 
+  const isValidDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date instanceof Date && !isNaN(date.getTime());
+  };
+
+  const formatDate = (dateString: string, formatStr: string) => {
+    if (!isValidDate(dateString)) return "Fecha inválida";
+    return format(new Date(dateString), formatStr, { locale: es });
+  };
+
   if (loading) {
     return (
       <>
         <Header title={{ en: "Check-in", es: "Check-in" }} />
-        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white mt-16">
           <CheckInSkeletonLoader />
         </main>
       </>
@@ -211,20 +206,25 @@ export default function CheckInDetailsPage() {
   return (
     <>
       <Header title={{ en: "Check-in", es: "Check-in" }} />
-      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <SuccessOverlay
+        show={showSuccessOverlay}
+        title={{
+          en: "Check-in Successful!",
+          es: "¡Check-in Exitoso!"
+        }}
+        message={{
+          en: "You have been successfully checked in for your class.",
+          es: "Has sido registrado exitosamente para tu clase."
+        }}
+        variant="checkin"
+        duration={2000}
+        onComplete={() => router.push('/')}
+        className="bg-gradient-to-br from-teal-900/95 to-cyan-900/95 backdrop-blur-md"
+      />
+      <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
-            {/* Back Button */}
-            <Button
-              variant="ghost"
-              className="mb-6"
-              onClick={() => router.push("/check-in")}
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Volver a búsqueda
-            </Button>
-
-            {/* Consumer Info Card */}
+                    {/* Consumer Info Card */}
             <Card className="p-6 mb-6">
               <div className="flex items-start justify-between">
                 <div>
@@ -240,7 +240,7 @@ export default function CheckInDetailsPage() {
                 <Package className="w-8 h-8 text-gray-400" />
               </div>
 
-              {/* Active Bundles Section */}
+              {/* Active Bundles Section
               {activeBundles.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <h4 className="text-sm font-semibold text-gray-700 mb-2">
@@ -267,13 +267,13 @@ export default function CheckInDetailsPage() {
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>
-                              Desde: {format(new Date(bundle.validFrom), "d MMM yyyy", { locale: es })}
+                              Desde: {formatDate(bundle.validFrom, "d MMM yyyy")}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>
-                              Hasta: {format(new Date(bundle.validTo), "d MMM yyyy", { locale: es })}
+                              Hasta: {formatDate(bundle.validTo, "d MMM yyyy")}
                             </span>
                           </div>
                         </div>
@@ -281,7 +281,7 @@ export default function CheckInDetailsPage() {
                     ))}
                   </div>
                 </div>
-              )}
+              )} */}
             </Card>
 
             {/* Today's Reservations */}
@@ -302,29 +302,17 @@ export default function CheckInDetailsPage() {
                         <Calendar className="w-5 h-5 text-blue-500" />
                         <div className="flex flex-col">
                           <span className="font-medium capitalize">
-                            {format(
-                              new Date(reservation.allocation.startTime),
-                              "eee",
-                              { locale: es }
-                            )}
+                            {formatDate(reservation.allocation.startTime, "eee")}
                           </span>
                           <span className="text-sm text-gray-600">
-                            {format(
-                              new Date(reservation.allocation.startTime),
-                              "d 'de' MMMM",
-                              { locale: es }
-                            )}
+                            {formatDate(reservation.allocation.startTime, "d 'de' MMMM")}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-green-500" />
                         <span>
-                          {format(
-                            new Date(reservation.allocation.startTime),
-                            "HH:mm"
-                          )}{" "}
-                          hrs
+                          {formatDate(reservation.allocation.startTime, "HH:mm")} hrs
                         </span>
                       </div>
                       <div className="flex items-center gap-2">

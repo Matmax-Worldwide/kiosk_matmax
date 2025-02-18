@@ -236,7 +236,6 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(0);
-  const [isAtBottom, setIsAtBottom] = useState(false);
   const [isScrollable, setIsScrollable] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(false);
@@ -273,11 +272,6 @@ export default function SchedulePage() {
     setSelectedWeek(newWeek);
   };
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-    const atBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight;
-    setIsAtBottom(atBottom);
-  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -367,7 +361,7 @@ export default function SchedulePage() {
             room: {
               name: timeSlot?.room?.name || "Main Studio",
               capacity:
-                sessionType?.maxConsumers || timeSlot?.room?.capacity || 20,
+                sessionType?.maxConsumers || timeSlot?.room?.capacity || 12,
             },
           });
         });
@@ -560,12 +554,11 @@ export default function SchedulePage() {
                   damping: 30,
                   delay: 0.1,
                 }}
-                className="bg-white rounded-2xl shadow-lg p-6 h-full relative"
+                className="rounded-2xl p-6 h-full relative"
               >
                 <div
                   ref={scrollRef}
                   className="snap-y snap-mandatory h-full overflow-y-auto scrollbar-hide"
-                  onScroll={handleScroll}
                 >
                   {chunk(
                     schedule[format(selectedDate, "yyyy-MM-dd")] || [],
@@ -814,47 +807,26 @@ export default function SchedulePage() {
                 }}
                 className="flex flex-col items-center gap-2"
               >
-                {isAtBottom ? (
-                  <>
-                    <svg
-                      className="w-6 h-6 text-green-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 14l-7 7m0 0l-7-7m7 7V3"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
-                      {language === "en" ? "Scroll up" : "Desliza arriba"}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      className="w-6 h-6 text-green-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 10l7-7m0 0l7 7m-7-7v18"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
-                      {language === "en"
-                        ? "Scroll for more"
-                        : "Desliza para más"}
-                    </span>
-                  </>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                    {language === "en" 
+                      ? "Scroll for more classes"
+                      : "Desliza para ver más clases"}
+                  </span>
+                  <svg
+                    className="w-6 h-6 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                    />
+                  </svg>
+                </div>
               </motion.div>
             </div>
           )}

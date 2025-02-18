@@ -48,6 +48,7 @@ interface DaySchedule {
 
 function CountdownTimer({ classTime, language }: { classTime: string, language: string }) {
   const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number } | null>(null);
+  const [isInProgress, setIsInProgress] = useState(false);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -66,13 +67,22 @@ function CountdownTimer({ classTime, language }: { classTime: string, language: 
       classDate.setHours(hour, parseInt(minutes), 0);
       
       // If the class time has passed for today, set it to tomorrow
-      if (classDate < now) {
+      if (classDate.getTime() + 10 * 60 * 1000 < now.getTime()) {
         classDate.setDate(classDate.getDate() + 1);
       }
 
       const difference = classDate.getTime() - now.getTime();
       
-      if (difference <= 0) {
+      // Check if class is in progress (within 10 minutes after start)
+      if (difference <= 0 && difference > -10 * 60 * 1000) {
+        setIsInProgress(true);
+        setTimeLeft(null);
+        return;
+      }
+
+      setIsInProgress(false);
+      
+      if (difference <= -10 * 60 * 1000) {
         setTimeLeft(null);
         return;
       }
@@ -88,6 +98,14 @@ function CountdownTimer({ classTime, language }: { classTime: string, language: 
 
     return () => clearInterval(timer);
   }, [classTime]);
+
+  if (isInProgress) {
+    return (
+      <span className="text-green-600 font-semibold text-lg">
+        {language === "en" ? "In progress" : "En progreso"}
+      </span>
+    );
+  }
 
   if (!timeLeft) return null;
 
@@ -268,7 +286,8 @@ export function ClassPassContent() {
       const nextClass = todaySchedule.items.find((item) => {
         if (!item.startDateTime) return false;
         const classTime = new Date(item.startDateTime);
-        return isAfter(classTime, today);
+        const tenMinutesAfterStart = new Date(classTime.getTime() + 10 * 60 * 1000);
+        return isAfter(tenMinutesAfterStart, today);
       });
 
       if (nextClass) {

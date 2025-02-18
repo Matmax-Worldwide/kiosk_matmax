@@ -14,19 +14,40 @@ function SelectContent() {
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
   const [showNewUserOverlay, setShowNewUserOverlay] = React.useState(false);
-  const [showExistingUserOverlay, setShowExistingUserOverlay] = React.useState(false);
+
+  const classId = searchParams.get('classId');
+  const bundleTypeId = searchParams.get('bundleTypeId');
 
   const handleNavigation = (path: string, type: 'new' | 'existing') => {
+    // Si es usuario nuevo, mostrar overlay y navegar
     if (type === 'new') {
       setShowNewUserOverlay(true);
-    } else {
-      setShowExistingUserOverlay(true);
+      setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        router.push(`${path}${params.toString() ? `?${params.toString()}` : ''}`);
+      }, 1500);
+      return;
     }
-    setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
-      router.push(`${path}${params.toString() ? `?${params.toString()}` : ''}`);
-    }, 1500);
+
+    // Si es usuario existente
+    if (type === 'existing') {
+      setTimeout(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        // Si hay bundleTypeId, navegar a existing manteniendo el bundleTypeId
+        if (bundleTypeId) {
+          params.append('redirectToPayment', 'true');
+        }
+        router.push(`${path}${params.toString() ? `?${params.toString()}` : ''}`);
+      }, 1500);
+      return;
+    }
   };
+
+  // Si no hay ni classId ni bundleTypeId, redirigir a buy-packages
+  if (!classId && !bundleTypeId) {
+    router.push('/buy-packages');
+    return null;
+  }
 
   return (
     <>
@@ -40,21 +61,6 @@ function SelectContent() {
         message={{
           en: "You will be redirected to create a new account",
           es: "Serás redirigido para crear una nueva cuenta"
-        }}
-        variant="user"
-        duration={1500}
-      />
-
-      {/* Existing User Overlay */}
-      <SuccessOverlay
-        show={showExistingUserOverlay}
-        title={{
-          en: "Finding Your Account",
-          es: "Buscando Tu Cuenta"
-        }}
-        message={{
-          en: "You will be redirected to find your account",
-          es: "Serás redirigido para buscar tu cuenta"
         }}
         variant="user"
         duration={1500}

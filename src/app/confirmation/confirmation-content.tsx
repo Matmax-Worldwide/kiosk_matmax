@@ -4,11 +4,12 @@ import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { CheckCircle2, Package, User, Calendar, Home, ArrowRight, Clock } from "lucide-react";
+import { CheckCircle2, User, Calendar, Home, ArrowRight } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
+import { maskEmail } from "@/lib/utils/mask-data";
 
 export function ConfirmationContent() {
   const router = useRouter();
@@ -26,32 +27,15 @@ export function ConfirmationContent() {
   const email = searchParams.get('email');
   const packageName = searchParams.get('packageName');
   const packagePrice = searchParams.get('packagePrice');
+  const remainingUses = searchParams.get('remainingUses');
   
   // Class information
   const classId = searchParams.get('classId');
   const className = searchParams.get('className');
   const classDate = searchParams.get('classDate');
   const professorName = searchParams.get('professorName');
+  const professorEmail = searchParams.get('professorEmail');
   const reservationId = searchParams.get('reservationId');
-
-  const maskEmail = (email: string | null) => {
-    if (!email) return '';
-    const [username, domain] = email.split('@');
-    if (!domain) return email;
-    
-    const maskedUsername = username.length > 3
-      ? `${username.slice(0, 3)}${'*'.repeat(username.length - 3)}`
-      : username;
-    
-    const [domainName, extension] = domain.split('.');
-    if (!extension) return `${maskedUsername}@${domain}`;
-    
-    const maskedDomain = domainName.length > 1
-      ? `${domainName[0]}${'*'.repeat(domainName.length - 1)}`
-      : domainName;
-    
-    return `${maskedUsername}@${maskedDomain}.${extension}`;
-  };
 
   const getPaymentMethodText = () => {
     switch (paymentMethod) {
@@ -172,7 +156,9 @@ export function ConfirmationContent() {
                 : "Hemos enviado un correo de confirmación a:"
               }
             </p>
-            <p className="text-lg font-semibold text-green-700 mb-2">{maskEmail(email)}</p>
+            <p className="text-lg font-semibold text-green-700 mb-2">
+              {email ? maskEmail(email) : '-'}
+            </p>
             <p className="text-sm text-gray-500">
               {language === "en"
                 ? "Please check your inbox and spam folder"
@@ -209,7 +195,17 @@ export function ConfirmationContent() {
                   <p className="text-sm text-gray-500">
                     {language === "en" ? "Customer" : "Cliente"}
                   </p>
-                  <p className="font-semibold text-gray-700">{firstName} {lastName}</p>
+                  <p className="font-semibold text-gray-700">
+                    {firstName && lastName ? (firstName + " " + lastName) : ''}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">
+                    {language === "en" ? "Email" : "Correo"}
+                  </p>
+                  <p className="font-semibold text-gray-700">
+                    {email ? maskEmail(email) : ''}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
@@ -233,10 +229,10 @@ export function ConfirmationContent() {
           >
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-purple-600 to-pink-600 h-full">
               <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white mb-6">
-                <Package className="w-8 h-8" />
+                <User className="w-8 h-8" />
               </div>
               <h3 className="text-2xl font-bold mb-4">
-                {language === "en" ? "Package Details" : "Detalles del Paquete"}
+                {professorName || (language === "en" ? "Professor" : "Profesor")}
               </h3>
               <div className="space-y-3">
                 <div>
@@ -247,9 +243,25 @@ export function ConfirmationContent() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    {language === "en" ? "Price" : "Precio"}
+                    {remainingUses 
+                      ? (language === "en" ? "Remaining Uses" : "Usos Restantes")
+                      : (language === "en" ? "Price" : "Precio")
+                    }
                   </p>
-                  <p className="font-semibold text-gray-700">S/. {packagePrice}</p>
+                  <p className="font-semibold text-gray-700">
+                    {remainingUses 
+                      ? `${remainingUses} ${language === "en" ? "uses" : "usos"}`
+                      : `S/. ${packagePrice}`
+                    }
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">
+                    {language === "en" ? "Professor Email" : "Correo del Profesor"}
+                  </p>
+                  <p className="font-semibold text-gray-700">
+                    {professorEmail ? maskEmail(professorEmail) : "-"}
+                  </p>
                 </div>
               </div>
               <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -324,15 +336,6 @@ export function ConfirmationContent() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {classId ? (
               <>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    onClick={() => router.push('/check-in')}
-                    className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-                  >
-                    <Clock className="w-6 h-6 mr-2" />
-                    {language === "en" ? "Go to Check-in" : "Ir a Check-in"}
-                  </Button>
-                </motion.div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button
                     onClick={handleScheduleClick}
