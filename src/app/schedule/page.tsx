@@ -741,7 +741,18 @@ export default function SchedulePage() {
                                         params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
                                         params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
                                         
-                                        router.push(`/user-selection${params.toString() ? `?${params.toString()}` : ''}`);
+                                        // Check if consumerId exists in current URL
+                                        const currentParams = new URLSearchParams(window.location.search);
+                                        const consumerId = currentParams.get('consumerId');
+                                        
+                                        if (consumerId) {
+                                          // If consumerId exists, add it to params and navigate to user-details
+                                          params.append('consumerId', consumerId);
+                                          router.push(`/user-details?${params.toString()}`);
+                                        } else {
+                                          // If no consumerId, navigate to user-selection as before
+                                          router.push(`/user-selection?${params.toString()}`);
+                                        }
                                       }
                                     } catch (error) {
                                       console.error('Error handling allocation:', error);
