@@ -164,7 +164,22 @@ const nextConfig = {
   // Configure rewrites for API proxying
   async rewrites() {
     return [];
-  }
+  },
+
+  // Configure workbox
+  webpack: (config, { isServer, webpack }) => {
+    if (!isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'self.__WB_MANIFEST': JSON.stringify([]),
+          'process.env.NEXT_PWA_WORKBOX': JSON.stringify({
+            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+          }),
+        })
+      );
+    }
+    return config;
+  },
 }
 
 export default withPWA(nextConfig)
