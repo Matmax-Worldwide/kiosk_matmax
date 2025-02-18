@@ -5,6 +5,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import typeDefs from '../_schema.js';
 import resolvers from '../_resolvers.js';
 
+interface GraphQLError {
+  message: string;
+  path?: string[];
+  extensions?: {
+    code?: string;
+    [key: string]: unknown;
+  };
+}
+
 const server = new ApolloServer({
   typeDefs,
   resolvers,
@@ -23,7 +32,12 @@ export async function POST(req: NextRequest) {
     const response = await handler(req);
     return response;
   } catch (error) {
-    console.error('GraphQL Error:', error);
+    const graphqlError = error as GraphQLError;
+    console.error('GraphQL Error:', {
+      message: graphqlError.message,
+      path: graphqlError.path,
+      extensions: graphqlError.extensions
+    });
     return NextResponse.json(
       { 
         errors: [{ 

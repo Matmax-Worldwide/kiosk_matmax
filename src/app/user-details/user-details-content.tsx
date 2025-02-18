@@ -338,6 +338,8 @@ export function UserDetailsContent() {
               transition={{ duration: 0.5, delay: 0.8 }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              aria-busy={isNavigatingToPackages}
+              aria-label={language === "en" ? "View All Packages" : "Ver Todos los Paquetes"}
               className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 
                 rounded-xl hover:bg-white/95 transition-all duration-300 
                 flex items-center justify-center gap-2 border border-gray-200 
@@ -348,7 +350,7 @@ export function UserDetailsContent() {
                 <>
                   <motion.div
                     animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
                     className="mr-2"
                   >
                     <Clock className="w-5 h-5" />

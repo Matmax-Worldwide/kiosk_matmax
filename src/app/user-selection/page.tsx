@@ -53,6 +53,7 @@ function SelectContent() {
     <>
       {/* New User Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showNewUserOverlay}
         title={{
           en: "Creating New Account",

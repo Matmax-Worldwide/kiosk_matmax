@@ -210,6 +210,7 @@ export default function CheckInDetailsPage() {
     <>
       <Header title={{ en: "Check-in", es: "Check-in" }} />
       <SuccessOverlay
+        aria-live="polite"
         show={showSuccessOverlay}
         title={{
           en: "Check-in Successful!",

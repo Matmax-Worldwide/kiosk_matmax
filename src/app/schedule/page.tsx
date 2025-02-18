@@ -396,6 +396,23 @@ export default function SchedulePage() {
     setViewMode('week');
   };
 
+  const handleNavigation = (params: URLSearchParams) => {
+    try {
+      const currentParams = new URLSearchParams(window.location.search);
+      const consumerId = currentParams.get('consumerId');
+      
+      const route = consumerId
+        ? `/user-details?${params.append('consumerId', consumerId)}`
+        : `/user-selection?${params.toString()}`;
+        
+      router.push(route);
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to user selection in case of error
+      router.push(`/user-selection?${params.toString()}`);
+    }
+  };
+
   return (
     <div className="bg-gradient-to-b from-blue-50 to-white max-h-screen h-screen overflow-hidden">
       <div className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-95 backdrop-blur-sm shadow-sm">
@@ -741,18 +758,7 @@ export default function SchedulePage() {
                                         params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
                                         params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
                                         
-                                        // Check if consumerId exists in current URL
-                                        const currentParams = new URLSearchParams(window.location.search);
-                                        const consumerId = currentParams.get('consumerId');
-                                        
-                                        if (consumerId) {
-                                          // If consumerId exists, add it to params and navigate to user-details
-                                          params.append('consumerId', consumerId);
-                                          router.push(`/user-details?${params.toString()}`);
-                                        } else {
-                                          // If no consumerId, navigate to user-selection as before
-                                          router.push(`/user-selection?${params.toString()}`);
-                                        }
+                                        handleNavigation(params);
                                       }
                                     } catch (error) {
                                       console.error('Error handling allocation:', error);

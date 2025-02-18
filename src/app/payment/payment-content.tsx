@@ -60,6 +60,13 @@ function PaymentMethodCard({
         className={`p-4 cursor-pointer transition-all duration-300 bg-white rounded-xl border ${
           selected ? "border-green-500 bg-green-50/50" : "border-gray-100"
         } hover:shadow-md`}
+        role="button"
+        tabIndex={0}
+        onKeyUp={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            onClick();
+          }
+        }}
         onClick={onClick}
       >
         <div className="flex items-center space-x-4">
@@ -420,6 +427,7 @@ export function PaymentContent() {
   return (
     <div className="container mx-auto px-4 py-16 md:py-24">
       <SuccessOverlay
+        aria-live="polite"
         show={showSuccess}
         title={{
           en: "Payment Processing",

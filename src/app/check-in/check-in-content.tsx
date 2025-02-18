@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,7 @@ import { useLanguageContext } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
+import debounce from "lodash/debounce";
 
 interface SearchResult {
   id: string;
@@ -68,14 +69,24 @@ export function CheckInContent() {
     }
   });
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (inputValue.length >= 2) {
       setIsSearching(true);
       setShowResults(true);
-      // La query se ejecutará automáticamente cuando inputValue cambie
-      setTimeout(() => setIsSearching(false), 500); // Simular tiempo de carga mínimo
+      setTimeout(() => setIsSearching(false), 500);
     }
-  };
+  }, [inputValue]);
+
+  const debouncedSearch = useMemo(
+    () => debounce(handleSearch, 300),
+    [handleSearch]
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [debouncedSearch]);
 
   const handleConsumerSelect = (consumer: SearchResult) => {
     setSelectedUser(consumer);
@@ -86,7 +97,7 @@ export function CheckInContent() {
     if (selectedUser) {
       setTimeout(() => {
         router.push(`/check-in/${selectedUser.id}`);
-      }, 1500);
+      }, 800);
     }
   };
 
@@ -128,7 +139,7 @@ export function CheckInContent() {
                   : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg"
               )}
               disabled={inputValue.length < 2 || isSearching}
-              onClick={handleSearch}
+              onClick={debouncedSearch}
             >
               {isSearching ? (
                 <>
@@ -199,6 +210,7 @@ export function CheckInContent() {
 
           {/* Success Overlay */}
           <SuccessOverlay
+            aria-live="polite"
             show={showOverlay}
             title={{
               en: `Welcome ${selectedUser?.firstName || ''}!`,

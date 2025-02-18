@@ -7,9 +7,9 @@ import {
   Package2,
   CalendarDays,
   UserCheck,
-//   Clock,
-//   ShoppingBag,
-//   Calendar,
+  //   Clock,
+  //   ShoppingBag,
+  //   Calendar,
 } from "lucide-react";
 import Image from "next/image";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
@@ -23,11 +23,14 @@ export default function Home() {
   const [showCheckinOverlay, setShowCheckinOverlay] = React.useState(false);
   const router = useRouter();
 
-  const handleNavigation = (route: string, type: 'schedule' | 'packages' | 'checkin') => {
+  const handleNavigation = (
+    route: string,
+    type: "schedule" | "packages" | "checkin"
+  ) => {
     const setters = {
       schedule: setShowScheduleOverlay,
       packages: setShowPackagesOverlay,
-      checkin: setShowCheckinOverlay
+      checkin: setShowCheckinOverlay,
     };
     setters[type](true);
     setTimeout(() => {
@@ -44,7 +47,7 @@ export default function Home() {
       descriptionEn: "Book your next class or check schedule",
       href: "/class-pass",
       gradient: "from-green-600 to-teal-600",
-      overlayType: 'schedule' as const
+      overlayType: "schedule" as const,
     },
     {
       icon: <Package2 className="w-8 h-8" />,
@@ -54,50 +57,51 @@ export default function Home() {
       descriptionEn: "View and purchase class packages",
       href: "/buy-packages",
       gradient: "from-green-600 to-teal-600",
-      overlayType: 'packages' as const
+      overlayType: "packages" as const,
     },
   ];
 
-//   const infoItems = [
-//     {
-//       icon: <Clock className="w-5 h-5" />,
-//       title: "Clase Actual",
-//       description: "Yoga Flow - 10:00 AM",
-//       detail: "Traer mat y ropa cómoda",
-//     },
-//     {
-//       icon: <ShoppingBag className="w-5 h-5" />,
-//       title: "Oferta",
-//       description: "Bolsters de Yoga -20%",
-//       detail: "Con MatPass activo",
-//     },
-//     {
-//       icon: <Calendar className="w-5 h-5" />,
-//       title: "Próximamente",
-//       description: "Taller de Meditación",
-//       detail: "Este sábado 10 AM",
-//     },
-//   ];
+  //   const infoItems = [
+  //     {
+  //       icon: <Clock className="w-5 h-5" />,
+  //       title: "Clase Actual",
+  //       description: "Yoga Flow - 10:00 AM",
+  //       detail: "Traer mat y ropa cómoda",
+  //     },
+  //     {
+  //       icon: <ShoppingBag className="w-5 h-5" />,
+  //       title: "Oferta",
+  //       description: "Bolsters de Yoga -20%",
+  //       detail: "Con MatPass activo",
+  //     },
+  //     {
+  //       icon: <Calendar className="w-5 h-5" />,
+  //       title: "Próximamente",
+  //       description: "Taller de Meditación",
+  //       detail: "Este sábado 10 AM",
+  //     },
+  //   ];
 
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setInfoIndex((current) => (current + 1) % infoItems.length);
-//     }, 5000);
-//     return () => clearInterval(timer);
-//   }, [infoItems.length]);
+  //   useEffect(() => {
+  //     const timer = setInterval(() => {
+  //       setInfoIndex((current) => (current + 1) % infoItems.length);
+  //     }, 5000);
+  //     return () => clearInterval(timer);
+  //   }, [infoItems.length]);
 
-  return (    
+  return (
     <main className="min-h-screen">
       {/* Schedule Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showScheduleOverlay}
         title={{
           en: "Opening Schedule",
-          es: "Abriendo Horario"
+          es: "Abriendo Horario",
         }}
         message={{
           en: "You will be redirected to view available classes",
-          es: "Serás redirigido para ver las clases disponibles"
+          es: "Serás redirigido para ver las clases disponibles",
         }}
         variant="schedule"
         duration={1500}
@@ -105,14 +109,15 @@ export default function Home() {
 
       {/* Packages Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showPackagesOverlay}
         title={{
           en: "Opening Packages",
-          es: "Abriendo Paquetes"
+          es: "Abriendo Paquetes",
         }}
         message={{
           en: "You will be redirected to view available packages",
-          es: "Serás redirigido para ver los paquetes disponibles"
+          es: "Serás redirigido para ver los paquetes disponibles",
         }}
         variant="packages"
         duration={1500}
@@ -120,14 +125,15 @@ export default function Home() {
 
       {/* Check-in Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showCheckinOverlay}
         title={{
           en: "Opening Check-in",
-          es: "Abriendo Check-in"
+          es: "Abriendo Check-in",
         }}
         message={{
           en: "You will be redirected to the check-in page",
-          es: "Serás redirigido a la página de check-in"
+          es: "Serás redirigido a la página de check-in",
         }}
         variant="checkin"
         duration={1500}
@@ -166,8 +172,10 @@ export default function Home() {
               whileHover={{ scale: 1.02 }}
               className="relative group h-full"
             >
-              <div 
-                onClick={() => handleNavigation(action.href, action.overlayType)}
+              <div
+                onClick={() =>
+                  handleNavigation(action.href, action.overlayType)
+                }
                 className="h-full cursor-pointer"
               >
                 <div
@@ -226,7 +234,7 @@ to-teal-600 bg-clip-text text-transparent"
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <div
-              onClick={() => handleNavigation('/check-in', 'checkin')}
+              onClick={() => handleNavigation("/check-in", "checkin")}
               className="bg-gradient-to-r from-green-600 to-teal-600 text-white
                 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 
                 flex items-center justify-center gap-3 group cursor-pointer"
@@ -242,7 +250,7 @@ transition-all"
         </motion.div>
 
         {/* Info Section - Above Footer */}
-          {/* <motion.div
+        {/* <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="max-w-4xl mx-auto mt-16 mb-8"
@@ -311,7 +319,7 @@ transition-all"
           transition={{ delay: 0.6 }}
           className="flex justify-center w-full mb-12"
         >
-          <div 
+          <div
             className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-lg 
             border border-green-100 p-1.5 flex gap-2 hover:shadow-xl 
             transition-all duration-500 hover:border-green-200"
@@ -340,8 +348,8 @@ transition-all"
             </button>
           </div>
         </motion.div>
-        </div>
-      </main>
+      </div>
+    </main>
   );
 }
 
