@@ -95,6 +95,7 @@ function NewUserContent() {
       <div className="w-full h-full mx-auto">
         {/* New User Success Overlay */}
         <SuccessOverlay
+          aria-live="polite"
           show={showNewUserOverlay}
           title={{
             en: "Account Created Successfully!",

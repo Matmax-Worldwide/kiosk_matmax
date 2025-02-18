@@ -21,6 +21,7 @@ import { es } from "date-fns/locale";
 import { GET_CONSUMER, UPDATE_RESERVATION_STATUS } from "@/lib/graphql/queries";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";
+import { useLanguageContext } from "@/contexts/LanguageContext";
 
 interface Bundle {
   id: string;
@@ -131,8 +132,10 @@ function CheckInSkeletonLoader() {
 export default function CheckInDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const { language } = useLanguageContext();
   const consumerId = params.slug as string;
   const [showSuccessOverlay, setShowSuccessOverlay] = React.useState(false);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   // Get consumer details query
   const { data: consumerData, loading } = useQuery(GET_CONSUMER, {
@@ -207,6 +210,7 @@ export default function CheckInDetailsPage() {
     <>
       <Header title={{ en: "Check-in", es: "Check-in" }} />
       <SuccessOverlay
+        aria-live="polite"
         show={showSuccessOverlay}
         title={{
           en: "Check-in Successful!",
@@ -355,15 +359,32 @@ export default function CheckInDetailsPage() {
                     <div className="space-y-4">
                       <p className="text-gray-500">No hay reservas para hoy</p>
                       <Button
-                        onClick={() =>
+                        onClick={async () => {
+                          setIsNavigating(true);
                           router.push(
                             `/schedule?consumerId=${consumerId}`
-                          )
-                        }
+                          );
+                        }}
                         className="bg-blue-500 hover:bg-blue-600"
+                        disabled={isNavigating}
                       >
-                        <CalendarPlus className="w-5 h-5 mr-2" />
-                        Reservar Ahora
+                        {isNavigating ? (
+                          <>
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              className="mr-2"
+                            >
+                              <Clock className="w-5 h-5" />
+                            </motion.div>
+                            {language === "en" ? "Loading..." : "Cargando..."}
+                          </>
+                        ) : (
+                          <>
+                            <CalendarPlus className="w-5 h-5 mr-2" />
+                            Reservar Ahora
+                          </>
+                        )}
                       </Button>
                     </div>
                   ) : (

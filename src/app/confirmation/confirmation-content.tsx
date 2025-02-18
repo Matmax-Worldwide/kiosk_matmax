@@ -11,6 +11,8 @@ import { motion } from "framer-motion";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
 import { maskEmail } from "@/lib/utils/mask-data";
 
+const AUTO_NAVIGATION_DELAY = 30; // seconds
+
 export function ConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -18,6 +20,31 @@ export function ConfirmationContent() {
   const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
   const [showHomeOverlay, setShowHomeOverlay] = React.useState(false);
   const [showInitialOverlay, setShowInitialOverlay] = React.useState(true);
+  const [countdown, setCountdown] = React.useState(AUTO_NAVIGATION_DELAY);
+  const [isRedirecting, setIsRedirecting] = React.useState(false);
+
+  React.useEffect(() => {
+    let timer: NodeJS.Timeout;
+    let isCancelled = false;
+    
+    if (!showInitialOverlay && countdown > 0 && !isRedirecting) {
+      timer = setInterval(() => {
+        if (!isCancelled) {
+          setCountdown((prev) => prev - 1);
+        }
+      }, 1000);
+    }
+
+    if (countdown === 0 && !isRedirecting) {
+      setIsRedirecting(true);
+      handleHomeClick();
+    }
+
+    return () => {
+      isCancelled = true;
+      if (timer) clearInterval(timer);
+    };
+  }, [countdown, showInitialOverlay, isRedirecting]);
 
   // Get all parameters
   const purchaseId = searchParams.get('purchaseId');
@@ -51,10 +78,12 @@ export function ConfirmationContent() {
   };
 
   const handleScheduleClick = () => {
+    setIsRedirecting(true);
     setShowScheduleOverlay(true);
   };
 
   const handleHomeClick = () => {
+    setIsRedirecting(true);
     setShowHomeOverlay(true);
   };
 
@@ -62,6 +91,7 @@ export function ConfirmationContent() {
     <>
       {/* Initial Success Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showInitialOverlay}
         title={{
           en: classId ? "Purchase and Reservation Successful!" : "Purchase Successful!",
@@ -82,6 +112,7 @@ export function ConfirmationContent() {
 
       {/* Schedule Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showScheduleOverlay}
         title={{
           en: "Opening Schedule",
@@ -98,6 +129,7 @@ export function ConfirmationContent() {
 
       {/* Home Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showHomeOverlay}
         title={{
           en: "Returning Home",
@@ -353,6 +385,7 @@ export function ConfirmationContent() {
                   >
                     <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
                     {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                    <span className="ml-2 text-sm text-green-600">({countdown}s)</span>
                     <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
                   </Button>
                 </motion.div>
@@ -376,6 +409,7 @@ export function ConfirmationContent() {
                   >
                     <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
                     {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                    <span className="ml-2 text-sm text-green-600">({countdown}s)</span>
                     <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
                   </Button>
                 </motion.div>

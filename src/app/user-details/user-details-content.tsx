@@ -8,11 +8,12 @@ import { GET_CONSUMER, GET_CONSUMER_RESERVATIONS, GET_ALLOCATION } from "@/lib/g
 import { Spinner } from "@/components/spinner";
 import { Package2, Clock, ChevronRight, Calendar, Home, User } from "lucide-react";
 import type { Bundle } from "@/types/bundle";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
+import React from "react";
 
 interface Reservation {
   status: string;
@@ -29,6 +30,8 @@ export function UserDetailsContent() {
   const searchParams = useSearchParams();
   const consumerId = searchParams.get('consumerId');
   const classId = searchParams.get('classId');
+  const [isNavigatingToPayment, setIsNavigatingToPayment] = React.useState(false);
+  const [isNavigatingToPackages, setIsNavigatingToPackages] = React.useState(false);
 
   // Verificar primero si existe una reserva
   const { data: reservationsData, loading: reservationsLoading } = useQuery(GET_CONSUMER_RESERVATIONS, {
@@ -133,6 +136,7 @@ export function UserDetailsContent() {
   const recentBundles = activeBundles.slice(0, 3);
 
   const handleBundleSelection = (bundle: Bundle) => {
+    setIsNavigatingToPayment(true);
     const queryParams = new URLSearchParams({
       consumerId: consumerId as string,
       bundleId: bundle.id
@@ -146,6 +150,7 @@ export function UserDetailsContent() {
   };
 
   const handleViewAllPackages = () => {
+    setIsNavigatingToPackages(true);
     router.push(`/buy-packages?consumerId=${consumerId}${classId ? `&classId=${classId}` : ''}`);
   };
 
@@ -284,13 +289,31 @@ export function UserDetailsContent() {
                         <Button 
                           onClick={() => handleBundleSelection(bundle)}
                           className="bg-gradient-to-r from-green-600 to-teal-600 
-                            hover:from-green-700 hover:to-teal-700 text-white px-4"
-                          disabled={bundle.remainingUses <= 0}
-                          size="sm"
+                            hover:from-green-700 hover:to-teal-700 text-white px-6 py-3
+                            shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl
+                            transform hover:scale-105 min-w-[140px]"
+                          disabled={bundle.remainingUses <= 0 || isNavigatingToPayment}
+                          size="default"
                         >
-                          {bundle.remainingUses > 0 
-                            ? (language === "en" ? "Use" : "Usar")
-                            : (language === "en" ? "Empty" : "Vacío")}
+                          {isNavigatingToPayment ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="mr-2"
+                              >
+                                <Clock className="w-4 h-4" />
+                              </motion.div>
+                              {language === "en" ? "Loading..." : "Cargando..."}
+                            </>
+                          ) : bundle.remainingUses > 0 ? (
+                            <>
+                              <Package2 className="w-4 h-4 mr-2" />
+                              {language === "en" ? "Use Package" : "Usar Paquete"}
+                            </>
+                          ) : (
+                            language === "en" ? "Empty" : "Vacío"
+                          )}
                         </Button>
                       </div>
                     </Card>
@@ -307,16 +330,50 @@ export function UserDetailsContent() {
             transition={{ delay: 0.4 }}
             className="mt-8"
           >
-            <Button 
+            <motion.button
               onClick={handleViewAllPackages}
-              className="w-full h-16 text-lg bg-gradient-to-r from-green-600 to-teal-600 
-                hover:from-green-700 hover:to-teal-700 text-white shadow-lg 
-                hover:shadow-xl transition-all duration-300 group"
+              disabled={isNavigatingToPackages}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.8 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              aria-busy={isNavigatingToPackages}
+              aria-label={language === "en" ? "View All Packages" : "Ver Todos los Paquetes"}
+              className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 
+                rounded-xl hover:bg-white/95 transition-all duration-300 
+                flex items-center justify-center gap-2 border border-gray-200 
+                font-semibold text-lg shadow-sm hover:shadow-md group
+                disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              <Package2 className="h-6 w-6 mr-2" />
-              {language === "en" ? "Buy More Packages" : "Comprar Más Paquetes"}
-              <ChevronRight className="h-6 w-6 ml-2 transform group-hover:translate-x-1 transition-transform" />
-            </Button>
+              {isNavigatingToPackages ? (
+                <>
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                    className="mr-2"
+                  >
+                    <Clock className="w-5 h-5" />
+                  </motion.div>
+                  <span>{language === "en" ? "Loading..." : "Cargando..."}</span>
+                </>
+              ) : (
+                <>
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={language}
+                      initial={{ y: 10, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: -10, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {language === "en" ? "Buy More Packages" : "Comprar Más Paquetes"}
+                    </motion.span>
+                  </AnimatePresence>
+                  <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
+            </motion.button>
           </motion.div>
         </div>
       </div>

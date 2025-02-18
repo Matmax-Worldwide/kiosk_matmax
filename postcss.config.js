@@ -1,4 +1,4 @@
-module.exports = {
+const config = {
   plugins: {
     'postcss-preset-env': {
       features: {
@@ -42,4 +42,6 @@ module.exports = {
       }
     } : {})
   }
-} 
+}
+
+export default config 

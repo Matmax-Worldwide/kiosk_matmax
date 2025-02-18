@@ -389,6 +389,7 @@ export function ClassPassContent() {
     <>
       {/* Schedule Navigation Overlay */}
       <SuccessOverlay
+        aria-live="polite"
         show={showScheduleOverlay}
         title={{
           en: "Opening Schedule",
