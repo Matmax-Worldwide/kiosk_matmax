@@ -12,27 +12,14 @@ import {
   //   Calendar,
 } from "lucide-react";
 import Image from "next/image";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
 import { useRouter } from "next/navigation";
 import React from "react";
 
 export default function Home() {
   const { language, setLanguage } = useLanguageContext();
-  const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
-  const [showPackagesOverlay, setShowPackagesOverlay] = React.useState(false);
-  const [showCheckinOverlay, setShowCheckinOverlay] = React.useState(false);
   const router = useRouter();
 
-  const handleNavigation = (
-    route: string,
-    type: "schedule" | "packages" | "checkin"
-  ) => {
-    const setters = {
-      schedule: setShowScheduleOverlay,
-      packages: setShowPackagesOverlay,
-      checkin: setShowCheckinOverlay,
-    };
-    setters[type](true);
+  const handleNavigation = (route: string) => {
     setTimeout(() => {
       router.push(route);
     }, 1500);
@@ -91,53 +78,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      {/* Schedule Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showScheduleOverlay}
-        title={{
-          en: "Opening Schedule",
-          es: "Abriendo Horario",
-        }}
-        message={{
-          en: "You will be redirected to view available classes",
-          es: "Serás redirigido para ver las clases disponibles",
-        }}
-        variant="schedule"
-        duration={1500}
-      />
-
-      {/* Packages Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showPackagesOverlay}
-        title={{
-          en: "Opening Packages",
-          es: "Abriendo Paquetes",
-        }}
-        message={{
-          en: "You will be redirected to view available packages",
-          es: "Serás redirigido para ver los paquetes disponibles",
-        }}
-        variant="packages"
-        duration={1500}
-      />
-
-      {/* Check-in Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showCheckinOverlay}
-        title={{
-          en: "Opening Check-in",
-          es: "Abriendo Check-in",
-        }}
-        message={{
-          en: "You will be redirected to the check-in page",
-          es: "Serás redirigido a la página de check-in",
-        }}
-        variant="checkin"
-        duration={1500}
-      />
 
       <div className="container mx-auto px-4 py-16 md:py-24">
         <div className="flex justify-center mb-8">
@@ -173,9 +113,7 @@ export default function Home() {
               className="relative group h-full"
             >
               <div
-                onClick={() =>
-                  handleNavigation(action.href, action.overlayType)
-                }
+                onClick={() => handleNavigation(action.href)}
                 className="h-full cursor-pointer"
               >
                 <div
@@ -234,7 +172,7 @@ to-teal-600 bg-clip-text text-transparent"
           </div>
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <div
-              onClick={() => handleNavigation("/check-in", "checkin")}
+              onClick={() => handleNavigation("/check-in")}
               className="bg-gradient-to-r from-green-600 to-teal-600 text-white
                 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 
                 flex items-center justify-center gap-3 group cursor-pointer"
