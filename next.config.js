@@ -97,8 +97,7 @@ const nextConfig = {
       'class-variance-authority',
       'framer-motion'
     ],
-    craCompat: false,
-    esmExternals: false
+    craCompat: false
   },
 
   // Enable strict mode for better error catching
