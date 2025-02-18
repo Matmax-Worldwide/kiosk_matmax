@@ -1,6 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { startServerAndCreateNextHandler } from '@as-integrations/next';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import typeDefs from '../_schema.js';
 import resolvers from '../_resolvers.js';
@@ -10,14 +10,28 @@ const server = new ApolloServer({
   resolvers,
 });
 
-// Create handler with basic context
-const handler = startServerAndCreateNextHandler(server);
-
-// Export route handlers with proper Next.js App Router types
-export async function GET(req: NextRequest) {
-  return handler(req);
-}
+const handler = startServerAndCreateNextHandler(server, {
+  context: async (req) => {
+    return {
+      req,
+    };
+  },
+});
 
 export async function POST(req: NextRequest) {
-  return handler(req);
+  try {
+    const response = await handler(req);
+    return response;
+  } catch (error) {
+    console.error('GraphQL Error:', error);
+    return NextResponse.json(
+      { 
+        errors: [{ 
+          message: 'Internal server error',
+          extensions: { code: 'INTERNAL_SERVER_ERROR' } 
+        }] 
+      },
+      { status: 500 }
+    );
+  }
 }
