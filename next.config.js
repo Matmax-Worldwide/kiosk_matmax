@@ -1,63 +1,62 @@
-import NextPWA from 'next-pwa'
+import NextPWA from "next-pwa";
 
 const withPWA = NextPWA({
-  dest: 'public',
+  dest: "public",
   register: true,
   skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development'
-})
+  disable: process.env.NODE_ENV === "development",
+});
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Transpile dependencies that need it
   transpilePackages: [
-    'lucide-react',
-    '@radix-ui/react-dialog',
-    '@radix-ui/react-accordion',
-    '@radix-ui/react-alert-dialog',
-    '@radix-ui/react-aspect-ratio',
-    '@radix-ui/react-avatar',
-    '@radix-ui/react-checkbox',
-    '@radix-ui/react-collapsible',
-    '@radix-ui/react-context-menu',
-    '@radix-ui/react-dropdown-menu',
-    '@radix-ui/react-hover-card',
-    '@radix-ui/react-label',
-    '@radix-ui/react-menubar',
-    '@radix-ui/react-navigation-menu',
-    '@radix-ui/react-popover',
-    '@radix-ui/react-progress',
-    '@radix-ui/react-radio-group',
-    '@radix-ui/react-scroll-area',
-    '@radix-ui/react-select',
-    '@radix-ui/react-separator',
-    '@radix-ui/react-slider',
-    '@radix-ui/react-slot',
-    '@radix-ui/react-switch',
-    '@radix-ui/react-tabs',
-    '@radix-ui/react-toast',
-    '@radix-ui/react-toggle',
-    '@radix-ui/react-toggle-group',
-    '@radix-ui/react-tooltip',
-    'class-variance-authority',
-    'framer-motion',
-    'react-day-picker',
-    'tailwind-merge'
+    "lucide-react",
+    "@radix-ui/react-dialog",
+    "@radix-ui/react-accordion",
+    "@radix-ui/react-alert-dialog",
+    "@radix-ui/react-aspect-ratio",
+    "@radix-ui/react-avatar",
+    "@radix-ui/react-checkbox",
+    "@radix-ui/react-collapsible",
+    "@radix-ui/react-context-menu",
+    "@radix-ui/react-dropdown-menu",
+    "@radix-ui/react-hover-card",
+    "@radix-ui/react-label",
+    "@radix-ui/react-menubar",
+    "@radix-ui/react-navigation-menu",
+    "@radix-ui/react-popover",
+    "@radix-ui/react-progress",
+    "@radix-ui/react-radio-group",
+    "@radix-ui/react-scroll-area",
+    "@radix-ui/react-select",
+    "@radix-ui/react-separator",
+    "@radix-ui/react-slider",
+    "@radix-ui/react-slot",
+    "@radix-ui/react-switch",
+    "@radix-ui/react-tabs",
+    "@radix-ui/react-toast",
+    "@radix-ui/react-toggle",
+    "@radix-ui/react-toggle-group",
+    "@radix-ui/react-tooltip",
+    "class-variance-authority",
+    "framer-motion",
+    "react-day-picker",
+    "tailwind-merge",
   ],
 
   // Compiler options
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
+    removeConsole: process.env.NODE_ENV === "production",
   },
 
-  // Enable webpack 5 features
   webpack: (config, { dev, isServer }) => {
     // Optimize CSS
     if (!dev && !isServer) {
       config.optimization.splitChunks.cacheGroups.styles = {
-        name: 'styles',
+        name: "styles",
         test: /\.(css|scss)$/,
-        chunks: 'all',
+        chunks: "all",
         enforce: true,
       };
     }
@@ -70,6 +69,16 @@ const nextConfig = {
         module: false,
         path: false,
       };
+
+      // Configure workbox
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          "self.__WB_MANIFEST": JSON.stringify([]),
+          "process.env.NEXT_PWA_WORKBOX": JSON.stringify({
+            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+          }),
+        })
+      );
     }
 
     return config;
@@ -77,7 +86,7 @@ const nextConfig = {
 
   // Image optimization settings
   images: {
-    formats: ['image/webp'],
+    formats: ["image/webp"],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
@@ -90,14 +99,14 @@ const nextConfig = {
     optimizeCss: true,
     forceSwcTransforms: true,
     optimizePackageImports: [
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-accordion',
-      '@radix-ui/react-alert-dialog',
-      'lucide-react',
-      'class-variance-authority',
-      'framer-motion'
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-accordion",
+      "@radix-ui/react-alert-dialog",
+      "lucide-react",
+      "class-variance-authority",
+      "framer-motion",
     ],
-    craCompat: false
+    craCompat: false,
   },
 
   // Enable strict mode for better error catching
@@ -110,49 +119,49 @@ const nextConfig = {
   compress: true,
 
   // Asset prefix for CDN support
-  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || '',
+  assetPrefix: process.env.NEXT_PUBLIC_CDN_URL || "",
 
   // Configure headers for security and caching
   async headers() {
     return [
       {
-        source: '/:path*',
+        source: "/:path*",
         headers: [
           {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            key: "X-DNS-Prefetch-Control",
+            value: "on",
           },
           {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            key: "X-XSS-Protection",
+            value: "1; mode=block",
           },
           {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            key: "X-Frame-Options",
+            value: "SAMEORIGIN",
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
+            key: "Referrer-Policy",
+            value: "origin-when-cross-origin",
           },
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=3600, must-revalidate'
-          }
-        ]
+            key: "Cache-Control",
+            value: "public, max-age=3600, must-revalidate",
+          },
+        ],
       },
       {
-        source: '/static/:path*',
+        source: "/static/:path*",
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable'
-          }
-        ]
-      }
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
     ];
   },
 
@@ -165,21 +174,6 @@ const nextConfig = {
   async rewrites() {
     return [];
   },
+};
 
-  // Configure workbox
-  webpack: (config, { isServer, webpack }) => {
-    if (!isServer) {
-      config.plugins.push(
-        new webpack.DefinePlugin({
-          'self.__WB_MANIFEST': JSON.stringify([]),
-          'process.env.NEXT_PWA_WORKBOX': JSON.stringify({
-            maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
-          }),
-        })
-      );
-    }
-    return config;
-  },
-}
-
-export default withPWA(nextConfig)
+export default withPWA(nextConfig);
