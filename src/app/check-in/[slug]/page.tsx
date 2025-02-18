@@ -362,7 +362,7 @@ export default function CheckInDetailsPage() {
                         onClick={async () => {
                           setIsNavigating(true);
                           router.push(
-                            `/schedule?consumerId=${consumerId}`
+                            `/schedule?consumerId=${params.slug}`
                           );
                         }}
                         className="bg-blue-500 hover:bg-blue-600"
@@ -382,7 +382,7 @@ export default function CheckInDetailsPage() {
                         ) : (
                           <>
                             <CalendarPlus className="w-5 h-5 mr-2" />
-                            Reservar Ahora
+                            {language === "en" ? "Book Now" : "Reservar Ahora"}
                           </>
                         )}
                       </Button>
