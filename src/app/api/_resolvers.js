@@ -151,12 +151,19 @@ const resolvers = {
             });
         },
         searchConsumers: async (_, { query, limit = 10 }) => {
+            const fullNameQuery = query.trim();
             return prisma.consumer.findMany({
                 where: {
                     OR: [
                         { firstName: { contains: query, mode: 'insensitive' } },
                         { lastName: { contains: query, mode: 'insensitive' } },
-                        { email: { contains: query, mode: 'insensitive' } }
+                        { email: { contains: query, mode: 'insensitive' } },
+                        {
+                            AND: [
+                                { firstName: { contains: fullNameQuery.split(' ')[0], mode: 'insensitive' } },
+                                { lastName: { contains: fullNameQuery.split(' ')[1] || '', mode: 'insensitive' } }
+                            ]
+                        }
                     ],
                     isDeleted: false
                 },
