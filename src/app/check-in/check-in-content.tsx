@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@apollo/client";
-import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Search, User2, Loader2 } from "lucide-react";
@@ -13,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { cn } from "@/lib/utils";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
 import debounce from "lodash/debounce";
 
 interface SearchResult {
@@ -51,12 +49,9 @@ function SearchSkeletonLoader() {
 }
 
 export function CheckInContent() {
-  const router = useRouter();
   const [inputValue, setInputValue] = useState("");
   const { language } = useLanguageContext();
   const [isSearching, setIsSearching] = useState(false);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<SearchResult | null>(null);
   const [showResults, setShowResults] = useState(false);
 
   // Search consumers query
@@ -88,16 +83,17 @@ export function CheckInContent() {
     };
   }, [debouncedSearch]);
 
-  const handleConsumerSelect = (consumer: SearchResult) => {
-    setSelectedUser(consumer);
-    setShowOverlay(true);
-  };
-
-  const handleOverlayComplete = () => {
-    if (selectedUser) {
+  const handleConsumerSelect = () => {
+    // Add hover effect animation
+    const element = document.activeElement as HTMLElement;
+    if (element) {
+      element.style.transform = 'scale(1.02)';
+      element.style.transition = 'transform 0.2s ease';
+      
+      // Reset after animation
       setTimeout(() => {
-        router.push(`/check-in/${selectedUser.id}`);
-      }, 800);
+        element.style.transform = 'scale(1)';
+      }, 200);
     }
   };
 
@@ -174,7 +170,7 @@ export function CheckInContent() {
                         whileHover={{ scale: 1.02 }}
                         className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md
                         cursor-pointer border border-gray-100"
-                        onClick={() => handleConsumerSelect(consumer)}
+                        onClick={() => handleConsumerSelect()}
                       >
                         <div className="flex items-center gap-3">
                           <User2 className="w-5 h-5 text-gray-400" />
@@ -207,23 +203,6 @@ export function CheckInContent() {
               </>
             )}
           </AnimatePresence>
-
-          {/* Success Overlay */}
-          <SuccessOverlay
-            aria-live="polite"
-            show={showOverlay}
-            title={{
-              en: `Welcome ${selectedUser?.firstName || ''}!`,
-              es: `¡Bienvenido ${selectedUser?.firstName || ''}!`
-            }}
-            message={{
-              en: "Preparing your check-in...",
-              es: "Preparando tu check-in..."
-            }}
-            variant="checkin"
-            duration={1500}
-            onComplete={handleOverlayComplete}
-          />
         </Card>
       </motion.div>
     </div>

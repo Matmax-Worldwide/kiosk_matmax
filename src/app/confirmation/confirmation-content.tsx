@@ -28,8 +28,6 @@ export function ConfirmationContent() {
 
   // Get all parameters
   const purchaseId = searchParams.get("purchaseId");
-  const bundleId = searchParams.get("bundleId");
-  const bundleTypeId = searchParams.get("bundleTypeId");
   const paymentMethod = searchParams.get("paymentMethod");
   const firstName = searchParams.get("firstName");
   const lastName = searchParams.get("lastName");
@@ -46,28 +44,25 @@ export function ConfirmationContent() {
   const reservationId = searchParams.get("reservationId");
 
   React.useEffect(() => {
-    if (bundleId) {
-      setPaymentMethodText(language === "en" ? "Existing Package" : "Paquete Existente");
-      return;
-    } else if (bundleTypeId) {
-      switch (paymentMethod) {
-        case "CARD":
-          setPaymentMethodText(language === "en" ? "Credit/Debit Card" : "Tarjeta Crédito/Débito");
-          break;
-        case "QR":
-          setPaymentMethodText("Yape / Plin");
-          break;
-        case "CASH":
-          setPaymentMethodText(language === "en" ? "Cash" : "Efectivo");
-          break;
-        default:
-          setPaymentMethodText("");
-      }
+    if (!purchaseId && !paymentMethod && remainingUses) {
+      setPaymentMethodText("Paquete Existente");
       return;
     }
 
-    setPaymentMethodText("");
-  }, [language, paymentMethod, bundleId, bundleTypeId]);
+    switch (paymentMethod) {
+      case "CARD":
+        setPaymentMethodText("Tarjeta Crédito/Débito");
+        break;
+      case "QR":
+        setPaymentMethodText("Yape / Plin");
+        break;
+      case "CASH":
+        setPaymentMethodText("Efectivo");
+        break;
+      default:
+        setPaymentMethodText("");
+    }
+  }, [paymentMethod, remainingUses, purchaseId]);
 
   const handleScheduleClick = () => {
     setShowScheduleOverlay(true);
@@ -75,6 +70,28 @@ export function ConfirmationContent() {
 
   const handleHomeClick = () => {
     setShowHomeOverlay(true);
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    try {
+      return format(new Date(dateString), "EEEE d 'de' MMMM, HH:mm", {
+        locale: language === "es" ? es : undefined,
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  const formatPrice = (price: string | null) => {
+    if (!price) return "0.00";
+    try {
+      return Number(price).toFixed(2);
+    } catch (error) {
+      console.error("Error formatting price:", error);
+      return "0.00";
+    }
   };
 
   return (
@@ -248,10 +265,8 @@ export function ConfirmationContent() {
                   </p>
                   <p className="font-semibold text-gray-700">
                     {remainingUses
-                      ? `${remainingUses} ${
-                          language === "en" ? "uses" : "usos"
-                        }`
-                      : `S/. ${packagePrice}`}
+                      ? `${remainingUses} ${language === "en" ? "uses" : "usos"}`
+                      : `S/. ${formatPrice(packagePrice)}`}
                   </p>
                 </div>
 
@@ -312,13 +327,7 @@ export function ConfirmationContent() {
                         {language === "en" ? "Date & Time" : "Fecha y Hora"}
                       </p>
                       <p className="font-semibold text-gray-700">
-                        {format(
-                          new Date(classDate),
-                          "EEEE d 'de' MMMM, HH:mm",
-                          {
-                            locale: language === "es" ? es : undefined,
-                          }
-                        )}
+                        {formatDate(classDate)}
                       </p>
                     </div>
                   )}
