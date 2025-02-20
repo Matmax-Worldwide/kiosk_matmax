@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
 import {
   Calendar,
   User2,
@@ -134,8 +133,8 @@ export default function CheckInDetailsPage() {
   const router = useRouter();
   const { language } = useLanguageContext();
   const consumerId = params.slug as string;
-  const [showSuccessOverlay, setShowSuccessOverlay] = React.useState(false);
   const [isNavigating, setIsNavigating] = React.useState(false);
+  const [isCheckingIn, setIsCheckingIn] = React.useState(false);
 
   // Get consumer details query
   const { data: consumerData, loading } = useQuery(GET_CONSUMER, {
@@ -143,14 +142,11 @@ export default function CheckInDetailsPage() {
   });
 
   // Update reservation mutation
-  const [updateReservation] = useMutation(UPDATE_RESERVATION_STATUS, {
-    onCompleted: () => {
-      setShowSuccessOverlay(true);
-    },
-  });
+  const [updateReservation] = useMutation(UPDATE_RESERVATION_STATUS);
 
   const handleCheckIn = async (reservationId: string) => {
     try {
+      setIsCheckingIn(true);
       await updateReservation({
         variables: {
           id: reservationId,
@@ -159,6 +155,8 @@ export default function CheckInDetailsPage() {
       });
     } catch (error) {
       console.error("Error during check-in:", error);
+    } finally {
+      setIsCheckingIn(false);
     }
   };
 
@@ -209,22 +207,43 @@ export default function CheckInDetailsPage() {
   return (
     <>
       <Header title={{ en: "Check-in", es: "Check-in" }} />
-      <SuccessOverlay
-        aria-live="polite"
-        show={showSuccessOverlay}
-        title={{
-          en: "Check-in Successful!",
-          es: "¡Check-in Exitoso!"
-        }}
-        message={{
-          en: "You have been successfully checked in for your class.",
-          es: "Has sido registrado exitosamente para tu clase."
-        }}
-        variant="checkin"
-        duration={2000}
-        onComplete={() => router.push('/')}
-        className="bg-gradient-to-br from-teal-900/95 to-cyan-900/95 backdrop-blur-md"
-      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50"
+      >
+        <motion.div 
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
+          className="bg-white rounded-2xl p-8 text-center max-w-md mx-4"
+        >
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center"
+          >
+            <CheckCircle2 className="w-8 h-8 text-green-600" />
+          </motion.div>
+          
+          <h2 className="text-2xl font-bold mb-2">
+            {language === "en" ? "Check-in Successful!" : "¡Check-in Exitoso!"}
+          </h2>
+          
+          <p className="text-gray-600 mb-6">
+            {language === "en" 
+              ? "You have been successfully checked in for your class."
+              : "Has sido registrado exitosamente para tu clase."}
+          </p>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+
+          </motion.div>
+        </motion.div>
+      </motion.div>
       <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
@@ -338,9 +357,25 @@ export default function CheckInDetailsPage() {
                         <Button
                           onClick={() => handleCheckIn(reservation.id)}
                           className="bg-green-500 hover:bg-green-600"
+                          disabled={isCheckingIn}
                         >
-                          <CheckCircle2 className="w-5 h-5 mr-2" />
-                          Check-in
+                          {isCheckingIn ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="mr-2"
+                              >
+                                <Clock className="w-5 h-5" />
+                              </motion.div>
+                              {language === "en" ? "Processing..." : "Procesando..."}
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-5 h-5 mr-2" />
+                              Check-in
+                            </>
+                          )}
                         </Button>
                       ) : (
                         <div className="flex items-center gap-2 text-gray-500">

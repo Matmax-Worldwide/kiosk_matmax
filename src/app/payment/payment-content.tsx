@@ -261,103 +261,172 @@ export function PaymentContent() {
     }
   };
 
+  // Move getPackageName outside handlePayment
+  const getPackageName = () => {
+    try {
+      if (!bundleData) return language === "en" ? "Loading package..." : "Cargando paquete...";
+
+      // For existing bundle
+      if (bundleId && bundleData.bundle?.bundleType?.name) {
+        return bundleData.bundle.bundleType.name;
+      }
+      // For new bundle
+      if (bundleTypeId && bundleData.bundleType?.name) {
+        return bundleData.bundleType.name;
+      }
+      // If we have bundleType from the earlier validation
+      if (bundleData.bundleType?.name) {
+        return bundleData.bundleType.name;
+      }
+      // Default case if no name is found
+      return language === "en" ? "Unknown Package" : "Paquete Desconocido";
+    } catch (error) {
+      console.error("Error getting package name:", error);
+      return language === "en" ? "Unknown Package" : "Paquete Desconocido";
+    }
+  };
+
   const handlePayment = async () => {
-    // Si es bundleTypeId necesitamos método de pago, si es bundleId no
-    if (
-      (!selectedMethod && !bundleId) ||
-      !consumerId ||
-      (!bundleId && !bundleTypeId)
-    )
+    // Initial validations
+    if (!consumerId) {
+      setError(language === "en" ? "Consumer ID is required." : "Se requiere ID del consumidor.");
       return;
+    }
+
+    // Validate that we have either bundleId or bundleTypeId, but not both
+    if ((!bundleId && !bundleTypeId) || (bundleId && bundleTypeId)) {
+      setError(
+        language === "en"
+          ? "Invalid bundle information."
+          : "Información de paquete inválida."
+      );
+      return;
+    }
+
+    // If creating new bundle (bundleTypeId), require payment method
+    if (bundleTypeId && !selectedMethod) {
+      setError(
+        language === "en"
+          ? "Please select a payment method."
+          : "Por favor seleccione un método de pago."
+      );
+      return;
+    }
 
     try {
       setIsProcessing(true);
       setError(null);
 
-      let finalBundleId;
-      let reservationData;
+      let finalBundleId = bundleId;
 
-      // Caso 1: Usar bundle existente
-      if (bundleId) {
-        finalBundleId = bundleId;
-      }
-      // Caso 2: Crear nuevo bundle
-      else if (bundleTypeId) {
+      // Scenario 1: Create new bundle and reservation
+      if (bundleTypeId) {
         const validFrom = new Date();
         const validTo = new Date();
         validTo.setDate(validFrom.getDate() + 30);
 
-        const { data: newBundleData } = await createBundle({
-          variables: {
-            input: {
-              consumerId: consumerId,
-              status: BundleStatus.ACTIVE,
-              bundleTypeId: bundleTypeId,
-              validFrom: validFrom.toISOString(),
-              validTo: validTo.toISOString(),
-              note: `Método de pago: ${getPaymentMethodText()}${
-                classId
-                  ? ` - Clase reservada: ${
-                      allocationData?.allocation?.timeSlot?.sessionType?.name ||
-                      "N/A"
-                    }`
-                  : ""
-              }`,
+        try {
+          let note = `${language === "en" ? "Payment Method" : "Método de pago"}: ${getPaymentMethodText() || ""}`;
+          if (classId && allocationData?.allocation?.timeSlot?.sessionType?.name) {
+            note += ` - ${language === "en" ? "Reserved Class" : "Clase reservada"}: ${allocationData.allocation.timeSlot.sessionType.name}`;
+          }
+
+          const { data: newBundleData } = await createBundle({
+            variables: {
+              input: {
+                consumerId,
+                status: BundleStatus.ACTIVE,
+                bundleTypeId,
+                validFrom: validFrom.toISOString(),
+                validTo: validTo.toISOString(),
+                note,
+              },
             },
-          },
-        });
-        finalBundleId = newBundleData.createBundle.id;
+          });
+
+          if (!newBundleData?.createBundle?.id) {
+            throw new Error(
+              language === "en"
+                ? "Failed to create bundle. Please try again."
+                : "Error al crear el paquete. Por favor intente de nuevo."
+            );
+          }
+
+          finalBundleId = newBundleData.createBundle.id;
+        } catch (bundleError) {
+          console.error("Error creating bundle:", bundleError);
+          throw new Error(
+            language === "en"
+              ? "Failed to create bundle. Please try again."
+              : "Error al crear el paquete. Por favor intente de nuevo."
+          );
+        }
       }
 
-      // Si existe classId, crear una reserva
-      if (classId && finalBundleId && allocationData?.allocation) {
+      // Create reservation (for both scenarios if classId exists)
+      let reservationData;
+      if (classId && finalBundleId) {
+        if (!allocationData?.allocation?.timeSlot?.id || !allocationData.allocation.startTime) {
+          throw new Error(
+            language === "en"
+              ? "Class information is not available"
+              : "La información de la clase no está disponible"
+          );
+        }
+
         const { data: reservationResponse } = await createReservation({
           variables: {
             input: {
               bundleId: finalBundleId,
               timeSlotId: allocationData.allocation.timeSlot.id,
-              startTime: new Date(
-                allocationData.allocation.startTime
-              ).toISOString(),
+              startTime: new Date(allocationData.allocation.startTime).toISOString(),
               forConsumerId: consumerId,
               status: "CONFIRMED",
             },
           },
         });
-        reservationData = reservationResponse?.createReservation;
+
+        if (!reservationResponse?.createReservation) {
+          throw new Error(
+            language === "en"
+              ? "Failed to create reservation. Please try again."
+              : "Error al crear la reserva. Por favor intente de nuevo."
+          );
+        }
+
+        reservationData = reservationResponse.createReservation;
       }
 
       // Show success message before navigation
       setShowSuccess(true);
 
-      // Construct URL with params
+      // Construct URL parameters based on scenario
       const params = new URLSearchParams({
-        ...(bundleId
-          ? {
-              reservationId: reservationData?.id,
-              bundleId: finalBundleId,
-              consumerId,
-              remainingUses: bundleData.bundle.remainingUses.toString(),
-            }
-          : {
-              purchaseId: finalBundleId,
-              bundleId: finalBundleId,
-              consumerId,
-              paymentMethod: selectedMethod,
-              packagePrice: bundleData.bundleType.price.toString(),
-            }),
-        ...(classId && {
-          classId,
-          className: allocationData?.allocation?.timeSlot?.sessionType?.name,
-          classDate: allocationData?.allocation?.startTime,
-          professorName: allocationData?.allocation?.timeSlot?.agent?.name,
+        consumerId: consumerId.toString(),
+        packageName: getPackageName(),
+        ...(bundleTypeId ? {
+          purchaseId: finalBundleId || "",
+          bundleId: finalBundleId || "",
+          paymentMethod: selectedMethod || "",
+          packagePrice: bundleData?.bundleType?.price?.toString() || "0",
+        } : {
+          bundleId: finalBundleId || "",
+          remainingUses: bundleData?.bundle?.remainingUses?.toString() || "0",
         }),
-        ...(consumerData?.consumer && {
-          firstName: consumerData.consumer.firstName,
-          lastName: consumerData.consumer.lastName,
-          email: consumerData.consumer.email,
-        }),
-        packageName: bundleData.bundleType.name,
+        ...(reservationData ? {
+          reservationId: reservationData.id || "",
+        } : {}),
+        ...(classId && allocationData?.allocation ? {
+          classId: classId,
+          className: allocationData.allocation.timeSlot?.sessionType?.name || "",
+          classDate: allocationData.allocation.startTime?.toString() || "",
+          professorName: allocationData.allocation.timeSlot?.agent?.name || "",
+        } : {}),
+        ...(consumerData?.consumer ? {
+          firstName: consumerData.consumer.firstName || "",
+          lastName: consumerData.consumer.lastName || "",
+          email: consumerData.consumer.email || "",
+        } : {}),
       });
 
       // Wait for 2 seconds before navigating
