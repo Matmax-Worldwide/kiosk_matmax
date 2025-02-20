@@ -4,14 +4,19 @@ import React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { CheckCircle2, User, Calendar, Home, ArrowRight } from "lucide-react";
+import {
+  CheckCircle2,
+  User,
+  Calendar,
+  Home,
+  ArrowRight,
+  Package,
+} from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
 import { maskEmail } from "@/lib/utils/mask-data";
-
-const AUTO_NAVIGATION_DELAY = 30; // seconds
 
 export function ConfirmationContent() {
   const router = useRouter();
@@ -19,112 +24,76 @@ export function ConfirmationContent() {
   const { language } = useLanguageContext();
   const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
   const [showHomeOverlay, setShowHomeOverlay] = React.useState(false);
-  const [showInitialOverlay, setShowInitialOverlay] = React.useState(true);
-  const [countdown, setCountdown] = React.useState(AUTO_NAVIGATION_DELAY);
-  const [isRedirecting, setIsRedirecting] = React.useState(false);
-
-  React.useEffect(() => {
-    let timer: NodeJS.Timeout;
-    let isCancelled = false;
-    
-    if (!showInitialOverlay && countdown > 0 && !isRedirecting) {
-      timer = setInterval(() => {
-        if (!isCancelled) {
-          setCountdown((prev) => prev - 1);
-        }
-      }, 1000);
-    }
-
-    if (countdown === 0 && !isRedirecting) {
-      setIsRedirecting(true);
-      handleHomeClick();
-    }
-
-    return () => {
-      isCancelled = true;
-      if (timer) clearInterval(timer);
-    };
-  }, [countdown, showInitialOverlay, isRedirecting]);
+  const [paymentMethodText, setPaymentMethodText] = React.useState("");
 
   // Get all parameters
-  const purchaseId = searchParams.get('purchaseId');
-  const paymentMethod = searchParams.get('paymentMethod');
-  const firstName = searchParams.get('firstName');
-  const lastName = searchParams.get('lastName');
-  const email = searchParams.get('email');
-  const packageName = searchParams.get('packageName');
-  const packagePrice = searchParams.get('packagePrice');
-  const remainingUses = searchParams.get('remainingUses');
-  
-  // Class information
-  const classId = searchParams.get('classId');
-  const className = searchParams.get('className');
-  const classDate = searchParams.get('classDate');
-  const professorName = searchParams.get('professorName');
-  const professorEmail = searchParams.get('professorEmail');
-  const reservationId = searchParams.get('reservationId');
+  const purchaseId = searchParams.get("purchaseId");
+  const bundleId = searchParams.get("bundleId");
+  const bundleTypeId = searchParams.get("bundleTypeId");
+  const paymentMethod = searchParams.get("paymentMethod");
+  const firstName = searchParams.get("firstName");
+  const lastName = searchParams.get("lastName");
+  const email = searchParams.get("email");
+  const packageName = searchParams.get("packageName");
+  const packagePrice = searchParams.get("packagePrice");
+  const remainingUses = searchParams.get("remainingUses");
 
-  const getPaymentMethodText = () => {
-    switch (paymentMethod) {
-      case 'CARD':
-        return language === 'en' ? 'Credit/Debit Card' : 'Tarjeta Crédito/Débito';
-      case 'QR':
-        return 'Yape / Plin';
-      case 'CASH':
-        return language === 'en' ? 'Cash' : 'Efectivo';
-      default:
-        return '';
+  // Class information
+  const classId = searchParams.get("classId");
+  const className = searchParams.get("className");
+  const classDate = searchParams.get("classDate");
+  const professorName = searchParams.get("professorName");
+  const reservationId = searchParams.get("reservationId");
+
+  React.useEffect(() => {
+    if (bundleId) {
+      setPaymentMethodText(language === "en" ? "Existing Package" : "Paquete Existente");
+      return;
+    } else if (bundleTypeId) {
+      switch (paymentMethod) {
+        case "CARD":
+          setPaymentMethodText(language === "en" ? "Credit/Debit Card" : "Tarjeta Crédito/Débito");
+          break;
+        case "QR":
+          setPaymentMethodText("Yape / Plin");
+          break;
+        case "CASH":
+          setPaymentMethodText(language === "en" ? "Cash" : "Efectivo");
+          break;
+        default:
+          setPaymentMethodText("");
+      }
+      return;
     }
-  };
+
+    setPaymentMethodText("");
+  }, [language, paymentMethod, bundleId, bundleTypeId]);
 
   const handleScheduleClick = () => {
-    setIsRedirecting(true);
     setShowScheduleOverlay(true);
   };
 
   const handleHomeClick = () => {
-    setIsRedirecting(true);
     setShowHomeOverlay(true);
   };
 
   return (
     <>
-      {/* Initial Success Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showInitialOverlay}
-        title={{
-          en: classId ? "Purchase and Reservation Successful!" : "Purchase Successful!",
-          es: classId ? "¡Compra y Reserva Exitosa!" : "¡Compra Exitosa!"
-        }}
-        message={{
-          en: classId
-            ? "Your purchase has been confirmed and your class has been successfully reserved."
-            : "Your purchase has been confirmed and processed successfully.",
-          es: classId
-            ? "Tu compra ha sido confirmada y tu clase ha sido reservada exitosamente."
-            : "Tu compra ha sido confirmada y procesada exitosamente."
-        }}
-        variant="payment"
-        duration={3000}
-        onComplete={() => setShowInitialOverlay(false)}
-      />
-
       {/* Schedule Overlay */}
       <SuccessOverlay
         aria-live="polite"
         show={showScheduleOverlay}
         title={{
           en: "Opening Schedule",
-          es: "Abriendo Horario"
+          es: "Abriendo Horario",
         }}
         message={{
           en: "You will be redirected to view the class schedule",
-          es: "Serás redirigido para ver el horario de clases"
+          es: "Serás redirigido para ver el horario de clases",
         }}
         variant="schedule"
         duration={1500}
-        onComplete={() => router.push('/schedule')}
+        onComplete={() => router.push("/schedule")}
       />
 
       {/* Home Overlay */}
@@ -133,22 +102,22 @@ export function ConfirmationContent() {
         show={showHomeOverlay}
         title={{
           en: "Returning Home",
-          es: "Volviendo al Inicio"
+          es: "Volviendo al Inicio",
         }}
         message={{
           en: "You will be redirected to the home page",
-          es: "Serás redirigido a la página principal"
+          es: "Serás redirigido a la página principal",
         }}
         variant="home"
         duration={1500}
-        onComplete={() => router.push('/')}
+        onComplete={() => router.push("/")}
       />
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{ 
-          opacity: showInitialOverlay ? 0 : 1,
-          y: showInitialOverlay ? 20 : 0
+        animate={{
+          opacity: 1,
+          y: 0,
         }}
         transition={{ duration: 0.5 }}
         className="container mx-auto px-4 py-16 md:py-24"
@@ -162,14 +131,13 @@ export function ConfirmationContent() {
             <CheckCircle2 className="w-14 h-14 text-white" />
           </div>
           <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-            {classId 
-              ? language === "en" 
-                ? "Purchase and Reservation Successful!" 
+            {classId
+              ? language === "en"
+                ? "Purchase and Reservation Successful!"
                 : "¡Compra y Reserva Exitosa!"
-              : language === "en" 
-                ? "Purchase Successful!" 
-                : "¡Compra Exitosa!"
-            }
+              : language === "en"
+              ? "Purchase Successful!"
+              : "¡Compra Exitosa!"}
           </h2>
           <p className="text-xl text-gray-600 mb-4">
             {classId
@@ -177,25 +145,22 @@ export function ConfirmationContent() {
                 ? "Your purchase has been confirmed and your class has been successfully reserved."
                 : "Tu compra ha sido confirmada y tu clase ha sido reservada exitosamente."
               : language === "en"
-                ? "Your purchase has been confirmed and processed successfully."
-                : "Tu compra ha sido confirmada y procesada exitosamente."
-            }
+              ? "Your purchase has been confirmed and processed successfully."
+              : "Tu compra ha sido confirmada y procesada exitosamente."}
           </p>
           <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6 max-w-md mx-auto border border-green-100/50 shadow-sm">
             <p className="text-gray-600 mb-2">
               {language === "en"
                 ? "We've sent a confirmation email to:"
-                : "Hemos enviado un correo de confirmación a:"
-              }
+                : "Hemos enviado un correo de confirmación a:"}
             </p>
             <p className="text-lg font-semibold text-green-700 mb-2">
-              {email ? maskEmail(email) : '-'}
+              {email ? maskEmail(email) : "-"}
             </p>
             <p className="text-sm text-gray-500">
               {language === "en"
                 ? "Please check your inbox and spam folder"
-                : "Por favor revisa tu bandeja de entrada y carpeta de spam"
-              }
+                : "Por favor revisa tu bandeja de entrada y carpeta de spam"}
             </p>
           </div>
         </motion.div>
@@ -214,7 +179,9 @@ export function ConfirmationContent() {
                 <User className="w-8 h-8" />
               </div>
               <h3 className="text-2xl font-bold mb-4">
-                {language === "en" ? "Order Information" : "Información de la Orden"}
+                {language === "en"
+                  ? "Order Information"
+                  : "Información de la Orden"}
               </h3>
               <div className="space-y-3">
                 <div>
@@ -228,7 +195,7 @@ export function ConfirmationContent() {
                     {language === "en" ? "Customer" : "Cliente"}
                   </p>
                   <p className="font-semibold text-gray-700">
-                    {firstName && lastName ? (firstName + " " + lastName) : ''}
+                    {firstName && lastName ? firstName + " " + lastName : ""}
                   </p>
                 </div>
                 <div>
@@ -236,14 +203,8 @@ export function ConfirmationContent() {
                     {language === "en" ? "Email" : "Correo"}
                   </p>
                   <p className="font-semibold text-gray-700">
-                    {email ? maskEmail(email) : ''}
+                    {email ? maskEmail(email) : ""}
                   </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">
-                    {language === "en" ? "Payment Method" : "Método de Pago"}
-                  </p>
-                  <p className="font-semibold text-gray-700">{getPaymentMethodText()}</p>
                 </div>
               </div>
               <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -261,10 +222,12 @@ export function ConfirmationContent() {
           >
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-purple-600 to-pink-600 h-full">
               <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white mb-6">
-                <User className="w-8 h-8" />
+                <Package className="w-8 h-8" />
               </div>
               <h3 className="text-2xl font-bold mb-4">
-                {professorName || (language === "en" ? "Professor" : "Profesor")}
+                {language === "en"
+                  ? "Package Information"
+                  : "Información del Paquete"}
               </h3>
               <div className="space-y-3">
                 <div>
@@ -275,24 +238,29 @@ export function ConfirmationContent() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    {remainingUses 
-                      ? (language === "en" ? "Remaining Uses" : "Usos Restantes")
-                      : (language === "en" ? "Price" : "Precio")
-                    }
+                    {remainingUses
+                      ? language === "en"
+                        ? "Remaining Uses"
+                        : "Usos Restantes"
+                      : language === "en"
+                      ? "Price"
+                      : "Precio"}
                   </p>
                   <p className="font-semibold text-gray-700">
-                    {remainingUses 
-                      ? `${remainingUses} ${language === "en" ? "uses" : "usos"}`
-                      : `S/. ${packagePrice}`
-                    }
+                    {remainingUses
+                      ? `${remainingUses} ${
+                          language === "en" ? "uses" : "usos"
+                        }`
+                      : `S/. ${packagePrice}`}
                   </p>
                 </div>
+
                 <div>
                   <p className="text-sm text-gray-500">
-                    {language === "en" ? "Professor Email" : "Correo del Profesor"}
+                    {language === "en" ? "Payment Method" : "Método de Pago"}
                   </p>
                   <p className="font-semibold text-gray-700">
-                    {professorEmail ? maskEmail(professorEmail) : "-"}
+                    {paymentMethodText}
                   </p>
                 </div>
               </div>
@@ -316,7 +284,9 @@ export function ConfirmationContent() {
                 <Calendar className="w-8 h-8" />
               </div>
               <h3 className="text-2xl font-bold mb-4">
-                {language === "en" ? "Class Information" : "Información de la Clase"}
+                {language === "en"
+                  ? "Class Information"
+                  : "Información de la Clase"}
               </h3>
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-3">
@@ -330,7 +300,9 @@ export function ConfirmationContent() {
                     <p className="text-sm text-gray-500">
                       {language === "en" ? "Professor" : "Profesor"}
                     </p>
-                    <p className="font-semibold text-gray-700">{professorName}</p>
+                    <p className="font-semibold text-gray-700">
+                      {professorName}
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -340,9 +312,13 @@ export function ConfirmationContent() {
                         {language === "en" ? "Date & Time" : "Fecha y Hora"}
                       </p>
                       <p className="font-semibold text-gray-700">
-                        {format(new Date(classDate), "EEEE d 'de' MMMM, HH:mm", {
-                          locale: language === 'es' ? es : undefined
-                        })}
+                        {format(
+                          new Date(classDate),
+                          "EEEE d 'de' MMMM, HH:mm",
+                          {
+                            locale: language === "es" ? es : undefined,
+                          }
+                        )}
                       </p>
                     </div>
                   )}
@@ -350,7 +326,9 @@ export function ConfirmationContent() {
                     <p className="text-sm text-gray-500">
                       {language === "en" ? "Reservation ID" : "ID de Reserva"}
                     </p>
-                    <p className="font-semibold text-gray-700">{reservationId}</p>
+                    <p className="font-semibold text-gray-700">
+                      {reservationId}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -368,16 +346,24 @@ export function ConfirmationContent() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {classId ? (
               <>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button
                     onClick={handleScheduleClick}
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
                   >
                     <Calendar className="w-6 h-6 mr-2" />
-                    {language === "en" ? "Book Another Class" : "Reservar Otra Clase"}
+                    {language === "en"
+                      ? "Book Another Class"
+                      : "Reservar Otra Clase"}
                   </Button>
                 </motion.div>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button
                     onClick={handleHomeClick}
                     variant="outline"
@@ -385,14 +371,16 @@ export function ConfirmationContent() {
                   >
                     <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
                     {language === "en" ? "Return to Home" : "Volver al Inicio"}
-                    <span className="ml-2 text-sm text-green-600">({countdown}s)</span>
                     <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
                   </Button>
                 </motion.div>
               </>
             ) : (
               <>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button
                     onClick={handleScheduleClick}
                     className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
@@ -401,7 +389,10 @@ export function ConfirmationContent() {
                     {language === "en" ? "View Schedule" : "Ver Horario"}
                   </Button>
                 </motion.div>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button
                     onClick={handleHomeClick}
                     variant="outline"
@@ -409,7 +400,6 @@ export function ConfirmationContent() {
                   >
                     <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
                     {language === "en" ? "Return to Home" : "Volver al Inicio"}
-                    <span className="ml-2 text-sm text-green-600">({countdown}s)</span>
                     <ArrowRight className="w-5 h-5 ml-2 opacity-0 group-hover:opacity-100 transition-all" />
                   </Button>
                 </motion.div>
@@ -428,7 +418,7 @@ export function ConfirmationContent() {
           >
             <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100">
               <p className="text-blue-700 mb-2 font-medium">
-                {language === "en" 
+                {language === "en"
                   ? "You can now check in for your class or book another one!"
                   : "¡Ahora puedes hacer check-in para tu clase o reservar otra!"}
               </p>
@@ -443,4 +433,4 @@ export function ConfirmationContent() {
       </motion.div>
     </>
   );
-} 
+}
