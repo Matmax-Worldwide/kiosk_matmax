@@ -136,6 +136,8 @@ export default function CheckInDetailsPage() {
   const [isNavigating, setIsNavigating] = React.useState(false);
   const [isCheckingIn, setIsCheckingIn] = React.useState(false);
   const [showSuccess, setShowSuccess] = React.useState(false);
+  const [isBuyingPackage, setIsBuyingPackage] = React.useState(false);
+  const [isBookingClass, setIsBookingClass] = React.useState(false);
 
   // Get consumer details query
   const { data: consumerData, loading } = useQuery(GET_CONSUMER, {
@@ -472,11 +474,30 @@ export default function CheckInDetailsPage() {
                             </div>
                             <div className="grid grid-cols-1 gap-4">
                               <Button
-                                onClick={() => router.push('/buy-packages')}
+                                onClick={() => {
+                                  setIsBuyingPackage(true);
+                                  router.push(`/buy-packages?consumerId=${params.slug}`);
+                                }}
                                 className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
+                                disabled={isBuyingPackage}
                               >
-                                <Package className="w-5 h-5 mr-2" />
-                                {language === "en" ? "Buy Packages" : "Comprar Paquetes"}
+                                {isBuyingPackage ? (
+                                  <>
+                                    <motion.div
+                                      animate={{ rotate: 360 }}
+                                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                      className="mr-2"
+                                    >
+                                      <Clock className="w-5 h-5" />
+                                    </motion.div>
+                                    {language === "en" ? "Loading..." : "Cargando..."}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Package className="w-5 h-5 mr-2" />
+                                    {language === "en" ? "Buy Packages" : "Comprar Paquetes"}
+                                  </>
+                                )}
                               </Button>
                               <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
@@ -489,11 +510,30 @@ export default function CheckInDetailsPage() {
                                 </div>
                               </div>
                               <Button
-                                onClick={() => router.push('/class-pass')}
+                                onClick={() => {
+                                  setIsBookingClass(true);
+                                  router.push(`/class-pass?consumerId=${params.slug}`);
+                                }}
                                 className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
+                                disabled={isBookingClass}
                               >
-                                <CalendarPlus className="w-5 h-5 mr-2" />
-                                {language === "en" ? "Book Individual Class" : "Reservar Clase Individual"}
+                                {isBookingClass ? (
+                                  <>
+                                    <motion.div
+                                      animate={{ rotate: 360 }}
+                                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                      className="mr-2"
+                                    >
+                                      <Clock className="w-5 h-5" />
+                                    </motion.div>
+                                    {language === "en" ? "Loading..." : "Cargando..."}
+                                  </>
+                                ) : (
+                                  <>
+                                    <CalendarPlus className="w-5 h-5 mr-2" />
+                                    {language === "en" ? "Book Individual Class" : "Reservar Clase Individual"}
+                                  </>
+                                )}
                               </Button>
                             </div>
                           </>
