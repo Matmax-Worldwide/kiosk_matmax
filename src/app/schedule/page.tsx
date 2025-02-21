@@ -401,11 +401,13 @@ export default function SchedulePage() {
       const currentParams = new URLSearchParams(window.location.search);
       const consumerId = currentParams.get('consumerId');
       
-      const route = consumerId
-        ? `/user-details?${params.append('consumerId', consumerId)}`
-        : `/user-selection?${params.toString()}`;
-        
-      router.push(route);
+      if (consumerId) {
+        // If we have a consumerId, navigate to consumer details with both consumerId and classId
+        router.push(`/consumer-details?consumerId=${consumerId}&classId=${params.get('classId')}`);
+      } else {
+        // If no consumerId, navigate to user selection with all params
+        router.push(`/user-selection?${params.toString()}`);
+      }
     } catch (error) {
       console.error('Navigation error:', error);
       // Fallback to user selection in case of error
