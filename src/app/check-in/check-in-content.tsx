@@ -57,7 +57,7 @@ export function CheckInContent() {
   const [showResults, setShowResults] = useState(false);
 
   // Search consumers query
-  const { data: searchData, loading } = useQuery(SEARCH_CONSUMERS, {
+  const { data: searchData, loading, refetch: refetchSearch } = useQuery(SEARCH_CONSUMERS, {
     variables: { query: inputValue, limit: 5 },
     skip: inputValue.length < 2,
     onError: (error) => {
@@ -66,13 +66,14 @@ export function CheckInContent() {
     },
   });
 
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback(async () => {
     if (inputValue.length >= 2) {
       setIsSearching(true);
+      await refetchSearch();
       setShowResults(true);
       setTimeout(() => setIsSearching(false), 500);
     }
-  }, [inputValue]);
+  }, [inputValue, refetchSearch]);
 
   const debouncedSearch = useMemo(
     () => debounce(handleSearch, 300),

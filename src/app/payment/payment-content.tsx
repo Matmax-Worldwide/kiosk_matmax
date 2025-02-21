@@ -210,7 +210,7 @@ export function PaymentContent() {
   const bundleTypeId = searchParams.get("bundleTypeId");
   const classId = searchParams.get("classId");
 
-  const { data: consumerData, loading: consumerLoading } = useQuery(
+  const { data: consumerData, loading: consumerLoading, refetch: refetchConsumer } = useQuery(
     GET_CONSUMER,
     {
       variables: { id: consumerId },
@@ -218,7 +218,7 @@ export function PaymentContent() {
     }
   );
 
-  const { data: bundleData, loading: bundleLoading } = useQuery(
+  const { data: bundleData, loading: bundleLoading, refetch: refetchBundle } = useQuery(
     bundleId ? GET_BUNDLE : GET_BUNDLE_TYPE,
     {
       variables: { id: bundleId || bundleTypeId },
@@ -226,7 +226,7 @@ export function PaymentContent() {
     }
   );
 
-  const { data: allocationData, loading: allocationLoading } = useQuery(
+  const { data: allocationData, loading: allocationLoading, refetch: refetchAllocation } = useQuery(
     GET_ALLOCATION,
     {
       variables: { id: classId },
@@ -396,6 +396,13 @@ export function PaymentContent() {
 
         reservationData = reservationResponse.createReservation;
       }
+
+      // Refetch all data to ensure it's up to date
+      await Promise.all([
+        refetchConsumer(),
+        refetchBundle(),
+        classId && refetchAllocation(),
+      ]);
 
       // Show success message before navigation
       setShowSuccess(true);
