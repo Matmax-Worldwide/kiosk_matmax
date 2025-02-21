@@ -117,10 +117,10 @@ export default function Home() {
                 className="h-full cursor-pointer"
               >
                 <div
-                  className={`bg-white p-8 rounded-2xl shadow-lg active:shadow-xl
+                  className={`bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl
 transition-all duration-300 border-2 border-transparent
-active:border-2 active:border-opacity-50 h-full
-active:border-gradient-to-r ${action.gradient}`}
+hover:border-2 hover:border-opacity-50 h-full hover:scale-[1.02]
+hover:border-gradient-to-r active:scale-[0.98] active:shadow-md ${action.gradient}`}
                 >
                   <div
                     className={`w-16 h-16 rounded-xl bg-gradient-to-r ${action.gradient}
@@ -174,13 +174,15 @@ to-teal-600 bg-clip-text text-transparent"
             <div
               onClick={() => handleNavigation("/check-in")}
               className="bg-gradient-to-r from-green-600 to-teal-600 text-white
-                p-6 rounded-2xl shadow-lg active:shadow-xl transition-all duration-300 
-                flex items-center justify-center gap-3 group cursor-pointer"
+                p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 
+                flex items-center justify-center gap-3 group cursor-pointer
+                hover:scale-[1.02] active:scale-[0.98] active:shadow-md
+                hover:from-green-500 hover:to-teal-500 active:from-green-700 active:to-teal-700"
             >
-              <UserCheck className="w-8 h-8 transition-transform group-active:scale-110" />
+              <UserCheck className="w-8 h-8 transition-transform group-hover:scale-110" />
               <span className="text-xl font-semibold">Check-in</span>
               <ArrowRight
-                className="w-6 h-6 opacity-0 group-active:opacity-100
+                className="w-6 h-6 opacity-0 group-hover:opacity-100
 transition-all"
               />
             </div>
@@ -265,10 +267,11 @@ transition-all"
             <button
               onClick={() => language === "es" && setLanguage("en")}
               className={`px-6 py-2.5 rounded-xl transition-all duration-500 font-medium
+              hover:scale-[1.02] active:scale-[0.98]
               ${
                 language === "en"
-                  ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md"
-                  : "text-green-700 active:bg-green-50"
+                  ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md hover:from-green-400 hover:to-teal-400 active:from-green-600 active:to-teal-600"
+                  : "text-green-700 hover:bg-green-50 active:bg-green-100"
               }`}
             >
               English
@@ -276,10 +279,11 @@ transition-all"
             <button
               onClick={() => language === "en" && setLanguage("es")}
               className={`px-6 py-2.5 rounded-xl transition-all duration-500 font-medium
+              hover:scale-[1.02] active:scale-[0.98]
               ${
                 language === "es"
-                  ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md"
-                  : "text-green-700 active:bg-green-50"
+                  ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md hover:from-green-400 hover:to-teal-400 active:from-green-600 active:to-teal-600"
+                  : "text-green-700 hover:bg-green-50 active:bg-green-100"
               }`}
             >
               Español

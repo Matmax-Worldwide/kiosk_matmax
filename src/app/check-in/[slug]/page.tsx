@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation } from "@apollo/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/components/header";
 import { Button } from "@/components/ui/button";
@@ -134,6 +134,8 @@ export default function CheckInDetailsPage() {
   const { language } = useLanguageContext();
   const consumerId = params.slug as string;
   const [isNavigating, setIsNavigating] = React.useState(false);
+  const [isCheckingIn, setIsCheckingIn] = React.useState(false);
+  const [showSuccess, setShowSuccess] = React.useState(false);
 
   // Get consumer details query
   const { data: consumerData, loading } = useQuery(GET_CONSUMER, {
@@ -145,14 +147,21 @@ export default function CheckInDetailsPage() {
 
   const handleCheckIn = async (reservationId: string) => {
     try {
+      setIsCheckingIn(true);
       await updateReservation({
         variables: {
           id: reservationId,
           status: "VALIDATED",
         },
       });
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
     } catch (error) {
       console.error("Error during check-in:", error);
+    } finally {
+      setIsCheckingIn(false);
     }
   };
 
@@ -204,6 +213,35 @@ export default function CheckInDetailsPage() {
     <>
       <Header title={{ en: "Check-in", es: "Check-in" }} />
       <main className="min-h-screen bg-gradient-to-b from-blue-50 to-white mt-16">
+        {/* Success Overlay */}
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="bg-white rounded-lg p-8 flex flex-col items-center gap-4 max-w-sm mx-4"
+              >
+                <CheckCircle2 className="w-16 h-16 text-green-500" />
+                <h2 className="text-2xl font-bold text-center">
+                  {language === "en" ? "Check-in Successful!" : "¡Check-in Exitoso!"}
+                </h2>
+                <p className="text-gray-600 text-center">
+                  {language === "en" 
+                    ? "You will be redirected to the home page..." 
+                    : "Serás redirigido a la página principal..."}
+                </p>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
                     {/* Consumer Info Card */}
@@ -315,10 +353,26 @@ export default function CheckInDetailsPage() {
                       {reservation.status === "CONFIRMED" ? (
                         <Button
                           onClick={() => handleCheckIn(reservation.id)}
-                          className="bg-green-500 hover:bg-green-600"
+                          className="bg-green-500 hover:bg-green-600 active:bg-green-700 transform hover:scale-102 active:scale-98 transition-all duration-200 shadow-md hover:shadow-lg"
+                          disabled={isCheckingIn}
                         >
-                          <CheckCircle2 className="w-5 h-5 mr-2" />
-                          Check-in
+                          {isCheckingIn ? (
+                            <>
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                className="mr-2"
+                              >
+                                <Clock className="w-5 h-5" />
+                              </motion.div>
+                              {language === "en" ? "Checking in..." : "Registrando..."}
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="w-5 h-5 mr-2" />
+                              Check-in
+                            </>
+                          )}
                         </Button>
                       ) : (
                         <div className="flex items-center gap-2 text-gray-500">
@@ -343,7 +397,7 @@ export default function CheckInDetailsPage() {
                             `/schedule?consumerId=${params.slug}`
                           );
                         }}
-                        className="bg-blue-500 hover:bg-blue-600"
+                        className="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 transform hover:scale-102 active:scale-98 transition-all duration-200 shadow-md hover:shadow-lg"
                         disabled={isNavigating}
                       >
                         {isNavigating ? (
