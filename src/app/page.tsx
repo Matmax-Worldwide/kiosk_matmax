@@ -177,7 +177,11 @@ to-teal-600 bg-clip-text text-transparent"
                 p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 
                 flex items-center justify-center gap-3 group cursor-pointer
                 hover:scale-[1.02] active:scale-[0.98] active:shadow-md
-                hover:from-green-500 hover:to-teal-500 active:from-green-700 active:to-teal-700"
+                hover:from-green-500 hover:to-teal-500 active:from-green-700 active:to-teal-700
+                focus:from-green-700 focus:to-teal-700 focus:outline-none
+                [&:active]:from-green-800 [&:active]:to-teal-800
+                [&:active]:shadow-inner [&:active]:scale-[0.98]
+                peer"
             >
               <UserCheck className="w-8 h-8 transition-transform group-hover:scale-110" />
               <span className="text-xl font-semibold">Check-in</span>
