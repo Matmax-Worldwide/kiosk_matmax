@@ -18,8 +18,10 @@ import React from "react";
 export default function Home() {
   const { language, setLanguage } = useLanguageContext();
   const router = useRouter();
+  const [activeButton, setActiveButton] = React.useState<string | null>(null);
 
   const handleNavigation = (route: string) => {
+    setActiveButton(route);
     setTimeout(() => {
       router.push(route);
     }, 1500);
@@ -119,7 +121,7 @@ export default function Home() {
                 <div
                   className={`bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl
 transition-all duration-300 border-2 border-transparent
-hover:border-2 hover:border-opacity-50 h-full hover:scale-[1.02]
+${activeButton === action.href ? 'scale-[1.02] shadow-xl border-2 border-opacity-50' : 'hover:scale-[1.02] hover:border-2 hover:border-opacity-50'}
 hover:border-gradient-to-r active:scale-[0.98] active:shadow-md ${action.gradient}`}
                 >
                   <div
@@ -173,15 +175,15 @@ to-teal-600 bg-clip-text text-transparent"
           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
             <div
               onClick={() => handleNavigation("/check-in")}
-              className="bg-gradient-to-r from-green-600 to-teal-600 text-white
-                p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 
+              className={`bg-gradient-to-r from-green-600 to-teal-600 text-white
+                p-6 rounded-2xl shadow-lg transition-all duration-300 
                 flex items-center justify-center gap-3 group cursor-pointer
-                hover:scale-[1.02] active:scale-[0.98] active:shadow-md
-                hover:from-green-500 hover:to-teal-500 active:from-green-700 active:to-teal-700
+                ${activeButton === "/check-in" ? 'scale-[1.02] shadow-xl from-green-500 to-teal-500' : 'hover:scale-[1.02] hover:shadow-xl hover:from-green-500 hover:to-teal-500'}
+                active:from-green-700 active:to-teal-700
                 focus:from-green-700 focus:to-teal-700 focus:outline-none
                 [&:active]:from-green-800 [&:active]:to-teal-800
                 [&:active]:shadow-inner [&:active]:scale-[0.98]
-                peer"
+                peer`}
             >
               <UserCheck className="w-8 h-8 transition-transform group-hover:scale-110" />
               <span className="text-xl font-semibold">Check-in</span>
