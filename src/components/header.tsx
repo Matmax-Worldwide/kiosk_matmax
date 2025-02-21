@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Globe, Calendar } from "lucide-react";
+import { ArrowLeft, Calendar } from "lucide-react";
 import { BilingualText } from "@/types/index";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
@@ -25,9 +25,6 @@ export function Header({ title, showBackButton = true, onBack }: HeaderProps) {
     }
   };
 
-  const handleLanguageToggle = () => {
-    setLanguage(language === "en" ? "es" : "en");
-  };
 
   const shouldShowBackButton = showBackButton && title[language] !== "Welcome" && title[language] !== "Bienvenido" && title[language] !== "Purchase Confirmation" && title[language] !== "Confirmación de Compra";
 
@@ -55,23 +52,35 @@ export function Header({ title, showBackButton = true, onBack }: HeaderProps) {
                 {title[language]}
               </h1>
             </div>
-            
+
+            <div className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-lg border border-green-100 p-1.5 flex gap-2 active:shadow-xl transition-all duration-500 active:border-green-200">
+              <button
+                onClick={() => language === "es" && setLanguage("en")}
+                className={`px-4 py-1.5 rounded-xl transition-all duration-500 font-medium text-sm
+                ${
+                  language === "en"
+                    ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md"
+                    : "text-green-700 active:bg-green-50"
+                }`}
+              >
+                English
+              </button>
+              <button
+                onClick={() => language === "en" && setLanguage("es")}
+                className={`px-4 py-1.5 rounded-xl transition-all duration-500 font-medium text-sm
+                ${
+                  language === "es"
+                    ? "bg-gradient-to-r from-green-500 to-teal-500 text-white shadow-md"
+                    : "text-green-700 active:bg-green-50"
+                }`}
+              >
+                Español
+              </button>
+            </div>
+
             <div className="flex items-center gap-1 text-sm text-gray-500">
               <Calendar className="h-4 w-4" />
               <span className="capitalize">{formattedDate}</span>
-            </div>
-
-            <div className="min-w-[100px] flex justify-end">
-              <button
-                onClick={handleLanguageToggle}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors flex items-center gap-2"
-                aria-label="Cambiar idioma / Change language"
-              >
-                <span className="text-sm font-medium">
-                  {language === "es" ? "Change language" : "Cambiar idioma"}
-                </span>
-                <Globe className="h-5 w-5" />
-              </button>
             </div>
           </div>
         </div>
