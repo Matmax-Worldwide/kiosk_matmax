@@ -140,12 +140,24 @@ export default function CheckInDetailsPage() {
   const [isBookingClass, setIsBookingClass] = React.useState(false);
 
   // Get consumer details query
-  const { data: consumerData, loading } = useQuery(GET_CONSUMER, {
+  const { data: consumerData, loading, refetch: refetchConsumer } = useQuery(GET_CONSUMER, {
     variables: { id: consumerId },
   });
 
   // Update reservation mutation
-  const [updateReservation] = useMutation(UPDATE_RESERVATION_STATUS);
+  const [updateReservation] = useMutation(UPDATE_RESERVATION_STATUS, {
+    onCompleted: async () => {
+      await refetchConsumer();
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push('/');
+      }, 3000);
+    },
+    onError: (error) => {
+      console.error("Error during check-in:", error);
+      setIsCheckingIn(false);
+    }
+  });
 
   const handleCheckIn = async (reservationId: string) => {
     try {
@@ -156,13 +168,8 @@ export default function CheckInDetailsPage() {
           status: "VALIDATED",
         },
       });
-      setShowSuccess(true);
-      setTimeout(() => {
-        router.push('/');
-      }, 3000);
     } catch (error) {
       console.error("Error during check-in:", error);
-    } finally {
       setIsCheckingIn(false);
     }
   };
