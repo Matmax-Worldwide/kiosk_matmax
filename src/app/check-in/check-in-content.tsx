@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@apollo/client";
+import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Search, User2, Loader2 } from "lucide-react";
@@ -14,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 import debounce from "lodash/debounce";
 
-interface SearchResult {
+interface Consumer {
   id: string;
   firstName: string;
   lastName: string;
@@ -49,6 +50,7 @@ function SearchSkeletonLoader() {
 }
 
 export function CheckInContent() {
+  const router = useRouter();
   const [inputValue, setInputValue] = useState("");
   const { language } = useLanguageContext();
   const [isSearching, setIsSearching] = useState(false);
@@ -59,9 +61,9 @@ export function CheckInContent() {
     variables: { query: inputValue, limit: 5 },
     skip: inputValue.length < 2,
     onError: (error) => {
-      console.error('Search error:', error);
+      console.error("Search error:", error);
       setIsSearching(false);
-    }
+    },
   });
 
   const handleSearch = useCallback(() => {
@@ -83,20 +85,6 @@ export function CheckInContent() {
     };
   }, [debouncedSearch]);
 
-  const handleConsumerSelect = () => {
-    // Add hover effect animation
-    const element = document.activeElement as HTMLElement;
-    if (element) {
-      element.style.transform = 'scale(1.02)';
-      element.style.transition = 'transform 0.2s ease';
-      
-      // Reset after animation
-      setTimeout(() => {
-        element.style.transform = 'scale(1)';
-      }, 200);
-    }
-  };
-
   return (
     <div className="mx-auto px-4 py-8 mt-16">
       <motion.div
@@ -108,9 +96,11 @@ export function CheckInContent() {
           <div className="space-y-3">
             <Input
               type="text"
-              placeholder={language === "en" 
-                ? "Search by name, email or phone" 
-                : "Buscar por nombre, correo o teléfono"}
+              placeholder={
+                language === "en"
+                  ? "Search by name, email or phone"
+                  : "Buscar por nombre, correo o teléfono"
+              }
               value={inputValue}
               onChange={(e) => {
                 setInputValue(e.target.value);
@@ -118,7 +108,6 @@ export function CheckInContent() {
                   setShowResults(false);
                 }
               }}
-
               className={cn(
                 "text-lg py-6 pl-6 pr-6 rounded-2xl border-2 focus-visible:ring-offset-0",
                 "border-gray-200 focus-visible:border-green-500 focus-visible:ring-green-500",
@@ -130,8 +119,8 @@ export function CheckInContent() {
               type="button"
               className={cn(
                 "w-full h-14 rounded-xl text-lg font-medium transition-all duration-200",
-                inputValue.length < 2 
-                  ? "bg-gray-100 text-gray-400" 
+                inputValue.length < 2
+                  ? "bg-gray-100 text-gray-400"
                   : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg"
               )}
               disabled={inputValue.length < 2 || isSearching}
@@ -157,37 +146,43 @@ export function CheckInContent() {
               <>
                 {isSearching || loading ? (
                   <SearchSkeletonLoader />
-                ) : searchData?.searchConsumers && searchData.searchConsumers.length > 0 ? (
+                ) : searchData?.searchConsumers &&
+                  searchData.searchConsumers.length > 0 ? (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     className="mt-4 space-y-2"
                   >
-                    {searchData.searchConsumers.map((consumer: SearchResult) => (
-                      <motion.div
-                        key={consumer.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md
+                    {searchData.searchConsumers.map(
+                      (consumer: Consumer) => (
+                        <motion.div
+                          key={consumer.id}
+                          className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md
                         cursor-pointer border border-gray-100"
-                        onClick={() => handleConsumerSelect()}
-                      >
-                        <div className="flex items-center gap-3">
-                          <User2 className="w-5 h-5 text-gray-400" />
-                          <div>
-                            <p className="font-medium">
-                              {`${consumer.firstName} ${consumer.lastName}`}
-                            </p>
-                            <p className="text-sm text-gray-500">{maskEmail(consumer.email)}</p>
-                            {consumer.phoneNumber && (
-                              <p className="text-sm text-gray-500">
-                                {maskPhoneNumber(consumer.phoneNumber)}
+                          onClick={() => router.push(`/check-in/${consumer.id}`)}
+                        >
+                          <div
+                            className="flex items-center gap-3 hover:bg-green-50/50 active:bg-green-100/50 transition-colors duration-200"
+                          >
+                            <User2 className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="font-medium">
+                                {`${consumer.firstName} ${consumer.lastName}`}
                               </p>
-                            )}
+                              <p className="text-sm text-gray-500">
+                                {maskEmail(consumer.email)}
+                              </p>
+                              {consumer.phoneNumber && (
+                                <p className="text-sm text-gray-500">
+                                  {maskPhoneNumber(consumer.phoneNumber)}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      )
+                    )}
                   </motion.div>
                 ) : (
                   <motion.div
@@ -195,8 +190,8 @@ export function CheckInContent() {
                     animate={{ opacity: 1 }}
                     className="mt-4 text-center text-gray-500"
                   >
-                    {language === "en" 
-                      ? "No users found. Try a different search term." 
+                    {language === "en"
+                      ? "No users found. Try a different search term."
                       : "No se encontraron usuarios. Intenta con otros términos."}
                   </motion.div>
                 )}
@@ -207,4 +202,4 @@ export function CheckInContent() {
       </motion.div>
     </div>
   );
-} 
+}
