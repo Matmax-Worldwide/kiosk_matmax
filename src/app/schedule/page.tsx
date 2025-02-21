@@ -403,7 +403,7 @@ export default function SchedulePage() {
       
       if (consumerId) {
         // If we have a consumerId, navigate to consumer details with both consumerId and classId
-        router.push(`/consumer-details?consumerId=${consumerId}&classId=${params.get('classId')}`);
+        router.push(`/user-details?consumerId=${consumerId}&classId=${params.get('classId')}`);
       } else {
         // If no consumerId, navigate to user selection with all params
         router.push(`/user-selection?${params.toString()}`);
