@@ -36,6 +36,7 @@ export function ConfirmationContent() {
 
   // Get all parameters
   const purchaseId = searchParams.get("purchaseId");
+  const consumerId = searchParams.get("consumerId");
   const paymentMethod = searchParams.get("paymentMethod");
   const firstName = searchParams.get("firstName");
   const lastName = searchParams.get("lastName");
@@ -132,7 +133,13 @@ export function ConfirmationContent() {
         }}
         variant="schedule"
         duration={1500}
-        onComplete={() => router.push("/schedule")}
+        onComplete={() => {
+          if (consumerId) {
+            router.push(`/schedule?consumerId=${consumerId}`);
+          } else {
+            router.push("/schedule");
+          }
+        }}
       />
 
       {/* Home Overlay */}
