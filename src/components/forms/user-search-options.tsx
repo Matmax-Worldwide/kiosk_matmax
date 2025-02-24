@@ -219,7 +219,11 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
                       </p>
                     )}
                   </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400" />
+                  {selectedId === user.id ? (
+                    <Loader2 className="h-5 w-5 text-green-500 animate-spin" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5 text-gray-400" />
+                  )}
                 </div>
               </Card>
             ))}
