@@ -50,24 +50,37 @@ const SearchSkeletonLoader = memo(() => (
 SearchSkeletonLoader.displayName = 'SearchSkeletonLoader';
 
 // Memoized consumer result item component
-const ConsumerResultItem = memo(({ consumer, onClick }: { consumer: Consumer; onClick: () => void }) => (
-  <motion.div
-    className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md cursor-pointer border border-gray-100"
-    onClick={onClick}
-    layout
-  >
-    <div className="flex items-center gap-3 hover:bg-green-50/50 active:bg-green-100/50 transition-colors duration-200">
-      <User2 className="w-5 h-5 text-gray-400" />
-      <div>
-        <p className="font-medium">{`${consumer.firstName} ${consumer.lastName}`}</p>
-        <p className="text-sm text-gray-500">{maskEmail(consumer.email)}</p>
-        {consumer.phoneNumber && (
-          <p className="text-sm text-gray-500">{maskPhoneNumber(consumer.phoneNumber)}</p>
-        )}
+const ConsumerResultItem = memo(({ consumer, onClick }: { consumer: Consumer; onClick: () => void }) => {
+  const [isClicked, setIsClicked] = useState(false);
+
+  const handleClick = () => {
+    setIsClicked(true);
+    onClick();
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "p-4 rounded-lg bg-white shadow-sm cursor-pointer border border-gray-100 transition-all duration-200",
+        "hover:shadow-md hover:border-green-500 hover:bg-green-50/50 active:bg-green-100/50",
+        isClicked && "shadow-md border-green-500 bg-green-50/50"
+      )}
+      onClick={handleClick}
+      layout
+    >
+      <div className="flex items-center gap-3 transition-colors duration-200">
+        <User2 className="w-5 h-5 text-gray-400" />
+        <div>
+          <p className="font-medium">{`${consumer.firstName} ${consumer.lastName}`}</p>
+          <p className="text-sm text-gray-500">{maskEmail(consumer.email)}</p>
+          {consumer.phoneNumber && (
+            <p className="text-sm text-gray-500">{maskPhoneNumber(consumer.phoneNumber)}</p>
+          )}
+        </div>
       </div>
-    </div>
-  </motion.div>
-));
+    </motion.div>
+  );
+});
 ConsumerResultItem.displayName = 'ConsumerResultItem';
 
 // Memoized search results component
@@ -117,7 +130,8 @@ const SearchResults = memo(({
     </motion.div>
   );
 });
-SearchResults.displayName = 'SearchResults';
+
+SearchResults.displayName = "SearchResults";
 
 export function CheckInContent() {
   const router = useRouter();

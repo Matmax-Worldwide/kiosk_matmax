@@ -22,7 +22,7 @@ export default function Home() {
       icon: CalendarDays,
       title: "Reservar Ahora",
       titleEn: "Book Now",
-      description: "Reserva tu próxima clase o revisa el horario",
+      description: "Reserva o revisa el horario",
       descriptionEn: "Book your next class or check schedule",
       href: "/class-pass",
       gradient: "from-green-600 to-teal-600",
