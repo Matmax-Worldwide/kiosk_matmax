@@ -178,7 +178,7 @@ export function RegistrationForm({
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full py-6 text-xl font-medium mt-8 rounded-xl hover:shadow-lg transition-all duration-200 bg-gradient-to-r from-green-600 to-teal-600 text-white"
+          className="w-full py-6 text-xl font-medium bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6 w-full text-2xl"
           variant="default"
           disabled={isSubmitting}
         >
