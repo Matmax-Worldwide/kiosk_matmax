@@ -176,20 +176,22 @@ export function RegistrationForm({
         )}
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          className="w-full py-6 text-xl font-medium bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6 w-full text-2xl"
-          variant="default"
-          disabled={isSubmitting}
-        >
-          {isSubmitting
-            ? language === "en"
-              ? "Creating Account..."
-              : "Creando Cuenta..."
-            : language === "en"
-            ? "Create Account"
-            : "Crear Cuenta"}
-        </Button>
+        <div className="max-w-4xl mx-auto text-center">
+          <Button
+            type="submit"
+            className="w-full py-6 text-xl font-medium bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-98 transition-all duration-300 rounded-2xl flex items-center justify-center gap-3"
+            variant="default"
+            disabled={isSubmitting}
+          >
+            {isSubmitting
+              ? language === "en"
+                ? "Creating Account..."
+                : "Creando Cuenta..."
+              : language === "en"
+              ? "Create Account"
+              : "Crear Cuenta"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

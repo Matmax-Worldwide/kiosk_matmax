@@ -7,13 +7,11 @@ import { UserPlus, Users, ArrowRight, Loader2 } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { PageTransition } from "@/components/page-transition";
 import { motion } from "framer-motion";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 function SelectContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
-  const [showNewUserOverlay, setShowNewUserOverlay] = React.useState(false);
   const [activeButton, setActiveButton] = React.useState<"new" | "existing" | null>(null);
 
   const classId = searchParams.get('classId');
@@ -25,7 +23,6 @@ function SelectContent() {
     setActiveButton(type);
 
     if (type === 'new') {
-      setShowNewUserOverlay(true);
       setTimeout(() => {
         const params = new URLSearchParams(searchParams.toString());
         router.push(`${path}${params.toString() ? `?${params.toString()}` : ''}`);
@@ -53,22 +50,6 @@ function SelectContent() {
 
   return (
     <>
-      {/* New User Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showNewUserOverlay}
-        title={{
-          en: "Creating New Account",
-          es: "Creando Nueva Cuenta"
-        }}
-        message={{
-          en: "You will be redirected to create a new account",
-          es: "Serás redirigido para crear una nueva cuenta"
-        }}
-        variant="user"
-        duration={1500}
-      />
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {/* Nuevo Usuario */}
         <motion.div
