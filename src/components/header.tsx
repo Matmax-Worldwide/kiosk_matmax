@@ -29,7 +29,7 @@ export function Header({ title, showBackButton = true, onBack }: HeaderProps) {
   const shouldShowBackButton = showBackButton && title[language] !== "Welcome" && title[language] !== "Bienvenido" && title[language] !== "Purchase Confirmation" && title[language] !== "Confirmación de Compra";
 
   const today = new Date();
-  const formattedDate = format(today, "EEEE, d 'de' MMMM yyyy", {
+  const formattedDate = format(today, language === "en" ? "EEEE, MMMM d, yyyy" : "EEEE, d 'de' MMMM yyyy", {
     locale: language === "es" ? es : undefined
   });
 

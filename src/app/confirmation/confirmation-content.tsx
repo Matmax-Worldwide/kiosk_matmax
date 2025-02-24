@@ -17,6 +17,13 @@ import { es } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
 import { maskEmail } from "@/lib/utils/mask-data";
+import { useQuery } from "@apollo/client";
+import { GET_BUNDLE_USAGES } from "@/lib/graphql/queries";
+
+interface BundleUsages {
+  id: string;
+  remainingUses: number;
+}
 
 export function ConfirmationContent() {
   const router = useRouter();
@@ -25,26 +32,39 @@ export function ConfirmationContent() {
   const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
   const [showHomeOverlay, setShowHomeOverlay] = React.useState(false);
   const [paymentMethodText, setPaymentMethodText] = React.useState("");
+  const [mounted, setMounted] = React.useState(false);
 
   // Get all parameters
   const purchaseId = searchParams.get("purchaseId");
+  const consumerId = searchParams.get("consumerId");
   const paymentMethod = searchParams.get("paymentMethod");
   const firstName = searchParams.get("firstName");
   const lastName = searchParams.get("lastName");
   const email = searchParams.get("email");
   const packageName = searchParams.get("packageName");
   const packagePrice = searchParams.get("packagePrice");
-  const remainingUses = searchParams.get("remainingUses");
-
-  // Class information
+  const bundleId = searchParams.get("bundleId");
   const classId = searchParams.get("classId");
   const className = searchParams.get("className");
   const classDate = searchParams.get("classDate");
   const professorName = searchParams.get("professorName");
   const reservationId = searchParams.get("reservationId");
 
+  // Fetch updated bundle information if we have a bundleId
+  const { data: bundleData, loading } = useQuery<{ bundle: BundleUsages }>(GET_BUNDLE_USAGES, {
+    variables: { id: bundleId },
+    skip: !bundleId || !mounted,
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "network-only",
+  });
+
+  // Set mounted state after initial render
   React.useEffect(() => {
-    if (!purchaseId && !paymentMethod && remainingUses) {
+    setMounted(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (!purchaseId && !paymentMethod && bundleData?.bundle) {
       setPaymentMethodText("Paquete Existente");
       return;
     }
@@ -62,7 +82,7 @@ export function ConfirmationContent() {
       default:
         setPaymentMethodText("");
     }
-  }, [paymentMethod, remainingUses, purchaseId]);
+  }, [paymentMethod, bundleData, purchaseId]);
 
   const handleScheduleClick = () => {
     setShowScheduleOverlay(true);
@@ -94,6 +114,9 @@ export function ConfirmationContent() {
     }
   };
 
+  // Determine if we should show remaining uses
+  const showRemainingUses = bundleData?.bundle?.remainingUses !== undefined;
+
   return (
     <>
       {/* Schedule Overlay */}
@@ -110,7 +133,13 @@ export function ConfirmationContent() {
         }}
         variant="schedule"
         duration={1500}
-        onComplete={() => router.push("/schedule")}
+        onComplete={() => {
+          if (consumerId) {
+            router.push(`/schedule?consumerId=${consumerId}`);
+          } else {
+            router.push("/schedule");
+          }
+        }}
       />
 
       {/* Home Overlay */}
@@ -132,10 +161,7 @@ export function ConfirmationContent() {
 
       <motion.div
         initial={{ opacity: 0 }}
-        animate={{
-          opacity: 1,
-          y: 0,
-        }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="container mx-auto px-4 py-16 md:py-24"
       >
@@ -255,7 +281,7 @@ export function ConfirmationContent() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">
-                    {remainingUses
+                    {mounted && showRemainingUses
                       ? language === "en"
                         ? "Remaining Uses"
                         : "Usos Restantes"
@@ -264,8 +290,12 @@ export function ConfirmationContent() {
                       : "Precio"}
                   </p>
                   <p className="font-semibold text-gray-700">
-                    {remainingUses
-                      ? `${remainingUses} ${language === "en" ? "uses" : "usos"}`
+                    {mounted && showRemainingUses
+                      ? loading
+                        ? "..." // Show loading state
+                        : `${bundleData?.bundle?.remainingUses} ${
+                            language === "en" ? "uses" : "usos"
+                          }`
                       : `S/. ${formatPrice(packagePrice)}`}
                   </p>
                 </div>

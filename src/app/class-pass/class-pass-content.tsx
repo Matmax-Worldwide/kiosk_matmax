@@ -38,8 +38,12 @@ interface ScheduleItem {
   status: string;
   currentReservations: number;
   cron: string;
-  maxConsumers: number;
   startDateTime?: string;
+  timeSlot?: {
+    sessionType: {
+      maxConsumers: number;
+    };
+  };
 }
 
 interface DaySchedule {
@@ -251,8 +255,11 @@ export function ClassPassContent() {
           status: alloc.status || "Unknown",
           currentReservations: alloc.currentReservations,
           cron: alloc.timeSlot.cron || "Unknown",
-          maxConsumers:
-            (alloc.sessionType as { maxConsumers?: number })?.maxConsumers || 0,
+          timeSlot: {
+            sessionType: {
+              maxConsumers: alloc.timeSlot.sessionType?.maxConsumers || 0
+            }
+          },
           startDateTime: alloc.startTime,
         });
       });
@@ -587,8 +594,8 @@ export function ClassPassContent() {
                           <div className="flex items-center gap-3 justify-start">
                             <Users className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
-                              {nextClass.currentReservations}/
-                              {nextClass.maxConsumers}{" "}
+                              {(nextClass.timeSlot?.sessionType?.maxConsumers || 12) - nextClass.currentReservations}/
+                              {nextClass.timeSlot?.sessionType?.maxConsumers || 12}{" "}
                               <AnimatePresence mode="wait">
                                 <motion.span
                                   key={language}

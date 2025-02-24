@@ -150,6 +150,7 @@ export const GET_POSSIBLE_ALLOCATIONS = gql`
       id
       startTime
       duration
+      currentReservations
       timeSlot {
         id
         agent {
@@ -158,6 +159,7 @@ export const GET_POSSIBLE_ALLOCATIONS = gql`
         sessionType {
           id
           name
+          maxConsumers
         }
       }
     }
@@ -341,6 +343,15 @@ export const GET_BUNDLE = gql`
         lastName
         email
       }
+    }
+  }
+`;
+
+export const GET_BUNDLE_USAGES = gql`
+  query GetBundleUsages($id: ID!) {
+    bundle(id: $id) {
+      id
+      remainingUses
     }
   }
 `;
