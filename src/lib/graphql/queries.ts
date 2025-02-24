@@ -83,6 +83,8 @@ export const GET_CONSUMER = gql`
           name
           price
         }
+        validFrom
+        validTo
       }
       reservations {
         id
