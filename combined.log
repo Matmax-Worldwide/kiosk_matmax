@@ -558,3 +558,11 @@
 {"level":"info","message":"Sending payload to https://primary-production-3f94.up.railway.app/webhook/dad4867f-1863-4a91-bf37-91ac661ffe5f with signature 666aeb4c5304303645818dc08e3854c3ee038f64509395c3f7dc0f9c8bab0000","timestamp":"2025-02-20T23:17:18.033Z"}
 {"level":"debug","message":"Webhook response for ID dad4867f-1863-4a91-bf37-91ac661ffe5f: 200 - OK","timestamp":"2025-02-20T23:17:19.563Z"}
 {"level":"info","message":"Webhook dad4867f-1863-4a91-bf37-91ac661ffe5f sent successfully.","timestamp":"2025-02-20T23:17:19.565Z"}
+{"level":"debug","message":"Triggering webhooks for event: CONSUMER_CREATED with payload: {\"eventType\":\"CONSUMER_CREATED\",\"timestamp\":\"2025-02-24T16:36:49.493Z\",\"consumer\":{\"id\":\"46088688-a68a-4d2b-8d96-0232434e65f6\",\"firstName\":\"NUEVO\",\"lastName\":\"TEST\",\"email\":\"rodrigovdev01@gmail.com\",\"phoneNumber\":\"+51 949 833 976\",\"status\":\"ACTIVE\",\"tags\":[],\"createdAt\":\"2025-02-24T16:36:47.328Z\"}}","timestamp":"2025-02-24T16:36:49.504Z"}
+{"level":"debug","message":"Found 1 webhooks for event: CONSUMER_CREATED","timestamp":"2025-02-24T16:36:50.947Z"}
+{"level":"debug","message":"Sending webhook to URL: https://primary-production-3f94.up.railway.app/webhook/ed0ddc54-15e5-4d3a-8038-5f2dd4642714 with ID: ed0ddc54-15e5-4d3a-8038-5f2dd4642714","timestamp":"2025-02-24T16:36:50.949Z"}
+{"level":"info","message":"Attempting to send webhook with ID: ed0ddc54-15e5-4d3a-8038-5f2dd4642714 to URL: https://primary-production-3f94.up.railway.app/webhook/ed0ddc54-15e5-4d3a-8038-5f2dd4642714","timestamp":"2025-02-24T16:36:50.955Z"}
+{"level":"info","message":"Generated signature for webhook ID: ed0ddc54-15e5-4d3a-8038-5f2dd4642714","timestamp":"2025-02-24T16:36:50.991Z"}
+{"level":"info","message":"Sending payload to https://primary-production-3f94.up.railway.app/webhook/ed0ddc54-15e5-4d3a-8038-5f2dd4642714 with signature cb3d3f4ad43429ac817b70c496836330c4620980adadea23826e9c21ba7b6479","timestamp":"2025-02-24T16:36:50.993Z"}
+{"level":"debug","message":"Webhook response for ID ed0ddc54-15e5-4d3a-8038-5f2dd4642714: 200 - OK","timestamp":"2025-02-24T16:36:52.265Z"}
+{"level":"info","message":"Webhook ed0ddc54-15e5-4d3a-8038-5f2dd4642714 sent successfully.","timestamp":"2025-02-24T16:36:52.267Z"}
