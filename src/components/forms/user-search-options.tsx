@@ -45,6 +45,7 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
   const [searchResults, setSearchResults] = useState<Consumer[]>([]);
   const [selectedConsumer, setSelectedConsumer] = useState<Consumer | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const classId = searchParams.get('classId');
   const bundleTypeId = searchParams.get('bundleTypeId');
@@ -72,6 +73,7 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
   });
 
   const handleConsumerSelect = (consumer: Consumer) => {
+    setSelectedId(consumer.id);
     setSelectedConsumer(consumer);
     onSelect(consumer, "unified");
 
@@ -196,7 +198,12 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
               <Card
                 key={user.id}
                 onClick={() => handleConsumerSelect(user)}
-                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                className={cn(
+                  "p-4 cursor-pointer border border-gray-100 transition-all duration-200",
+                  "hover:shadow-md hover:border-green-500 hover:bg-green-50/50",
+                  "active:bg-green-100/50",
+                  selectedId === user.id && "shadow-md border-green-500 bg-green-50/50"
+                )}
               >
                 <div className="flex items-center justify-between w-full">
                   <div className="flex-1">
