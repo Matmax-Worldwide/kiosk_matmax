@@ -158,6 +158,47 @@ export function UserDetailsContent() {
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 mt-16">
       <div className="container mx-auto px-4 py-8">
 
+        
+        {/* User Details Card */}
+        {consumer && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-purple-600 to-pink-600">
+              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white mb-6">
+                <User className="w-8 h-8" />
+              </div>
+              <h3 className="text-2xl font-bold mb-4">
+                {`${consumer.firstName} ${consumer.lastName}`}
+              </h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Email" : "Correo"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {maskEmail(consumer.email)}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-gray-500">
+                      {language === "en" ? "Phone" : "Teléfono"}
+                    </p>
+                    <p className="font-semibold text-gray-700">
+                      {maskPhoneNumber(consumer.phoneNumber)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Class Details Card */}
         {allocationData?.allocation && (
           <motion.div
@@ -216,45 +257,6 @@ export function UserDetailsContent() {
           </motion.div>
         )}
 
-        {/* User Details Card */}
-        {consumer && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
-          >
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-purple-600 to-pink-600">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white mb-6">
-                <User className="w-8 h-8" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4">
-                {`${consumer.firstName} ${consumer.lastName}`}
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      {language === "en" ? "Email" : "Correo"}
-                    </p>
-                    <p className="font-semibold text-gray-700">
-                      {maskEmail(consumer.email)}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      {language === "en" ? "Phone" : "Teléfono"}
-                    </p>
-                    <p className="font-semibold text-gray-700">
-                      {maskPhoneNumber(consumer.phoneNumber)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
 
         {/* Active Packages Section */}
         <div className="space-y-6">

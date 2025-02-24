@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
@@ -23,31 +23,115 @@ interface Consumer {
   phoneNumber?: string;
 }
 
-function SearchSkeletonLoader() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
-      className="mt-4 space-y-2"
-    >
-      {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="p-3 rounded-lg bg-white shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center gap-3">
-            <Skeleton className="w-5 h-5 rounded-full" />
-            <div className="flex-1">
-              <Skeleton className="h-5 w-48 mb-1" />
-              <Skeleton className="h-4 w-32" />
-            </div>
+// Memoized skeleton loader component
+const SearchSkeletonLoader = memo(() => (
+  <motion.div
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -10 }}
+    className="mt-4 space-y-2"
+  >
+    {[1, 2, 3].map((i) => (
+      <div
+        key={i}
+        className="p-3 rounded-lg bg-white shadow-sm border border-gray-100"
+      >
+        <div className="flex items-center gap-3">
+          <Skeleton className="w-5 h-5 rounded-full" />
+          <div className="flex-1">
+            <Skeleton className="h-5 w-48 mb-1" />
+            <Skeleton className="h-4 w-32" />
           </div>
         </div>
-      ))}
+      </div>
+    ))}
+  </motion.div>
+));
+SearchSkeletonLoader.displayName = 'SearchSkeletonLoader';
+
+// Memoized consumer result item component
+const ConsumerResultItem = memo(({ consumer, onClick }: { consumer: Consumer; onClick: () => void }) => {
+  const [isClicked, setIsClicked] = useState(false);
+
+  const handleClick = () => {
+    setIsClicked(true);
+    onClick();
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "p-4 rounded-lg bg-white shadow-sm cursor-pointer border border-gray-100 transition-all duration-200",
+        "hover:shadow-md hover:border-green-500 hover:bg-green-50/50 active:bg-green-100/50",
+        isClicked && "shadow-md border-green-500 bg-green-50/50"
+      )}
+      onClick={handleClick}
+      layout
+    >
+      <div className="flex items-center gap-3 transition-colors duration-200">
+        <User2 className="w-5 h-5 text-gray-400" />
+        <div>
+          <p className="font-medium">{`${consumer.firstName} ${consumer.lastName}`}</p>
+          <p className="text-sm text-gray-500">{maskEmail(consumer.email)}</p>
+          {consumer.phoneNumber && (
+            <p className="text-sm text-gray-500">{maskPhoneNumber(consumer.phoneNumber)}</p>
+          )}
+        </div>
+      </div>
     </motion.div>
   );
-}
+});
+ConsumerResultItem.displayName = 'ConsumerResultItem';
+
+// Memoized search results component
+const SearchResults = memo(({ 
+  isSearching, 
+  loading, 
+  searchData, 
+  language,
+  onConsumerClick 
+}: { 
+  isSearching: boolean;
+  loading: boolean;
+  searchData: { searchConsumers: Consumer[] };
+  language: string;
+  onConsumerClick: (id: string) => void;
+}) => {
+  if (isSearching || loading) return <SearchSkeletonLoader />;
+  
+  if (searchData?.searchConsumers?.length > 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        className="mt-4 space-y-2"
+      >
+        {searchData.searchConsumers.map((consumer: Consumer) => (
+          <ConsumerResultItem
+            key={consumer.id}
+            consumer={consumer}
+            onClick={() => onConsumerClick(consumer.id)}
+          />
+        ))}
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="mt-4 text-center text-gray-500"
+    >
+      {language === "en"
+        ? "No users found. Try a different search term."
+        : "No se encontraron usuarios. Intenta con otros términos."}
+    </motion.div>
+  );
+});
+
+SearchResults.displayName = "SearchResults";
 
 export function CheckInContent() {
   const router = useRouter();
@@ -56,10 +140,12 @@ export function CheckInContent() {
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
-  // Search consumers query
+  // Search consumers query with fetchPolicy optimization
   const { data: searchData, loading, refetch: refetchSearch } = useQuery(SEARCH_CONSUMERS, {
     variables: { query: inputValue, limit: 5 },
     skip: inputValue.length < 2,
+    fetchPolicy: 'cache-first',
+    nextFetchPolicy: 'cache-first',
     onError: (error) => {
       console.error("Search error:", error);
       setIsSearching(false);
@@ -71,7 +157,7 @@ export function CheckInContent() {
       setIsSearching(true);
       await refetchSearch();
       setShowResults(true);
-      setTimeout(() => setIsSearching(false), 500);
+      setTimeout(() => setIsSearching(false), 300);
     }
   }, [inputValue, refetchSearch]);
 
@@ -80,11 +166,36 @@ export function CheckInContent() {
     [handleSearch]
   );
 
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setInputValue(value);
+    if (value.length < 2) {
+      setShowResults(false);
+    }
+  }, []);
+
+  const handleConsumerClick = useCallback((id: string) => {
+    router.push(`/check-in/${id}`);
+  }, [router]);
+
   useEffect(() => {
     return () => {
       debouncedSearch.cancel();
     };
   }, [debouncedSearch]);
+
+  const buttonClassName = useMemo(() => cn(
+    "w-full h-14 rounded-xl text-lg font-medium transition-all duration-200",
+    inputValue.length < 2
+      ? "bg-gray-100 text-gray-400"
+      : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg"
+  ), [inputValue.length]);
+
+  const inputClassName = useMemo(() => cn(
+    "text-lg py-6 pl-6 pr-6 rounded-2xl border-2 focus-visible:ring-offset-0",
+    "border-gray-200 focus-visible:border-green-500 focus-visible:ring-green-500",
+    "transition-all duration-200"
+  ), []);
 
   return (
     <div className="mx-auto px-4 py-8 mt-16">
@@ -103,27 +214,13 @@ export function CheckInContent() {
                   : "Buscar por nombre, correo o teléfono"
               }
               value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-                if (e.target.value.length < 2) {
-                  setShowResults(false);
-                }
-              }}
-              className={cn(
-                "text-lg py-6 pl-6 pr-6 rounded-2xl border-2 focus-visible:ring-offset-0",
-                "border-gray-200 focus-visible:border-green-500 focus-visible:ring-green-500",
-                "transition-all duration-200"
-              )}
+              onChange={handleInputChange}
+              className={inputClassName}
             />
             <Button
               size="lg"
               type="button"
-              className={cn(
-                "w-full h-14 rounded-xl text-lg font-medium transition-all duration-200",
-                inputValue.length < 2
-                  ? "bg-gray-100 text-gray-400"
-                  : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-md hover:shadow-lg"
-              )}
+              className={buttonClassName}
               disabled={inputValue.length < 2 || isSearching}
               onClick={debouncedSearch}
             >
@@ -141,62 +238,15 @@ export function CheckInContent() {
             </Button>
           </div>
 
-          {/* Search Results with Loading State */}
           <AnimatePresence mode="wait">
             {showResults && (
-              <>
-                {isSearching || loading ? (
-                  <SearchSkeletonLoader />
-                ) : searchData?.searchConsumers &&
-                  searchData.searchConsumers.length > 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="mt-4 space-y-2"
-                  >
-                    {searchData.searchConsumers.map(
-                      (consumer: Consumer) => (
-                        <motion.div
-                          key={consumer.id}
-                          className="p-4 rounded-lg bg-white shadow-sm hover:shadow-md
-                        cursor-pointer border border-gray-100"
-                          onClick={() => router.push(`/check-in/${consumer.id}`)}
-                        >
-                          <div
-                            className="flex items-center gap-3 hover:bg-green-50/50 active:bg-green-100/50 transition-colors duration-200"
-                          >
-                            <User2 className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <p className="font-medium">
-                                {`${consumer.firstName} ${consumer.lastName}`}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {maskEmail(consumer.email)}
-                              </p>
-                              {consumer.phoneNumber && (
-                                <p className="text-sm text-gray-500">
-                                  {maskPhoneNumber(consumer.phoneNumber)}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      )
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="mt-4 text-center text-gray-500"
-                  >
-                    {language === "en"
-                      ? "No users found. Try a different search term."
-                      : "No se encontraron usuarios. Intenta con otros términos."}
-                  </motion.div>
-                )}
-              </>
+              <SearchResults
+                isSearching={isSearching}
+                loading={loading}
+                searchData={searchData}
+                language={language}
+                onConsumerClick={handleConsumerClick}
+              />
             )}
           </AnimatePresence>
         </Card>

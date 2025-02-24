@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Tag,
   Globe2,
+  Loader2,
 } from "lucide-react";
 import { format, isAfter, startOfDay, addDays } from "date-fns";
 import { es, enUS } from "date-fns/locale";
@@ -46,8 +47,17 @@ interface DaySchedule {
   items: ScheduleItem[];
 }
 
-function CountdownTimer({ classTime, language }: { classTime: string, language: string }) {
-  const [timeLeft, setTimeLeft] = useState<{ hours: number; minutes: number } | null>(null);
+function CountdownTimer({
+  classTime,
+  language,
+}: {
+  classTime: string;
+  language: string;
+}) {
+  const [timeLeft, setTimeLeft] = useState<{
+    hours: number;
+    minutes: number;
+  } | null>(null);
   const [isInProgress, setIsInProgress] = useState(false);
 
   useEffect(() => {
@@ -55,24 +65,28 @@ function CountdownTimer({ classTime, language }: { classTime: string, language: 
       const now = new Date();
       const [hours, minutes, period] = classTime.split(/:|\s/);
       const today = new Date();
-      const classDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
+      const classDate = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
       if (!hours || !minutes || !period) return;
-      
+
       // Convert to 24-hour format
       let hour = parseInt(hours);
-      if (period.toLowerCase() === 'pm' && hour !== 12) hour += 12;
-      if (period.toLowerCase() === 'am' && hour === 12) hour = 0;
-      
+      if (period.toLowerCase() === "pm" && hour !== 12) hour += 12;
+      if (period.toLowerCase() === "am" && hour === 12) hour = 0;
+
       classDate.setHours(hour, parseInt(minutes), 0);
-      
+
       // If the class time has passed for today, set it to tomorrow
       if (classDate.getTime() + 10 * 60 * 1000 < now.getTime()) {
         classDate.setDate(classDate.getDate() + 1);
       }
 
       const difference = classDate.getTime() - now.getTime();
-      
+
       // Check if class is in progress (within 10 minutes after start)
       if (difference <= 0 && difference > -10 * 60 * 1000) {
         setIsInProgress(true);
@@ -81,15 +95,17 @@ function CountdownTimer({ classTime, language }: { classTime: string, language: 
       }
 
       setIsInProgress(false);
-      
+
       if (difference <= -10 * 60 * 1000) {
         setTimeLeft(null);
         return;
       }
 
       const hoursLeft = Math.floor(difference / (1000 * 60 * 60));
-      const minutesLeft = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-      
+      const minutesLeft = Math.floor(
+        (difference % (1000 * 60 * 60)) / (1000 * 60)
+      );
+
       setTimeLeft({ hours: hoursLeft, minutes: minutesLeft });
     };
 
@@ -113,11 +129,13 @@ function CountdownTimer({ classTime, language }: { classTime: string, language: 
     <span className="text-gray-700 text-lg">
       {language === "en" ? (
         <>
-          Starts in {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}{timeLeft.minutes}m
+          Starts in {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ""}
+          {timeLeft.minutes}m
         </>
       ) : (
         <>
-          Comienza en {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ''}{timeLeft.minutes}m
+          Comienza en {timeLeft.hours > 0 ? `${timeLeft.hours}h ` : ""}
+          {timeLeft.minutes}m
         </>
       )}
     </span>
@@ -197,6 +215,7 @@ export function ClassPassContent() {
   const { language } = useLanguageContext();
   const [fetchedSchedule, setFetchedSchedule] = useState<DaySchedule[]>([]);
   const [showScheduleOverlay, setShowScheduleOverlay] = useState(false);
+  const [isBooking, setIsBooking] = useState(false);
 
   const startDate = startOfDay(new Date());
   const endDate = addDays(startDate, 7);
@@ -286,7 +305,9 @@ export function ClassPassContent() {
       const nextClass = todaySchedule.items.find((item) => {
         if (!item.startDateTime) return false;
         const classTime = new Date(item.startDateTime);
-        const tenMinutesAfterStart = new Date(classTime.getTime() + 10 * 60 * 1000);
+        const tenMinutesAfterStart = new Date(
+          classTime.getTime() + 10 * 60 * 1000
+        );
         return isAfter(tenMinutesAfterStart, today);
       });
 
@@ -314,8 +335,7 @@ export function ClassPassContent() {
 
     // Buscar en los días siguientes
     for (let i = 1; i < weekDaysOrder.length; i++) {
-      const nextDay =
-        weekDaysOrder[(currentIndex + i) % weekDaysOrder.length];
+      const nextDay = weekDaysOrder[(currentIndex + i) % weekDaysOrder.length];
       const nextDaySchedule = fetchedSchedule.find(
         (daySchedule) =>
           daySchedule.day.en.toLowerCase() === nextDay.toLowerCase()
@@ -324,7 +344,7 @@ export function ClassPassContent() {
       if (nextDaySchedule && nextDaySchedule.items.length > 0) {
         // Ordenar las clases por hora de inicio
         const sortedClasses = [...nextDaySchedule.items]
-          .filter(item => item.startDateTime) // Filter out items without startDateTime
+          .filter((item) => item.startDateTime) // Filter out items without startDateTime
           .sort((a, b) => {
             const timeA = new Date(a.startDateTime!);
             const timeB = new Date(b.startDateTime!);
@@ -360,9 +380,12 @@ export function ClassPassContent() {
 
   const handleClassSelection = () => {
     if (nextClass && singleClassPass) {
-      router.push(
-        `/user-selection?classId=${nextClass.id}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
-      );
+      setIsBooking(true);
+      setTimeout(() => {
+        router.push(
+          `/user-selection?classId=${nextClass.id}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
+        );
+      }, 1500);
     }
   };
 
@@ -393,11 +416,11 @@ export function ClassPassContent() {
         show={showScheduleOverlay}
         title={{
           en: "Opening Schedule",
-          es: "Abriendo Horario"
+          es: "Abriendo Horario",
         }}
         message={{
           en: "You will be redirected to view all available classes",
-          es: "Serás redirigido para ver todas las clases disponibles"
+          es: "Serás redirigido para ver todas las clases disponibles",
         }}
         variant="schedule"
         duration={1500}
@@ -476,7 +499,9 @@ export function ClassPassContent() {
                                 <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
                                   <Tag className="w-4 h-4 text-green-600" />
                                   <span className="text-green-700 font-medium">
-                                    {nextClass?.activity.toLowerCase().includes("acro")
+                                    {nextClass?.activity
+                                      .toLowerCase()
+                                      .includes("acro")
                                       ? language === "en"
                                         ? "1 Acro MatPass"
                                         : "1 Acro MatPass"
@@ -489,58 +514,70 @@ export function ClassPassContent() {
                         </div>
                       </div>
 
-                      {/* Action Button */}
+                      {/* Action Button con Loader */}
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: 0.6 }}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: isBooking ? 1 : 1.02 }}
+                        whileTap={{ scale: isBooking ? 1 : 0.98 }}
                       >
                         <button
                           onClick={handleClassSelection}
+                          disabled={isBooking}
                           className="relative w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-6 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-2xl font-semibold shadow-lg hover:shadow-xl group overflow-hidden"
                         >
                           {/* Darkening overlay */}
                           <motion.div
                             className="absolute inset-0 bg-black/0"
                             initial={{ x: "-100%" }}
-                            whileHover={{ 
+                            whileHover={{
                               x: "0%",
                               backgroundColor: "rgba(0, 0, 0, 0.2)",
-                              transition: { duration: 0.3, ease: "easeOut" }
+                              transition: { duration: 0.3, ease: "easeOut" },
                             }}
                           />
 
                           <CreditCard className="w-7 h-7 relative transition-transform group-hover:scale-110" />
-                          <AnimatePresence mode="wait">
-                            <motion.span
-                              key={language}
-                              initial={{ y: 10, opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              exit={{ y: -10, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
+
+                          {isBooking ? (
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                          ) : (
+                            <AnimatePresence mode="wait">
+                              <motion.span
+                                key={language}
+                                initial={{ y: 10, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -10, opacity: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="relative"
+                              >
+                                {language === "en"
+                                  ? "Book Now"
+                                  : "Reservar Ahora"}
+                              </motion.span>
+                            </AnimatePresence>
+                          )}
+
+                          {/* Solo mostramos la flecha si no está en estado loader */}
+                          {!isBooking && (
+                            <motion.div
                               className="relative"
+                              initial={{ x: 0, y: 0 }}
+                              whileHover={{
+                                x: [0, 10, 10],
+                                y: [0, -5, 5],
+                                transition: {
+                                  duration: 1.5,
+                                  repeat: Infinity,
+                                  repeatType: "reverse",
+                                  ease: "easeInOut",
+                                },
+                              }}
                             >
-                              {language === "en" ? "Book Now" : "Reservar Ahora"}
-                            </motion.span>
-                          </AnimatePresence>
-                          <motion.div
-                            className="relative"
-                            initial={{ x: 0, y: 0 }}
-                            whileHover={{ 
-                              x: [0, 10, 10],
-                              y: [0, -5, 5],
-                              transition: { 
-                                duration: 1.5,
-                                repeat: Infinity,
-                                repeatType: "reverse",
-                                ease: "easeInOut"
-                              }
-                            }}
-                          >
-                            <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                          </motion.div>
+                              <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                            </motion.div>
+                          )}
                         </button>
                       </motion.div>
 
@@ -550,7 +587,8 @@ export function ClassPassContent() {
                           <div className="flex items-center gap-3 justify-start">
                             <Users className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
-                              {nextClass.currentReservations}/{nextClass.maxConsumers}{" "}
+                              {nextClass.currentReservations}/
+                              {nextClass.maxConsumers}{" "}
                               <AnimatePresence mode="wait">
                                 <motion.span
                                   key={language}
@@ -567,7 +605,7 @@ export function ClassPassContent() {
 
                           <div className="flex items-center gap-3 justify-center">
                             <Clock className="w-6 h-6 text-green-500" />
-                            <CountdownTimer 
+                            <CountdownTimer
                               classTime={nextClass.time}
                               language={language}
                             />
@@ -576,7 +614,9 @@ export function ClassPassContent() {
                           <div className="flex items-center gap-3 justify-end">
                             <Globe2 className="w-6 h-6 text-green-500" />
                             <span className="text-gray-700 text-lg">
-                              {language === "en" ? "Bilingual Class" : "Clase Bilingüe"}
+                              {language === "en"
+                                ? "Bilingual Class"
+                                : "Clase Bilingüe"}
                             </span>
                           </div>
                         </div>
@@ -623,4 +663,4 @@ export function ClassPassContent() {
       </motion.div>
     </>
   );
-} 
+}
