@@ -312,14 +312,14 @@ export default function CheckInDetailsPage() {
                             <Calendar className="w-3 h-3" />
                             <span>
                               {language === "en" ? "From: " : "Desde: "}
-                              {formatDate(bundle.validFrom, "ddd dd MMM yyyy")}
+                              {formatDate(bundle.validFrom, "eee dd MMM yyyy")}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             <span>
                               {language === "en" ? "To: " : "Hasta: "}
-                              {formatDate(bundle.validTo, "ddd dd MMM yyyy")}
+                              {formatDate(bundle.validTo, "eee dd MMM yyyy")}
                             </span>
                           </div>
                         </div>
