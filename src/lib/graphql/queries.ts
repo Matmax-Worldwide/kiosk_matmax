@@ -347,6 +347,15 @@ export const GET_BUNDLE = gql`
   }
 `;
 
+export const GET_BUNDLE_USAGES = gql`
+  query GetBundleUsages($id: ID!) {
+    bundle(id: $id) {
+      id
+      remainingUses
+    }
+  }
+`;
+
 export const GET_CONSUMER_RESERVATIONS = gql`
   query GetConsumerReservations($consumerId: ID!, $allocationId: ID!) {
     consumer(id: $consumerId) {
