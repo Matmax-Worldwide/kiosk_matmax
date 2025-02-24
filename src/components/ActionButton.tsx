@@ -67,7 +67,7 @@ const ActionButton = ({
         className="h-full cursor-pointer"
       >
         <div
-          className={`bg-gradient-to-r ${appliedGradient} p-8 rounded-2xl shadow-lg transition-all duration-300 border-2 border-transparent ${
+          className={`p-8 rounded-2xl shadow-lg transition-all duration-300 border-2 border-transparent ${
             isRedirecting
               ? "scale-[0.98] shadow-xl border-opacity-50"
               : "hover:scale-[1.02] hover:border-2 hover:border-opacity-50"
