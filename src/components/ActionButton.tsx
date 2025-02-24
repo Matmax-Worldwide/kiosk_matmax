@@ -67,26 +67,26 @@ const ActionButton = ({
         className="h-full cursor-pointer"
       >
         <div
-          className={`p-8 rounded-2xl shadow-lg transition-all duration-300 border-2 border-transparent ${
+          className={`p-8 rounded-2xl shadow-lg transition-all duration-300 border-2 border-transparent text-slate-900 ${
             isRedirecting
               ? "scale-[0.98] shadow-xl border-opacity-50"
               : "hover:scale-[1.02] hover:border-2 hover:border-opacity-50"
           }`}
         >
           <div
-            className={`w-16 h-16 rounded-xl bg-gradient-to-r ${appliedGradient} flex items-center justify-center text-white mb-6 transition-transform group-hover:scale-110`}
+            className={`w-16 h-16 rounded-xl bg-gradient-to-r ${appliedGradient} flex items-center justify-center mb-6 transition-transform group-hover:scale-110 text-white`}
           >
             <Icon className="w-8 h-8" />
           </div>
-          <h3 className="text-2xl font-bold mb-3 text-white">
+          <h3 className="text-2xl font-bold mb-3">
             {language === "en" ? titleEn : title}
           </h3>
-          <p className="text-gray-100">
+          <p className="text-slate-700">
             {language === "en" ? descriptionEn : description}
           </p>
           <div className="absolute bottom-8 right-8 transition-all">
             {isRedirecting ? (
-              <Loader2 className="w-6 h-6 animate-spin text-gray-100" />
+              <Loader2 className="w-6 h-6 animate-spin text-slate-700" />
             ) : (
               <ArrowRight className="w-6 h-6 text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity" />
             )}
