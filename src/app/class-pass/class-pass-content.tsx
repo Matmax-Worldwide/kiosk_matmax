@@ -15,10 +15,11 @@ import {
 import { format, isAfter, startOfDay, addDays } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { useQuery } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client";
 import {
   GET_BUNDLE_TYPES,
   GET_POSSIBLE_ALLOCATIONS,
+  CREATE_ALLOCATION,
 } from "@/lib/graphql/queries";
 import type {
   Allocation,
@@ -220,6 +221,7 @@ export function ClassPassContent() {
   const [fetchedSchedule, setFetchedSchedule] = useState<DaySchedule[]>([]);
   const [showScheduleOverlay, setShowScheduleOverlay] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
+  const [createAllocation] = useMutation(CREATE_ALLOCATION);
 
   const startDate = startOfDay(new Date());
   const endDate = addDays(startDate, 7);
@@ -246,8 +248,12 @@ export function ClassPassContent() {
         const dayEn = format(start, "EEEE", { locale: enUS });
         if (!groups[dayEn]) groups[dayEn] = [];
         const time = format(start, "h:mm a");
+
+        // Construir el ID compuesto si no hay un ID de allocation
+        const compositeId = alloc.id || `${alloc.timeSlot.id}_${format(start, "yyyy-MM-dd_HH:mm")}`;
+
         groups[dayEn].push({
-          id: alloc.id,
+          id: compositeId,
           time,
           duration: alloc.duration.toString(),
           activity: alloc.timeSlot.sessionType?.name || "Unknown",
@@ -385,14 +391,43 @@ export function ClassPassContent() {
     }
   });
 
-  const handleClassSelection = () => {
+  const handleClassSelection = async () => {
     if (nextClass && singleClassPass) {
       setIsBooking(true);
-      setTimeout(() => {
+      try {
+        let allocationId = nextClass.id;
+        
+        // Si el ID contiene '_', es un timeSlot y necesitamos crear una allocation
+        if (nextClass.id && nextClass.id.includes('_')) {
+          const [timeSlotId, dateTime] = nextClass.id.split('_');
+          const startTime = new Date(dateTime.replace('_', ' ')).toISOString();
+          
+          // Creamos una nueva allocation directamente
+          const { data: newAllocationData } = await createAllocation({
+            variables: {
+              input: {
+                timeSlotId,
+                startTime,
+                status: "AVAILABLE"
+              }
+            }
+          });
+          
+          if (newAllocationData?.createAllocation?.id) {
+            allocationId = newAllocationData.createAllocation.id;
+          } else {
+            throw new Error('Failed to create allocation');
+          }
+        }
+
         router.push(
-          `/user-selection?classId=${nextClass.id}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
+          `/user-selection?classId=${allocationId}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
         );
-      }, 1500);
+      } catch (error) {
+        console.error('Error handling allocation:', error);
+        setIsBooking(false);
+        // Aquí podrías mostrar un mensaje de error al usuario
+      }
     }
   };
 

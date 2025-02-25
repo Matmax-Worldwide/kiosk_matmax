@@ -277,21 +277,27 @@ const resolvers = {
             // Determine the effective duration
             const effectiveDuration = timeSlot.duration || timeSlot.sessionType.defaultDuration;
 
-            // Parse the cron expression
-            const interval = cronParser.parseExpression(timeSlot.cron);
-
-            // Get the next occurrence (startTime)
-            const startTime = interval.next().toDate();
-
             // Calculate endTime based on startTime and effectiveDuration
+            const startTime = new Date(input.startTime);
             const endTime = new Date(startTime.getTime() + effectiveDuration * 60000); // Convert minutes to milliseconds
 
-            // Create the allocation with calculated startTime and endTime
-            return prisma.allocation.create({
-                data: {
-                    ...input,
-                    startTime,
-                    endTime,
+            // Use upsert instead of create to handle existing allocations
+            return prisma.allocation.upsert({
+                where: {
+                    timeSlotId_startTime: {
+                        timeSlotId: input.timeSlotId,
+                        startTime: startTime
+                    }
+                },
+                update: {
+                    status: input.status || 'AVAILABLE',
+                    endTime: endTime,
+                },
+                create: {
+                    timeSlot: { connect: { id: input.timeSlotId } },
+                    startTime: startTime,
+                    endTime: endTime,
+                    status: input.status || 'AVAILABLE',
                 },
             });
         },
