@@ -200,7 +200,7 @@ export enum BundleStatus {
   ACTIVE = "ACTIVE",
   EXPIRED = "EXPIRED",
   CANCELLED = "CANCELLED",
-  EXPENDED = "EXPENDED",
+  USED = "USED",
 }
 
 export const CREATE_ALLOCATION = gql`
