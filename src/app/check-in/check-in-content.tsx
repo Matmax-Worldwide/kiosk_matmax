@@ -23,6 +23,19 @@ interface Consumer {
   phoneNumber?: string;
 }
 
+interface SearchResultsProps {
+  isSearching: boolean;
+  loading: boolean;
+  searchData: { searchConsumers: Consumer[] };
+  language: string;
+  onConsumerClick: (id: string) => void;
+  router: ReturnType<typeof useRouter>;
+  setInputValue: (value: string) => void;
+  setShowResults: (value: boolean) => void;
+  setError: (value: string | null) => void;
+  inputValue: string;
+}
+
 // Memoized skeleton loader component
 const SearchSkeletonLoader = memo(() => (
   <motion.div
@@ -93,18 +106,9 @@ const SearchResults = memo(({
   router,
   setInputValue,
   setShowResults,
-  setError
-}: { 
-  isSearching: boolean;
-  loading: boolean;
-  searchData: { searchConsumers: Consumer[] };
-  language: string;
-  onConsumerClick: (id: string) => void;
-  router: ReturnType<typeof useRouter>;
-  setInputValue: (value: string) => void;
-  setShowResults: (value: boolean) => void;
-  setError: (value: string | null) => void;
-}) => {
+  setError,
+  inputValue
+}: SearchResultsProps) => {
   if (isSearching || loading) return <SearchSkeletonLoader />;
   
   if (searchData?.searchConsumers?.length > 0) {
@@ -324,6 +328,7 @@ export function CheckInContent() {
                 setInputValue={setInputValue}
                 setShowResults={setShowResults}
                 setError={setError}
+                inputValue={inputValue}
               />
             )}
           </AnimatePresence>
