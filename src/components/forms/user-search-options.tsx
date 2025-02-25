@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { AlertCircle, Search, ChevronRight, Loader2 } from "lucide-react";
+import { AlertCircle, Search, ChevronRight, Loader2, User2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLazyQuery } from "@apollo/client";
 import { SEARCH_CONSUMERS } from "@/lib/graphql/queries";
@@ -183,6 +183,64 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
         >
           <AlertCircle className="h-4 w-4" />
           <span className="text-sm">{error}</span>
+        </motion.div>
+      )}
+
+      {error && searchResults.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4"
+        >
+          <div className="text-center py-8">
+            <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-12 border border-gray-100">
+              <div className="space-y-8">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center">
+                    <User2 className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <div className="text-gray-600 text-xl">
+                    {language === "en" 
+                      ? "Would you like to create a new account?"
+                      : "¿Deseas crear una cuenta nueva?"}
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <Button
+                    onClick={() => {
+                      router.push('/new');
+                    }}
+                    className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
+                  >
+                    <User2 className="w-5 h-5 mr-2" />
+                    {language === "en" ? "Create New Account" : "Crear Nueva Cuenta"}
+                  </Button>
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">
+                        {language === "en" ? "or" : "o"}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => {
+                      setInputValue("");
+                      setError(null);
+                      setSearchResults([]);
+                    }}
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
+                  >
+                    <Search className="w-5 h-5 mr-2" />
+                    {language === "en" ? "Try Another Search" : "Intentar Otra Búsqueda"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
         </motion.div>
       )}
 
