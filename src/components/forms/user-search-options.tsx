@@ -199,10 +199,18 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
                   <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center">
                     <User2 className="w-10 h-10 text-gray-400" />
                   </div>
-                  <div className="text-gray-600 text-xl">
-                    {language === "en" 
-                      ? "Would you like to create a new account?"
-                      : "¿Deseas crear una cuenta nueva?"}
+                  <div className="space-y-4 text-center">
+                    <div className="text-gray-500">
+                      {language === "en" ? "Your search for:" : "Tu búsqueda de:"}
+                    </div>
+                    <div className="text-2xl font-semibold text-gray-800 px-4 py-2 bg-gray-50 rounded-lg">
+                      &ldquo;{inputValue}&rdquo;
+                    </div>
+                    <div className="text-xl text-gray-600">
+                      {language === "en" 
+                        ? "Would you like to create a new account?"
+                        : "¿Deseas crear una cuenta nueva?"}
+                    </div>
                   </div>
                 </div>
                 
