@@ -23,19 +23,6 @@ interface Consumer {
   phoneNumber?: string;
 }
 
-interface SearchResultsProps {
-  isSearching: boolean;
-  loading: boolean;
-  searchData: { searchConsumers: Consumer[] };
-  language: string;
-  onConsumerClick: (id: string) => void;
-  router: ReturnType<typeof useRouter>;
-  setInputValue: (value: string) => void;
-  setShowResults: (value: boolean) => void;
-  setError: (value: string | null) => void;
-  inputValue: string;
-}
-
 // Memoized skeleton loader component
 const SearchSkeletonLoader = memo(() => (
   <motion.div
@@ -106,8 +93,18 @@ const SearchResults = memo(({
   router,
   setInputValue,
   setShowResults,
-  setError,
-}: SearchResultsProps) => {
+  setError
+}: { 
+  isSearching: boolean;
+  loading: boolean;
+  searchData: { searchConsumers: Consumer[] };
+  language: string;
+  onConsumerClick: (id: string) => void;
+  router: ReturnType<typeof useRouter>;
+  setInputValue: (value: string) => void;
+  setShowResults: (value: boolean) => void;
+  setError: (value: string | null) => void;
+}) => {
   if (isSearching || loading) return <SearchSkeletonLoader />;
   
   if (searchData?.searchConsumers?.length > 0) {
@@ -142,12 +139,10 @@ const SearchResults = memo(({
               <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center">
                 <User2 className="w-10 h-10 text-gray-400" />
               </div>
-              <div className="space-y-4 text-center">
-                <div className="text-xl text-gray-600">
-                  {language === "en" 
-                    ? "No users found. Would you like to create a new account?"
-                    : "No se encontraron usuarios. ¿Deseas crear una cuenta nueva?"}
-                </div>
+              <div className="text-gray-600 text-xl">
+                {language === "en" 
+                  ? "No users found. Would you like to create a new account?"
+                  : "No se encontraron usuarios. ¿Deseas crear una cuenta nueva?"}
               </div>
             </div>
             
@@ -321,7 +316,6 @@ export function CheckInContent() {
                 setInputValue={setInputValue}
                 setShowResults={setShowResults}
                 setError={setError}
-                inputValue={inputValue}
               />
             )}
           </AnimatePresence>
