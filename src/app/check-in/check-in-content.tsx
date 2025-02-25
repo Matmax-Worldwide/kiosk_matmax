@@ -107,7 +107,6 @@ const SearchResults = memo(({
   setInputValue,
   setShowResults,
   setError,
-  inputValue
 }: SearchResultsProps) => {
   if (isSearching || loading) return <SearchSkeletonLoader />;
   
@@ -144,12 +143,6 @@ const SearchResults = memo(({
                 <User2 className="w-10 h-10 text-gray-400" />
               </div>
               <div className="space-y-4 text-center">
-                <div className="text-gray-500">
-                  {language === "en" ? "Your search for:" : "Tu búsqueda de:"}
-                </div>
-                <div className="text-2xl font-semibold text-gray-800 px-4 py-2 bg-gray-50 rounded-lg">
-                  &ldquo;{inputValue}&rdquo;
-                </div>
                 <div className="text-xl text-gray-600">
                   {language === "en" 
                     ? "No users found. Would you like to create a new account?"
