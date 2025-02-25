@@ -30,7 +30,6 @@ export function ConfirmationContent() {
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
   const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
-  const [showHomeOverlay, setShowHomeOverlay] = React.useState(false);
   const [paymentMethodText, setPaymentMethodText] = React.useState("");
   const [mounted, setMounted] = React.useState(false);
 
@@ -89,7 +88,7 @@ export function ConfirmationContent() {
   };
 
   const handleHomeClick = () => {
-    setShowHomeOverlay(true);
+    router.push("/");
   };
 
   const formatDate = (dateString: string | null) => {
@@ -141,24 +140,6 @@ export function ConfirmationContent() {
           }
         }}
       />
-
-      {/* Home Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showHomeOverlay}
-        title={{
-          en: "Returning Home",
-          es: "Volviendo al Inicio",
-        }}
-        message={{
-          en: "You will be redirected to the home page",
-          es: "Serás redirigido a la página principal",
-        }}
-        variant="home"
-        duration={1500}
-        onComplete={() => router.push("/")}
-      />
-
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, y: 0 }}

@@ -6,7 +6,7 @@ import { useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Search, User2, Loader2 } from "lucide-react";
+import { Search, User2, Loader2, AlertCircle } from "lucide-react";
 import { SEARCH_CONSUMERS } from "@/lib/graphql/queries";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -89,13 +89,21 @@ const SearchResults = memo(({
   loading, 
   searchData, 
   language,
-  onConsumerClick 
+  onConsumerClick,
+  router,
+  setInputValue,
+  setShowResults,
+  setError
 }: { 
   isSearching: boolean;
   loading: boolean;
   searchData: { searchConsumers: Consumer[] };
   language: string;
   onConsumerClick: (id: string) => void;
+  router: ReturnType<typeof useRouter>;
+  setInputValue: (value: string) => void;
+  setShowResults: (value: boolean) => void;
+  setError: (value: string | null) => void;
 }) => {
   if (isSearching || loading) return <SearchSkeletonLoader />;
   
@@ -122,11 +130,57 @@ const SearchResults = memo(({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="mt-4 text-center text-gray-500"
+      className="mt-4"
     >
-      {language === "en"
-        ? "No users found. Try a different search term."
-        : "No se encontraron usuarios. Intenta con otros términos."}
+      <div className="text-center py-12">
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg p-12 border border-gray-100">
+          <div className="space-y-8">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-20 h-20 rounded-full bg-gray-50 flex items-center justify-center">
+                <User2 className="w-10 h-10 text-gray-400" />
+              </div>
+              <div className="text-gray-600 text-xl">
+                {language === "en" 
+                  ? "No users found. Would you like to create a new account?"
+                  : "No se encontraron usuarios. ¿Deseas crear una cuenta nueva?"}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <Button
+                onClick={() => {
+                  router.push('/new');
+                }}
+                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
+              >
+                <User2 className="w-5 h-5 mr-2" />
+                {language === "en" ? "Create New Account" : "Crear Nueva Cuenta"}
+              </Button>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-200"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">
+                    {language === "en" ? "or" : "o"}
+                  </span>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  setInputValue("");
+                  setShowResults(false);
+                  setError(null);
+                }}
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                {language === "en" ? "Try Another Search" : "Intentar Otra Búsqueda"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 });
@@ -139,6 +193,7 @@ export function CheckInContent() {
   const { language } = useLanguageContext();
   const [isSearching, setIsSearching] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Search consumers query with fetchPolicy optimization
   const { data: searchData, loading, refetch: refetchSearch } = useQuery(SEARCH_CONSUMERS, {
@@ -238,6 +293,17 @@ export function CheckInContent() {
             </Button>
           </div>
 
+          {error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center space-x-2 text-red-500 mt-3"
+            >
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{error}</span>
+            </motion.div>
+          )}
+
           <AnimatePresence mode="wait">
             {showResults && (
               <SearchResults
@@ -246,6 +312,10 @@ export function CheckInContent() {
                 searchData={searchData}
                 language={language}
                 onConsumerClick={handleConsumerClick}
+                router={router}
+                setInputValue={setInputValue}
+                setShowResults={setShowResults}
+                setError={setError}
               />
             )}
           </AnimatePresence>
