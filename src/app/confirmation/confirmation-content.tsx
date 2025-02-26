@@ -9,18 +9,19 @@ import {
   Calendar,
   Home,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
-import { motion } from "framer-motion";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
+import { motion } from "framer-motion"
 import { maskEmail } from "@/lib/utils/mask-data";
 
 export function ConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
-  const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
   const [countdown, setCountdown] = React.useState(10);
   const [isMounted, setIsMounted] = React.useState(false);
+  const [isTimerActive, setIsTimerActive] = React.useState(true);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Get all parameters
   const consumerId = searchParams.get("consumerId");
@@ -35,24 +36,30 @@ export function ConfirmationContent() {
 
   // Handle countdown
   useEffect(() => {
-    if (!isMounted) return;
+    if (!isMounted || !isTimerActive) return;
 
     const timer = setInterval(() => {
       setCountdown((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isMounted]);
+  }, [isMounted, isTimerActive]);
 
   // Handle navigation when countdown reaches 0
   useEffect(() => {
-    if (countdown === 0) {
+    if (countdown === 0 && isTimerActive) {
       router.push("/");
     }
-  }, [countdown, router]);
+  }, [countdown, router, isTimerActive]);
 
-  const handleScheduleClick = () => {
-    setShowScheduleOverlay(true);
+  const handleScheduleClick = async () => {
+    setIsLoading(true);
+    setIsTimerActive(false);
+    if (consumerId) {
+      router.push(`/schedule?consumerId=${consumerId}`);
+    } else {
+      router.push("/schedule");
+    }
   };
 
   const handleHomeClick = () => {
@@ -70,28 +77,6 @@ export function ConfirmationContent() {
 
   return (
     <>
-      {/* Schedule Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showScheduleOverlay}
-        title={{
-          en: "Opening Schedule",
-          es: "Abriendo Horario",
-        }}
-        message={{
-          en: "You will be redirected to view the class schedule",
-          es: "Serás redirigido para ver el horario de clases",
-        }}
-        variant="schedule"
-        duration={1500}
-        onComplete={() => {
-          if (consumerId) {
-            router.push(`/schedule?consumerId=${consumerId}`);
-          } else {
-            router.push("/schedule");
-          }
-        }}
-      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, y: 0 }}
@@ -157,12 +142,17 @@ export function ConfirmationContent() {
                 >
                   <Button
                     onClick={handleScheduleClick}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
+                    disabled={isLoading}
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Calendar className="w-6 h-6 mr-2" />
+                    {isLoading ? (
+                      <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                    ) : (
+                      <Calendar className="w-6 h-6 mr-2" />
+                    )}
                     {language === "en"
-                      ? "Book Another Class"
-                      : "Reservar Otra Clase"}
+                      ? isLoading ? "Loading..." : "Book Another Class"
+                      : isLoading ? "Cargando..." : "Reservar Otra Clase"}
                   </Button>
                 </motion.div>
                 <motion.div
