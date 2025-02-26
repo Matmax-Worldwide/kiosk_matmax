@@ -38,6 +38,7 @@ export function PackageSelector() {
   const instructor = searchParams.get('instructor');
   const time = searchParams.get('time');
   const day = searchParams.get('day');
+  const now = searchParams.get('now');
   
   const { data, loading, error } = useQuery<GetBundleQuery>(GET_BUNDLE_TYPES, { 
     variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} 
@@ -58,6 +59,7 @@ export function PackageSelector() {
         if (instructor) params.append('instructor', instructor);
         if (time) params.append('time', time);
         if (day) params.append('day', day);
+        if (now) params.append('now', now);
       }
       router.push(`/payment?${params.toString()}`);
       return;
@@ -70,6 +72,7 @@ export function PackageSelector() {
       if (instructor) params.append('instructor', instructor);
       if (time) params.append('time', time);
       if (day) params.append('day', day);
+      if (now) params.append('now', now);
     }
 
     router.push(`/user-selection?${params.toString()}`);
