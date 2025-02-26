@@ -418,6 +418,77 @@ export default function SchedulePage() {
   };
 
   const handleNavigation = async (params: URLSearchParams) => {
+    let retryCount = 0;
+    const MAX_RETRIES = 3;
+
+    const attemptAllocationCreation = async (timeSlotId: string, startDateTime: Date): Promise<string> => {
+      try {
+        // First, check if allocation already exists
+        console.log('🔍 [Schedule] Checking for existing allocation...', {
+          timeSlotId,
+          startTime: startDateTime.toISOString(),
+        });
+
+        const { data: existingAllocation } = await client.query({
+          query: CHECK_EXISTING_ALLOCATION,
+          variables: {
+            timeSlotId,
+            startTime: startDateTime.toISOString(),
+          },
+          fetchPolicy: 'network-only', // Ensure we get fresh data
+        });
+
+        if (existingAllocation?.allocation?.id) {
+          console.log('✅ [Schedule] Using existing allocation:', existingAllocation.allocation.id);
+          return existingAllocation.allocation.id;
+        }
+
+        // Create new allocation
+        console.log('🔨 [Schedule] Creating new allocation...', {
+          timeSlotId,
+          startTime: startDateTime.toISOString(),
+        });
+
+        const { data: newAllocation } = await client.mutate({
+          mutation: CREATE_ALLOCATION_FROM_TIMESLOT,
+          variables: {
+            input: {
+              timeSlotId,
+              startTime: startDateTime.toISOString(),
+              status: "AVAILABLE",
+            },
+          },
+        });
+
+        if (!newAllocation?.createAllocation?.id) {
+          throw new Error("Failed to create allocation: No ID returned");
+        }
+
+        console.log('✅ [Schedule] Created new allocation:', newAllocation.createAllocation.id);
+        return newAllocation.createAllocation.id;
+      } catch (error) {
+        console.error(`❌ [Schedule] Attempt ${retryCount + 1} failed:`, error);
+        
+        if (error instanceof Error && error.message.includes('already exists')) {
+          // If allocation already exists, try to fetch it again
+          const { data: retryExistingAllocation } = await client.query({
+            query: CHECK_EXISTING_ALLOCATION,
+            variables: {
+              timeSlotId,
+              startTime: startDateTime.toISOString(),
+            },
+            fetchPolicy: 'network-only',
+          });
+
+          if (retryExistingAllocation?.allocation?.id) {
+            return retryExistingAllocation.allocation.id;
+          }
+        }
+
+        throw error;
+      }
+    };
+
     try {
       console.log('🚀 [Schedule] Starting navigation process...', {
         params: Object.fromEntries(params.entries()),
@@ -434,70 +505,26 @@ export default function SchedulePage() {
         throw new Error("Class information not found");
       }
 
-      console.log('📋 [Schedule] Found class information:', {
-        classInfo,
-        selectedDate: format(selectedDate, "yyyy-MM-dd"),
-      });
-
       const timeSlotId = classInfo.timeSlot.id;
       const startDateTime = new Date(classInfo.startDateTime);
 
-      console.log('🕒 [Schedule] Time details:', {
-        startDateTime: startDateTime.toISOString(),
-        originalStartDateTime: classInfo.startDateTime,
-      });
+      let allocationId: string | null = null;
 
-      // First, check if allocation already exists
-      console.log('🔍 [Schedule] Checking for existing allocation...', {
-        timeSlotId,
-        startTime: startDateTime.toISOString(),
-      });
-
-      const { data: existingAllocation } = await client.query({
-        query: CHECK_EXISTING_ALLOCATION,
-        variables: {
-          timeSlotId,
-          startTime: startDateTime.toISOString(),
-        },
-      });
-
-      console.log('📝 [Schedule] Existing allocation check result:', existingAllocation);
-
-      let allocationId;
-
-      if (existingAllocation?.allocation?.id) {
-        // Use existing allocation
-        allocationId = existingAllocation.allocation.id;
-        console.log('✅ [Schedule] Using existing allocation:', allocationId);
-      } else {
-        // Create new allocation with the exact startDateTime from classInfo
-        console.log('🔨 [Schedule] Creating new allocation...', {
-          timeSlotId,
-          startTime: startDateTime.toISOString(),
-        });
-
-        const { data: newAllocation } = await client.mutate({
-          mutation: CREATE_ALLOCATION_FROM_TIMESLOT,
-          variables: {
-            input: {
-              timeSlotId: timeSlotId,
-              startTime: startDateTime.toISOString(),
-              status: "AVAILABLE",
-            },
-          },
-        });
-
-        console.log('📝 [Schedule] New allocation creation result:', newAllocation);
-
-        if (newAllocation?.createAllocation?.id) {
-          allocationId = newAllocation.createAllocation.id;
-          console.log('✅ [Schedule] Created new allocation:', allocationId);
+      while (retryCount < MAX_RETRIES && !allocationId) {
+        try {
+          allocationId = await attemptAllocationCreation(timeSlotId, startDateTime);
+        } catch (error) {
+          retryCount++;
+          if (retryCount === MAX_RETRIES) {
+            throw error;
+          }
+          // Wait before retrying (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
         }
       }
 
       if (!allocationId) {
-        console.error('❌ [Schedule] Failed to find or create allocation');
-        throw new Error("Could not find or create allocation");
+        throw new Error("Could not create or find allocation after multiple attempts");
       }
 
       // Update the classId in params with the verified/created allocation ID
@@ -510,19 +537,17 @@ export default function SchedulePage() {
       });
 
       if (consumerId) {
-        // If we have a consumerId, navigate to consumer details with both consumerId and classId
         console.log('➡️ [Schedule] Navigating to user details...');
         router.push(`/user-details?consumerId=${consumerId}&classId=${allocationId}`);
       } else {
-        // If no consumerId, navigate to user selection with all params
         console.log('➡️ [Schedule] Navigating to user selection...');
         router.push(`/user-selection?${params.toString()}`);
       }
     } catch (error) {
       console.error('❌ [Schedule] Navigation error:', error);
       setLoadingAllocation(null);
-      // Fallback to user selection in case of error
-      router.push(`/user-selection?${params.toString()}`);
+      // Here you might want to show an error toast/notification to the user
+      // You could add a toast/notification system
     }
   };
 

@@ -7,14 +7,15 @@ import { Card } from "@/components/ui/card";
 import { GET_CONSUMER, GET_CONSUMER_RESERVATIONS, GET_ALLOCATION } from "@/lib/graphql/queries";
 import { Spinner } from "@/components/spinner";
 import { Package2, Clock, ChevronRight, Calendar, Home, User } from "lucide-react";
-import type { Bundle } from "@/types/bundle";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { toast } from 'sonner';
+import { Bundle } from "@/types/graphql";
 
 interface Reservation {
   status: string;
@@ -23,21 +24,6 @@ interface Reservation {
       id: string;
     };
   };
-}
-
-interface BundleType {
-  id: string;
-  name: string;
-  price: number;
-}
-
-interface ConsumerBundle {
-  id: string;
-  status: string;
-  remainingUses: number;
-  bundleType: BundleType;
-  validFrom: string;
-  validTo: string;
 }
 
 const UPDATE_BUNDLE_STATUS = gql`
@@ -59,7 +45,7 @@ export function UserDetailsContent() {
   const now = searchParams.get('now');
   const [isNavigatingToPayment, setIsNavigatingToPayment] = React.useState(false);
   const [isNavigatingToPackages, setIsNavigatingToPackages] = React.useState(false);
-  const [checkedBundles] = useState(new Set<string>());
+  const checkedBundles = React.useRef(new Set<string>());
 
   const [updateBundleStatus] = useMutation(UPDATE_BUNDLE_STATUS);
 
@@ -88,24 +74,16 @@ export function UserDetailsContent() {
     const checkAndExpireBundles = async () => {
       if (consumerData?.consumer?.bundles) {
         const activeBundlesWithZeroUses = consumerData.consumer.bundles.filter(
-          (bundle: ConsumerBundle) => bundle.status === 'ACTIVE' && 
+          (bundle: Bundle) => bundle.status === 'ACTIVE' && 
                     bundle.remainingUses === 0 && 
-                    !checkedBundles.has(bundle.id)
+                    !checkedBundles.current?.has(bundle.id)
         );
 
-        for (const bundle of activeBundlesWithZeroUses) {
-          try {
-            await updateBundleStatus({
-              variables: {
-                id: bundle.id,
-                status: 'EXPIRED'
-              }
-            });
-            checkedBundles.add(bundle.id);
-          } catch (error) {
-            console.error('Error expiring bundle:', error);
-          }
-        }
+        await Promise.all(
+          activeBundlesWithZeroUses.map((bundle: Bundle) =>
+            updateBundleStatus({ variables: { id: bundle.id, status: "EXPIRED" } })
+          )
+        );
 
         if (activeBundlesWithZeroUses.length > 0) {
           toast.info(
