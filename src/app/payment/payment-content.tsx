@@ -209,6 +209,7 @@ export function PaymentContent() {
   const bundleId = searchParams.get("bundleId");
   const bundleTypeId = searchParams.get("bundleTypeId");
   const classId = searchParams.get("classId");
+  const now = searchParams.get("now") === "true";
 
   const { data: consumerData, loading: consumerLoading, refetch: refetchConsumer } = useQuery(
     GET_CONSUMER,
@@ -381,7 +382,7 @@ export function PaymentContent() {
               timeSlotId: allocationData.allocation.timeSlot.id,
               startTime: new Date(allocationData.allocation.startTime).toISOString(),
               forConsumerId: consumerId,
-              status: "CONFIRMED",
+              status: now ? "VALIDATED" : "CONFIRMED",
             },
           },
         });
