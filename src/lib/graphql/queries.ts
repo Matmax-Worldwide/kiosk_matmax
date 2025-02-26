@@ -405,33 +405,6 @@ export const CHECK_EXISTING_ALLOCATION = gql`
   }
 `;
 
-export const GET_TIMESLOT_BY_DAY = gql`
-  query GetTimeSlotByDay($contextId: ID!, $dayOfWeek: Int!, $hour: Int!, $minute: Int!) {
-    timeSlots(
-      where: {
-        contextId: $contextId,
-        dayOfWeek: $dayOfWeek,
-        hour: $hour,
-        minute: $minute
-      }
-    ) {
-      id
-      cron
-      duration
-      sessionType {
-        id
-        name
-        maxConsumers
-        defaultDuration
-      }
-      agent {
-        id
-        name
-      }
-    }
-  }
-`;
-
 export const CREATE_ALLOCATION_FROM_TIMESLOT = gql`
   mutation CreateAllocationFromTimeSlot($input: CreateAllocationInput!) {
     createAllocation(input: $input) {

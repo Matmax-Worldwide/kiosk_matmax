@@ -396,40 +396,35 @@ export function ClassPassContent() {
   const handleClassSelection = async () => {
     if (nextClass && singleClassPass && nextClass.startDateTime && nextClass.timeSlot?.id) {
       setIsBooking(true);
-      try {
-        console.log('🚀 [ClassPass] Starting class selection process...', {
-          startDateTime: nextClass.startDateTime,
-          timeSlotId: nextClass.timeSlot.id,
-          activity: nextClass.activity,
-        });
+      let retryCount = 0;
+      const MAX_RETRIES = 3;
 
-        const startDateTime = new Date(nextClass.startDateTime);
-        const timeSlotId = nextClass.timeSlot.id;
+      const attemptAllocationCreation = async (): Promise<string> => {
+        try {
+          const startDateTime = new Date(nextClass.startDateTime);
+          const timeSlotId = nextClass.timeSlot.id;
 
-        // First, check if allocation already exists
-        console.log('🔍 [ClassPass] Checking for existing allocation...', {
-          timeSlotId,
-          startTime: startDateTime.toISOString(),
-        });
-
-        const { data: existingAllocation } = await client.query({
-          query: CHECK_EXISTING_ALLOCATION,
-          variables: {
+          // First, check if allocation already exists
+          console.log('🔍 [ClassPass] Checking for existing allocation...', {
             timeSlotId,
             startTime: startDateTime.toISOString(),
-          },
-        });
+          });
 
-        console.log('📝 [ClassPass] Existing allocation check result:', existingAllocation);
+          const { data: existingAllocation } = await client.query({
+            query: CHECK_EXISTING_ALLOCATION,
+            variables: {
+              timeSlotId,
+              startTime: startDateTime.toISOString(),
+            },
+            fetchPolicy: 'network-only', // Ensure we get fresh data
+          });
 
-        let allocationId;
+          if (existingAllocation?.allocation?.id) {
+            console.log('✅ [ClassPass] Using existing allocation:', existingAllocation.allocation.id);
+            return existingAllocation.allocation.id;
+          }
 
-        if (existingAllocation?.allocation?.id) {
-          // Use existing allocation
-          allocationId = existingAllocation.allocation.id;
-          console.log('✅ [ClassPass] Using existing allocation:', allocationId);
-        } else {
-          // Create new allocation with the exact startDateTime
+          // Create new allocation
           console.log('🔨 [ClassPass] Creating new allocation...', {
             timeSlotId,
             startTime: startDateTime.toISOString(),
@@ -439,24 +434,60 @@ export function ClassPassContent() {
             mutation: CREATE_ALLOCATION_FROM_TIMESLOT,
             variables: {
               input: {
-                timeSlotId: timeSlotId,
+                timeSlotId,
                 startTime: startDateTime.toISOString(),
                 status: "AVAILABLE",
               },
             },
           });
 
-          console.log('📝 [ClassPass] New allocation creation result:', newAllocation);
+          if (!newAllocation?.createAllocation?.id) {
+            throw new Error("Failed to create allocation: No ID returned");
+          }
 
-          if (newAllocation?.createAllocation?.id) {
-            allocationId = newAllocation.createAllocation.id;
-            console.log('✅ [ClassPass] Created new allocation:', allocationId);
+          console.log('✅ [ClassPass] Created new allocation:', newAllocation.createAllocation.id);
+          return newAllocation.createAllocation.id;
+        } catch (error) {
+          console.error(`❌ [ClassPass] Attempt ${retryCount + 1} failed:`, error);
+          
+          if (error instanceof Error && error.message.includes('already exists')) {
+            // If allocation already exists, try to fetch it again
+            const { data: retryExistingAllocation } = await client.query({
+              query: CHECK_EXISTING_ALLOCATION,
+              variables: {
+                timeSlotId: nextClass.timeSlot.id,
+                startTime: new Date(nextClass.startDateTime).toISOString(),
+              },
+              fetchPolicy: 'network-only',
+            });
+
+            if (retryExistingAllocation?.allocation?.id) {
+              return retryExistingAllocation.allocation.id;
+            }
+          }
+
+          throw error;
+        }
+      };
+
+      try {
+        let allocationId: string | null = null;
+
+        while (retryCount < MAX_RETRIES && !allocationId) {
+          try {
+            allocationId = await attemptAllocationCreation();
+          } catch (error) {
+            retryCount++;
+            if (retryCount === MAX_RETRIES) {
+              throw error;
+            }
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
           }
         }
 
         if (!allocationId) {
-          console.error('❌ [ClassPass] Failed to find or create allocation');
-          throw new Error("Could not find or create allocation");
+          throw new Error("Could not create or find allocation after multiple attempts");
         }
 
         console.log('🎯 [ClassPass] Navigating to user selection...', {
@@ -473,6 +504,9 @@ export function ClassPassContent() {
         );
       } catch (error) {
         console.error('❌ [ClassPass] Error handling allocation:', error);
+        // Here you might want to show an error toast/notification to the user
+        // You could add a toast/notification system
+      } finally {
         setIsBooking(false);
       }
     }

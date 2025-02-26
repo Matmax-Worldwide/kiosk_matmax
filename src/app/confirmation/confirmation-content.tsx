@@ -19,7 +19,7 @@ export function ConfirmationContent() {
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
   const [showScheduleOverlay, setShowScheduleOverlay] = React.useState(false);
-  const [countdown, setCountdown] = React.useState<number | null>(null);
+  const [countdown, setCountdown] = React.useState(10);
   const [isMounted, setIsMounted] = React.useState(false);
 
   // Get all parameters

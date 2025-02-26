@@ -10,17 +10,8 @@ import { GET_BUNDLE_TYPES } from "@/lib/graphql/queries";
 import { useQuery } from "@apollo/client";
 import { ArrowRight, Users, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { GetBundleQuery } from "@/types/graphql";
 
-interface BundleType {
-  id: string;
-  name: string;
-  price: number;
-  currency: string;
-}
-
-interface GetBundleQuery {
-  bundleTypes: BundleType[];
-}
 
 const getPackageNumber = (name: string): number => {
   const number = parseInt(name.split(' ')[0] || '1', 10);

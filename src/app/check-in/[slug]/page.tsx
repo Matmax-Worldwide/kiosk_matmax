@@ -21,42 +21,9 @@ import { GET_CONSUMER, UPDATE_RESERVATION_STATUS } from "@/lib/graphql/queries";
 import { Skeleton } from "@/components/ui/skeleton";
 import React from "react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
+import { Bundle, Reservation } from "@/types/graphql";
 
-interface Bundle {
-  id: string;
-  bundleType: {
-    name: string;
-  };
-  remainingUses: number;
-  status: string;
-  validFrom: string;
-  validTo: string;
-}
 
-interface Reservation {
-  id: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  bundle: {
-    id: string;
-    bundleType: {
-      name: string;
-    };
-    remainingUses: number;
-  };
-  allocation: {
-    startTime: string;
-    timeSlot: {
-      sessionType: {
-        name: string;
-      };
-      agent: {
-        name: string;
-      };
-    };
-  };
-}
 
 function CheckInSkeletonLoader() {
   return (
@@ -364,7 +331,7 @@ export default function CheckInDetailsPage() {
                       <div className="flex items-center gap-2">
                         <User2 className="w-5 h-5 text-purple-500" />
                         <span>
-                          {reservation.allocation.timeSlot.agent.name}
+                          {reservation.allocation.timeSlot.agent?.name}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg">
