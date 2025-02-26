@@ -178,6 +178,7 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
           animate={{ opacity: 1, y: 0 }}
           className="mt-4"
         >
+
           <NoUsersFound 
             searchQuery={inputValue}
             onTryNewSearch={() => {
@@ -186,6 +187,7 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
               setHasSearched(false);
             }}
           />
+
         </motion.div>
       )}
 
