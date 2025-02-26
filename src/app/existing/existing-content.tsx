@@ -43,6 +43,7 @@ export function ExistingContent() {
       if (classId) params.append('classId', classId);
       if (bundleTypeId) params.append('bundleTypeId', bundleTypeId);
       if (packageId) params.append('packageId', packageId);
+      if (searchParams.get('now')) params.append('now', 'true');
       
       router.push(`/user-details?${params.toString()}`);
     }, 1500);

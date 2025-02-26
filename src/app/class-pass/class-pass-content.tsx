@@ -15,11 +15,12 @@ import {
 import { format, isAfter, startOfDay, addDays } from "date-fns";
 import { es, enUS } from "date-fns/locale";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useApolloClient } from "@apollo/client";
 import {
   GET_BUNDLE_TYPES,
   GET_POSSIBLE_ALLOCATIONS,
-  CREATE_ALLOCATION,
+  CHECK_EXISTING_ALLOCATION,
+  CREATE_ALLOCATION_FROM_TIMESLOT,
 } from "@/lib/graphql/queries";
 import type {
   Allocation,
@@ -28,7 +29,6 @@ import type {
 } from "@/types/graphql";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
 
 interface ScheduleItem {
   id: string;
@@ -39,8 +39,9 @@ interface ScheduleItem {
   status: string;
   currentReservations: number;
   cron: string;
-  startDateTime?: string;
-  timeSlot?: {
+  startDateTime: string;
+  timeSlot: {
+    id: string;
     sessionType: {
       maxConsumers: number;
     };
@@ -218,10 +219,10 @@ function ClassPassSkeletonLoader() {
 export function ClassPassContent() {
   const router = useRouter();
   const { language } = useLanguageContext();
+  const client = useApolloClient();
   const [fetchedSchedule, setFetchedSchedule] = useState<DaySchedule[]>([]);
-  const [showScheduleOverlay, setShowScheduleOverlay] = useState(false);
   const [isBooking, setIsBooking] = useState(false);
-  const [createAllocation] = useMutation(CREATE_ALLOCATION);
+  const [isViewingSchedule, setIsViewingSchedule] = useState(false);
 
   const startDate = startOfDay(new Date());
   const endDate = addDays(startDate, 7);
@@ -262,6 +263,7 @@ export function ClassPassContent() {
           currentReservations: alloc.currentReservations,
           cron: alloc.timeSlot.cron || "Unknown",
           timeSlot: {
+            id: alloc.timeSlot.id,
             sessionType: {
               maxConsumers: alloc.timeSlot.sessionType?.maxConsumers || 0
             }
@@ -392,50 +394,94 @@ export function ClassPassContent() {
   });
 
   const handleClassSelection = async () => {
-    if (nextClass && singleClassPass) {
+    if (nextClass && singleClassPass && nextClass.startDateTime && nextClass.timeSlot?.id) {
       setIsBooking(true);
       try {
-        let allocationId = nextClass.id;
-        
-        // Si el ID contiene '_', es un timeSlot y necesitamos crear una allocation
-        if (nextClass.id && nextClass.id.includes('_')) {
-          const [timeSlotId, dateTime] = nextClass.id.split('_');
-          const startTime = new Date(dateTime.replace('_', ' ')).toISOString();
-          
-          // Creamos una nueva allocation directamente
-          const { data: newAllocationData } = await createAllocation({
+        console.log('🚀 [ClassPass] Starting class selection process...', {
+          startDateTime: nextClass.startDateTime,
+          timeSlotId: nextClass.timeSlot.id,
+          activity: nextClass.activity,
+        });
+
+        const startDateTime = new Date(nextClass.startDateTime);
+        const timeSlotId = nextClass.timeSlot.id;
+
+        // First, check if allocation already exists
+        console.log('🔍 [ClassPass] Checking for existing allocation...', {
+          timeSlotId,
+          startTime: startDateTime.toISOString(),
+        });
+
+        const { data: existingAllocation } = await client.query({
+          query: CHECK_EXISTING_ALLOCATION,
+          variables: {
+            timeSlotId,
+            startTime: startDateTime.toISOString(),
+          },
+        });
+
+        console.log('📝 [ClassPass] Existing allocation check result:', existingAllocation);
+
+        let allocationId;
+
+        if (existingAllocation?.allocation?.id) {
+          // Use existing allocation
+          allocationId = existingAllocation.allocation.id;
+          console.log('✅ [ClassPass] Using existing allocation:', allocationId);
+        } else {
+          // Create new allocation with the exact startDateTime
+          console.log('🔨 [ClassPass] Creating new allocation...', {
+            timeSlotId,
+            startTime: startDateTime.toISOString(),
+          });
+
+          const { data: newAllocation } = await client.mutate({
+            mutation: CREATE_ALLOCATION_FROM_TIMESLOT,
             variables: {
               input: {
-                timeSlotId,
-                startTime,
-                status: "AVAILABLE"
-              }
-            }
+                timeSlotId: timeSlotId,
+                startTime: startDateTime.toISOString(),
+                status: "AVAILABLE",
+              },
+            },
           });
-          
-          if (newAllocationData?.createAllocation?.id) {
-            allocationId = newAllocationData.createAllocation.id;
-          } else {
-            throw new Error('Failed to create allocation');
+
+          console.log('📝 [ClassPass] New allocation creation result:', newAllocation);
+
+          if (newAllocation?.createAllocation?.id) {
+            allocationId = newAllocation.createAllocation.id;
+            console.log('✅ [ClassPass] Created new allocation:', allocationId);
           }
         }
 
+        if (!allocationId) {
+          console.error('❌ [ClassPass] Failed to find or create allocation');
+          throw new Error("Could not find or create allocation");
+        }
+
+        console.log('🎯 [ClassPass] Navigating to user selection...', {
+          allocationId,
+          activity: nextClass.activity,
+          instructor: nextClass.instructor,
+          time: nextClass.time,
+          day: nextClass.day,
+          packageId: singleClassPass.id,
+        });
+
         router.push(
-          `/user-selection?classId=${allocationId}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}`
+          `/user-selection?classId=${allocationId}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}&now=true`
         );
       } catch (error) {
-        console.error('Error handling allocation:', error);
+        console.error('❌ [ClassPass] Error handling allocation:', error);
         setIsBooking(false);
-        // Aquí podrías mostrar un mensaje de error al usuario
       }
     }
   };
 
   const handleViewSchedule = () => {
-    setShowScheduleOverlay(true);
-    setTimeout(() => {
-      router.push("/schedule");
-    }, 1500);
+    setIsViewingSchedule(true);
+    console.log('🚀 [ClassPass] Navigating to schedule...');
+    router.push("/schedule");
   };
 
   if (scheduleLoading) {
@@ -453,20 +499,6 @@ export function ClassPassContent() {
   return (
     <>
       {/* Schedule Navigation Overlay */}
-      <SuccessOverlay
-        aria-live="polite"
-        show={showScheduleOverlay}
-        title={{
-          en: "Opening Schedule",
-          es: "Abriendo Horario",
-        }}
-        message={{
-          en: "You will be redirected to view all available classes",
-          es: "Serás redirigido para ver todas las clases disponibles",
-        }}
-        variant="schedule"
-        duration={1500}
-      />
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -668,26 +700,39 @@ export function ClassPassContent() {
 
                   {/* Ver Horarios button outside the card */}
                   <motion.button
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.8 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md group"
                     onClick={handleViewSchedule}
+                    disabled={isViewingSchedule}
+                    className={`w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md group ${isViewingSchedule ? 'cursor-not-allowed opacity-80' : ''}`}
                   >
                     <AnimatePresence mode="wait">
-                      <motion.span
-                        key={language}
-                        initial={{ y: 10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: -10, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {language === "en" ? "View Schedule" : "Ver Horarios"}
-                      </motion.span>
+                      {isViewingSchedule ? (
+                        <motion.div
+                          key="loading"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="flex items-center gap-2"
+                        >
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>
+                            {language === "en" ? "Loading..." : "Cargando..."}
+                          </span>
+                        </motion.div>
+                      ) : (
+                        <motion.span
+                          key={language}
+                          initial={{ y: 10, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -10, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {language === "en" ? "View Schedule" : "Ver Horarios"}
+                        </motion.span>
+                      )}
                     </AnimatePresence>
-                    <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    {!isViewingSchedule && (
+                      <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    )}
                   </motion.button>
                 </div>
               )}

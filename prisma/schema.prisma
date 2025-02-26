@@ -395,6 +395,7 @@ enum BundleUsageEventType {
 
 enum BundleStatus {
   ACTIVE
+  USED
   EXPIRED
   CANCELLED
 }

@@ -20,8 +20,12 @@ import {
   differenceInDays
 } from "date-fns";
 import { enUS, es } from "date-fns/locale";
-import { useApolloClient, useMutation } from "@apollo/client";
-import { GET_POSSIBLE_ALLOCATIONS, CREATE_ALLOCATION } from "@/lib/graphql/queries";
+import { useApolloClient } from "@apollo/client";
+import { 
+  GET_POSSIBLE_ALLOCATIONS,
+  CHECK_EXISTING_ALLOCATION,
+  CREATE_ALLOCATION_FROM_TIMESLOT,
+} from "@/lib/graphql/queries";
 import { Allocation, GetPossibleAllocationsQuery } from "@/types/graphql";
 import { Header } from "@/components/header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -165,6 +169,16 @@ interface ClassInstance {
     matpassRequirement: number;
     expertiseLevel: string;
   };
+  timeSlot: {
+    id: string;
+    sessionType: {
+      name: string;
+      maxConsumers: number;
+    };
+    agent?: {
+      name: string;
+    };
+  };
   primaryTeacher: {
     user: {
       firstName: string;
@@ -240,7 +254,6 @@ export default function SchedulePage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(false);
   const [viewMode, setViewMode] = useState<'week' | 'calendar'>('week');
-  const [createAllocation] = useMutation(CREATE_ALLOCATION);
   const [loadingAllocation, setLoadingAllocation] = useState<string | null>(null);
 
   const weekStarts = [0, 1, 2].map(offset => 
@@ -352,6 +365,14 @@ export default function SchedulePage() {
               matpassRequirement: 1,
               expertiseLevel: sessionType?.expertiseLevel || "all",
             },
+            timeSlot: {
+              id: timeSlot?.id || "",
+              sessionType: {
+                name: timeSlot?.sessionType?.name || sessionType?.name || "Class",
+                maxConsumers: sessionType?.maxConsumers || timeSlot?.room?.capacity || 12,
+              },
+              agent: timeSlot?.agent,
+            },
             primaryTeacher: {
               user: {
                 firstName: timeSlot?.agent?.name?.split(" ")[0] || "",
@@ -396,20 +417,110 @@ export default function SchedulePage() {
     setViewMode('week');
   };
 
-  const handleNavigation = (params: URLSearchParams) => {
+  const handleNavigation = async (params: URLSearchParams) => {
     try {
+      console.log('🚀 [Schedule] Starting navigation process...', {
+        params: Object.fromEntries(params.entries()),
+      });
+
       const currentParams = new URLSearchParams(window.location.search);
       const consumerId = currentParams.get('consumerId');
+      const classInfo = schedule[format(selectedDate, "yyyy-MM-dd")]?.find(
+        c => c.id === params.get('classId')
+      );
+
+      if (!classInfo) {
+        console.error('❌ [Schedule] Class information not found');
+        throw new Error("Class information not found");
+      }
+
+      console.log('📋 [Schedule] Found class information:', {
+        classInfo,
+        selectedDate: format(selectedDate, "yyyy-MM-dd"),
+      });
+
+      const timeSlotId = classInfo.timeSlot.id;
+      const startDateTime = new Date(classInfo.startDateTime);
+
+      console.log('🕒 [Schedule] Time details:', {
+        startDateTime: startDateTime.toISOString(),
+        originalStartDateTime: classInfo.startDateTime,
+      });
+
+      // First, check if allocation already exists
+      console.log('🔍 [Schedule] Checking for existing allocation...', {
+        timeSlotId,
+        startTime: startDateTime.toISOString(),
+      });
+
+      const { data: existingAllocation } = await client.query({
+        query: CHECK_EXISTING_ALLOCATION,
+        variables: {
+          timeSlotId,
+          startTime: startDateTime.toISOString(),
+        },
+      });
+
+      console.log('📝 [Schedule] Existing allocation check result:', existingAllocation);
+
+      let allocationId;
+
+      if (existingAllocation?.allocation?.id) {
+        // Use existing allocation
+        allocationId = existingAllocation.allocation.id;
+        console.log('✅ [Schedule] Using existing allocation:', allocationId);
+      } else {
+        // Create new allocation with the exact startDateTime from classInfo
+        console.log('🔨 [Schedule] Creating new allocation...', {
+          timeSlotId,
+          startTime: startDateTime.toISOString(),
+        });
+
+        const { data: newAllocation } = await client.mutate({
+          mutation: CREATE_ALLOCATION_FROM_TIMESLOT,
+          variables: {
+            input: {
+              timeSlotId: timeSlotId,
+              startTime: startDateTime.toISOString(),
+              status: "AVAILABLE",
+            },
+          },
+        });
+
+        console.log('📝 [Schedule] New allocation creation result:', newAllocation);
+
+        if (newAllocation?.createAllocation?.id) {
+          allocationId = newAllocation.createAllocation.id;
+          console.log('✅ [Schedule] Created new allocation:', allocationId);
+        }
+      }
+
+      if (!allocationId) {
+        console.error('❌ [Schedule] Failed to find or create allocation');
+        throw new Error("Could not find or create allocation");
+      }
+
+      // Update the classId in params with the verified/created allocation ID
+      params.set('classId', allocationId);
       
+      console.log('🎯 [Schedule] Preparing navigation...', {
+        consumerId,
+        allocationId,
+        params: Object.fromEntries(params.entries()),
+      });
+
       if (consumerId) {
         // If we have a consumerId, navigate to consumer details with both consumerId and classId
-        router.push(`/user-details?consumerId=${consumerId}&classId=${params.get('classId')}`);
+        console.log('➡️ [Schedule] Navigating to user details...');
+        router.push(`/user-details?consumerId=${consumerId}&classId=${allocationId}`);
       } else {
         // If no consumerId, navigate to user selection with all params
+        console.log('➡️ [Schedule] Navigating to user selection...');
         router.push(`/user-selection?${params.toString()}`);
       }
     } catch (error) {
-      console.error('Navigation error:', error);
+      console.error('❌ [Schedule] Navigation error:', error);
+      setLoadingAllocation(null);
       // Fallback to user selection in case of error
       router.push(`/user-selection?${params.toString()}`);
     }
@@ -727,31 +838,8 @@ export default function SchedulePage() {
                                     setLoadingAllocation(classInfo.id);
                                     
                                     try {
-                                      let allocationId = classInfo.id;
+                                      const allocationId = classInfo.id;
                                       
-                                      // Si el ID contiene '_', es un timeSlot y necesitamos crear una allocation
-                                      if (classInfo.id && classInfo.id.includes('_')) {
-                                        const [timeSlotId, dateTime] = classInfo.id.split('_');
-                                        const startTime = new Date(dateTime.replace('_', ' ')).toISOString();
-                                        
-                                        // Creamos una nueva allocation directamente
-                                        const { data: newAllocationData } = await createAllocation({
-                                          variables: {
-                                            input: {
-                                              timeSlotId,
-                                              startTime,
-                                              status: "AVAILABLE"
-                                            }
-                                          }
-                                        });
-                                        
-                                        if (newAllocationData?.createAllocation?.id) {
-                                          allocationId = newAllocationData.createAllocation.id;
-                                        } else {
-                                          throw new Error('Failed to create allocation');
-                                        }
-                                      }
-
                                       // Agregamos los parámetros a la URL
                                       if (allocationId) {
                                         params.append('classId', allocationId);
@@ -760,7 +848,7 @@ export default function SchedulePage() {
                                         params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
                                         params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
                                         
-                                        handleNavigation(params);
+                                        await handleNavigation(params);
                                       }
                                     } catch (error) {
                                       console.error('Error handling allocation:', error);

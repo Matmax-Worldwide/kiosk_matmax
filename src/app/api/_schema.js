@@ -400,9 +400,9 @@ enum BundleUsageEventType {
 
 enum BundleStatus {
   ACTIVE
+  USED
   EXPIRED
   CANCELLED
-  EXPENDED
 }
 
 enum ReservationStatus {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from "@apollo/client";
+import { useQuery, useMutation, gql } from "@apollo/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,7 +13,8 @@ import { useLanguageContext } from "@/contexts/LanguageContext";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from 'sonner';
 
 interface Reservation {
   status: string;
@@ -24,14 +25,43 @@ interface Reservation {
   };
 }
 
+interface BundleType {
+  id: string;
+  name: string;
+  price: number;
+}
+
+interface ConsumerBundle {
+  id: string;
+  status: string;
+  remainingUses: number;
+  bundleType: BundleType;
+  validFrom: string;
+  validTo: string;
+}
+
+const UPDATE_BUNDLE_STATUS = gql`
+  mutation UpdateBundleStatus($id: ID!, $status: BundleStatus!) {
+    updateBundle(id: $id, input: { status: $status }) {
+      id
+      status
+      remainingUses
+    }
+  }
+`;
+
 export function UserDetailsContent() {
   const router = useRouter();
   const { language } = useLanguageContext();
   const searchParams = useSearchParams();
   const consumerId = searchParams.get('consumerId');
   const classId = searchParams.get('classId');
+  const now = searchParams.get('now');
   const [isNavigatingToPayment, setIsNavigatingToPayment] = React.useState(false);
   const [isNavigatingToPackages, setIsNavigatingToPackages] = React.useState(false);
+  const [checkedBundles] = useState(new Set<string>());
+
+  const [updateBundleStatus] = useMutation(UPDATE_BUNDLE_STATUS);
 
   // Verificar primero si existe una reserva
   const { data: reservationsData, loading: reservationsLoading } = useQuery(GET_CONSUMER_RESERVATIONS, {
@@ -53,6 +83,46 @@ export function UserDetailsContent() {
     skip: !classId,
   });
 
+  // Efecto para revisar paquetes con 0 usos al cargar la página
+  useEffect(() => {
+    const checkAndExpireBundles = async () => {
+      if (consumerData?.consumer?.bundles) {
+        const activeBundlesWithZeroUses = consumerData.consumer.bundles.filter(
+          (bundle: ConsumerBundle) => bundle.status === 'ACTIVE' && 
+                    bundle.remainingUses === 0 && 
+                    !checkedBundles.has(bundle.id)
+        );
+
+        for (const bundle of activeBundlesWithZeroUses) {
+          try {
+            await updateBundleStatus({
+              variables: {
+                id: bundle.id,
+                status: 'EXPIRED'
+              }
+            });
+            checkedBundles.add(bundle.id);
+          } catch (error) {
+            console.error('Error expiring bundle:', error);
+          }
+        }
+
+        if (activeBundlesWithZeroUses.length > 0) {
+          toast.info(
+            language === 'en'
+              ? `Found ${activeBundlesWithZeroUses.length} package(s) with 0 uses remaining and expired them.`
+              : `Se encontraron ${activeBundlesWithZeroUses.length} paquete(s) con 0 usos restantes y fueron expirados.`,
+            {
+              duration: 5000,
+              position: "top-center",
+            }
+          );
+        }
+      }
+    };
+
+    checkAndExpireBundles();
+  }, [consumerData?.consumer?.bundles, updateBundleStatus, checkedBundles, language]);
 
   if (consumerLoading || reservationsLoading || allocationLoading) {
     return (
@@ -145,13 +215,20 @@ export function UserDetailsContent() {
     if (classId) {
       queryParams.append('classId', classId);
     }
+    if (now) {
+      queryParams.append('now', now);
+    }
     
     router.push(`/payment?${queryParams.toString()}`);
   };
 
   const handleViewAllPackages = () => {
     setIsNavigatingToPackages(true);
-    router.push(`/buy-packages?consumerId=${consumerId}${classId ? `&classId=${classId}` : ''}`);
+    const params = new URLSearchParams();
+    params.append('consumerId', consumerId as string);
+    if (classId) params.append('classId', classId);
+    if (now) params.append('now', now);
+    router.push(`/buy-packages?${params.toString()}`);
   };
 
   return (

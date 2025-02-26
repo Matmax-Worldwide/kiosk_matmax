@@ -62,69 +62,101 @@ const resolvers = {
 
             return nextSlot;
         },
-        allocation: (_, { input: { id, timeSlotId, startTime } }) => {
-            if (id) {
-                return prisma.allocation.findUnique({ where: { id } });
-            } else if (timeSlotId && startTime) {
-                return prisma.allocation.findFirst({
-                    where: {
-                        timeSlotId,
-                        startTime: new Date(startTime),
-                    },
-                });
+        allocation: async (_, { input: { id, timeSlotId, startTime } }) => {
+            console.log('🔍 [Server] Looking up allocation...', { id, timeSlotId, startTime });
+            try {
+                let allocation;
+                if (id) {
+                    console.log('🔍 [Server] Searching by ID:', id);
+                    allocation = await prisma.allocation.findUnique({ where: { id } });
+                } else if (timeSlotId && startTime) {
+                    console.log('🔍 [Server] Searching by timeSlotId and startTime:', { timeSlotId, startTime });
+                    allocation = await prisma.allocation.findFirst({
+                        where: {
+                            timeSlotId,
+                            startTime: new Date(startTime),
+                        },
+                    });
+                }
+                console.log('📝 [Server] Allocation lookup result:', allocation);
+                return allocation;
+            } catch (error) {
+                console.error('❌ [Server] Error looking up allocation:', error);
+                throw error;
             }
         },
-        allocations: (_, { contextId, status }) => prisma.allocation.findMany({
-            where: {
-                ...(status && { status }),
-                timeSlot: {
-                    contextId,
-                },
-            },
-        }),
-        possibleAllocations: async (_, { contextId, startDate, endDate }) => {
-            // Get all time slots for the given context with their effective duration
-            const timeSlots = await prisma.timeSlot.findMany({
-                where: { contextId },
-                include: { sessionType: true, allocations: true, agent: true },
-            });
-
-            const possibleAllocations = timeSlots.flatMap(timeSlot => {
-                // Generate all occurrences for the requested time frame
-                const interval = cronParser.parseExpression(timeSlot.cron, {
-                    // set day to the latest of startDate and today
-                    currentDate: new Date(startDate),
-                    tz: 'America/Lima'
+        allocations: async (_, { contextId, status }) => {
+            console.log('🔍 [Server] Fetching allocations...', { contextId, status });
+            try {
+                const allocations = await prisma.allocation.findMany({
+                    where: {
+                        ...(status && { status }),
+                        timeSlot: {
+                            contextId,
+                        },
+                    },
                 });
-                const effectiveDuration = timeSlot.duration || timeSlot.sessionType.defaultDuration;
+                console.log('📝 [Server] Found allocations count:', allocations.length);
+                return allocations;
+            } catch (error) {
+                console.error('❌ [Server] Error fetching allocations:', error);
+                throw error;
+            }
+        },
+        possibleAllocations: async (_, { contextId, startDate, endDate }) => {
+            console.log('🔍 [Server] Fetching possible allocations...', { contextId, startDate, endDate });
+            try {
+                // Get all time slots for the given context with their effective duration
+                const timeSlots = await prisma.timeSlot.findMany({
+                    where: { contextId },
+                    include: { sessionType: true, allocations: true, agent: true },
+                });
+                console.log('📝 [Server] Found timeSlots count:', timeSlots.length);
 
-                const occurrences = [];
+                const possibleAllocations = timeSlots.flatMap(timeSlot => {
+                    console.log('⚙️ [Server] Processing timeSlot:', {
+                        id: timeSlot.id,
+                        cron: timeSlot.cron,
+                    });
 
-                while (true) {
-                    const event = interval.next();
+                    // Generate all occurrences for the requested time frame
+                    const interval = cronParser.parseExpression(timeSlot.cron, {
+                        currentDate: new Date(startDate),
+                        tz: 'America/Lima'
+                    });
+                    const effectiveDuration = timeSlot.duration || timeSlot.sessionType.defaultDuration;
 
-                    if (event.getTime() > new Date(endDate).getTime()) {
-                        break;
+                    const occurrences = [];
+                    while (true) {
+                        const event = interval.next();
+
+                        if (event.getTime() > new Date(endDate).getTime()) {
+                            break;
+                        }
+
+                        occurrences.push(new Date(event.getTime()));
                     }
 
-                    occurrences.push(new Date(event.getTime()));
-                }
-
-                return occurrences.map(startTime => {
-                    return {
-                        id: timeSlot.allocations.find(allocation => allocation.startTime.getTime() === startTime.getTime())?.id,
-                        startTime,
-                        duration: effectiveDuration,
-                        status: 'AVAILABLE',
-                        timeSlotId: timeSlot.id,
-                        sessionTypeId: timeSlot.sessionType.id,
-                        currentReservations: timeSlot.allocations.find(allocation => allocation.startTime.getTime() === startTime.getTime())?.currentReservations || 0,
-                    };
+                    console.log('📝 [Server] Generated occurrences count:', occurrences.length);
+                    return occurrences.map(startTime => {
+                        return {
+                            id: timeSlot.allocations.find(allocation => allocation.startTime.getTime() === startTime.getTime())?.id,
+                            startTime,
+                            duration: effectiveDuration,
+                            status: 'AVAILABLE',
+                            timeSlotId: timeSlot.id,
+                            sessionTypeId: timeSlot.sessionType.id,
+                            currentReservations: timeSlot.allocations.find(allocation => allocation.startTime.getTime() === startTime.getTime())?.currentReservations || 0,
+                        };
+                    });
                 });
-            });
 
-            // Flatten and sort the allocations by startTime
-            return possibleAllocations.flat().sort((a, b) => a.startTime - b.startTime);
+                console.log('✅ [Server] Total possible allocations:', possibleAllocations.length);
+                return possibleAllocations.flat().sort((a, b) => a.startTime - b.startTime);
+            } catch (error) {
+                console.error('❌ [Server] Error generating possible allocations:', error);
+                throw error;
+            }
         },
         sessionType: (_, { id }) => prisma.sessionType.findUnique({ where: { id } }),
         sessionTypes: () => prisma.sessionType.findMany(),
@@ -267,39 +299,66 @@ const resolvers = {
         createTimeSlot: (_, { input }) => prisma.timeSlot.create({ data: input }),
         updateTimeSlot: (_, { id, input }) => prisma.timeSlot.update({ where: { id }, data: input }),
         createAllocation: async (_, { input }) => {
-            const timeSlot = await prisma.timeSlot.findUnique({
-                where: { id: input.timeSlotId },
-                include: { sessionType: true }
-            });
+            console.log('🔨 [Server] Creating allocation...', input);
+            try {
+                const timeSlot = await prisma.timeSlot.findUnique({
+                    where: { id: input.timeSlotId },
+                    include: { sessionType: true }
+                });
 
-            if (!timeSlot) throw new Error("TimeSlot not found")
+                if (!timeSlot) {
+                    console.error('❌ [Server] TimeSlot not found:', input.timeSlotId);
+                    throw new Error("TimeSlot not found");
+                }
 
-            // Determine the effective duration
-            const effectiveDuration = timeSlot.duration || timeSlot.sessionType.defaultDuration;
+                console.log('📝 [Server] Found timeSlot:', {
+                    id: timeSlot.id,
+                    sessionType: timeSlot.sessionType,
+                });
 
-            // Calculate endTime based on startTime and effectiveDuration
-            const startTime = new Date(input.startTime);
-            const endTime = new Date(startTime.getTime() + effectiveDuration * 60000); // Convert minutes to milliseconds
+                // Determine the effective duration
+                const effectiveDuration = timeSlot.duration || timeSlot.sessionType.defaultDuration;
 
-            // Use upsert instead of create to handle existing allocations
-            return prisma.allocation.upsert({
-                where: {
-                    timeSlotId_startTime: {
-                        timeSlotId: input.timeSlotId,
-                        startTime: startTime
-                    }
-                },
-                update: {
-                    status: input.status || 'AVAILABLE',
-                    endTime: endTime,
-                },
-                create: {
-                    timeSlot: { connect: { id: input.timeSlotId } },
-                    startTime: startTime,
-                    endTime: endTime,
-                    status: input.status || 'AVAILABLE',
-                },
-            });
+                // Calculate endTime based on startTime and effectiveDuration
+                const startTime = new Date(input.startTime);
+                const endTime = new Date(startTime.getTime() + effectiveDuration * 60000);
+
+                console.log('⚙️ [Server] Calculated allocation times:', {
+                    startTime,
+                    endTime,
+                    duration: effectiveDuration,
+                });
+
+                // Use upsert instead of create to handle existing allocations
+                const allocation = await prisma.allocation.upsert({
+                    where: {
+                        timeSlotId_startTime: {
+                            timeSlotId: input.timeSlotId,
+                            startTime: startTime
+                        }
+                    },
+                    update: {
+                        status: input.status || 'AVAILABLE',
+                        endTime: endTime,
+                    },
+                    create: {
+                        timeSlot: { connect: { id: input.timeSlotId } },
+                        startTime: startTime,
+                        endTime: endTime,
+                        status: input.status || 'AVAILABLE',
+                    },
+                });
+
+                console.log('✅ [Server] Allocation created/updated:', {
+                    id: allocation.id,
+                    status: allocation.status,
+                });
+
+                return allocation;
+            } catch (error) {
+                console.error('❌ [Server] Error creating allocation:', error);
+                throw error;
+            }
         },
         updateAllocation: async (_, { id, input }) => {
             const updatedAllocation = await prisma.allocation.update({

@@ -200,7 +200,7 @@ export enum BundleStatus {
   ACTIVE = "ACTIVE",
   EXPIRED = "EXPIRED",
   CANCELLED = "CANCELLED",
-  EXPENDED = "EXPENDED",
+  USED = "USED",
 }
 
 export const CREATE_ALLOCATION = gql`
@@ -378,6 +378,76 @@ export const GET_CONSUMER_RESERVATIONS = gql`
             endTime
             status
           }
+        }
+      }
+    }
+  }
+`;
+
+export const CHECK_EXISTING_ALLOCATION = gql`
+  query CheckExistingAllocation($timeSlotId: ID!, $startTime: DateTime!) {
+    allocation(input: { timeSlotId: $timeSlotId, startTime: $startTime }) {
+      id
+      startTime
+      endTime
+      status
+      timeSlot {
+        id
+        sessionType {
+          name
+          maxConsumers
+        }
+        agent {
+          name
+        }
+      }
+    }
+  }
+`;
+
+export const GET_TIMESLOT_BY_DAY = gql`
+  query GetTimeSlotByDay($contextId: ID!, $dayOfWeek: Int!, $hour: Int!, $minute: Int!) {
+    timeSlots(
+      where: {
+        contextId: $contextId,
+        dayOfWeek: $dayOfWeek,
+        hour: $hour,
+        minute: $minute
+      }
+    ) {
+      id
+      cron
+      duration
+      sessionType {
+        id
+        name
+        maxConsumers
+        defaultDuration
+      }
+      agent {
+        id
+        name
+      }
+    }
+  }
+`;
+
+export const CREATE_ALLOCATION_FROM_TIMESLOT = gql`
+  mutation CreateAllocationFromTimeSlot($input: CreateAllocationInput!) {
+    createAllocation(input: $input) {
+      id
+      startTime
+      endTime
+      status
+      currentReservations
+      timeSlot {
+        id
+        agent {
+          name
+        }
+        sessionType {
+          name
+          maxConsumers
         }
       }
     }

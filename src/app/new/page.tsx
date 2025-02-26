@@ -23,6 +23,7 @@ function NewUserContent() {
   const instructor = searchParams.get("instructor");
   const time = searchParams.get("time");
   const day = searchParams.get("day");
+  const now = searchParams.get("now");
 
   const [createConsumer] = useMutation(CREATE_CONSUMER);
 
@@ -55,6 +56,7 @@ function NewUserContent() {
           if (instructor) params.append("instructor", instructor);
           if (time) params.append("time", time);
           if (day) params.append("day", day);
+          if (now) params.append("now", now);
         }
         
         setTimeout(() => {
@@ -71,6 +73,7 @@ function NewUserContent() {
         if (instructor) params.append("instructor", instructor);
         if (time) params.append("time", time);
         if (day) params.append("day", day);
+        if (now) params.append("now", now);
         
         setTimeout(() => {
           router.push(`/buy-packages?${params.toString()}`);
