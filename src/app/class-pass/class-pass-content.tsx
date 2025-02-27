@@ -531,126 +531,163 @@ export function ClassPassContent() {
   }
 
   return (
-    <>
-      {/* Schedule Navigation Overlay */}
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="min-h-screen bg-gradient-to-b from-blue-50 to-white"
-      >
-        <div className="container mx-auto px-4 py-16 md:py-24">
-          <div className="max-w-4xl mx-auto">
-            <div className="space-y-6">
-              {nextClass && singleClassPass && (
-                <div key={nextClass.activity}>
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-4"
-                  >
-                    <div className="p-6 sm:p-8">
-                      {/* Header Section with Class Info */}
-                      <div className="flex flex-col gap-4 pb-6 border-b border-gray-100">
-                        <div>
-                          <div className="flex items-start justify-between mb-2">
-                            {/* Left side - Class info */}
-                            <div className="flex flex-col">
-                              <motion.h2
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ duration: 0.5, delay: 0.3 }}
-                                className="text-4xl font-bold text-gray-900"
-                              >
-                                {nextClass.activity}
-                              </motion.h2>
-                              <motion.span
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ duration: 0.5, delay: 0.4 }}
-                                className="text-2xl text-gray-600 font-medium mt-2"
-                              >
-                                {language === "en" ? "with" : "con"}{" "}
-                                <span className="font-semibold">
-                                  {nextClass.instructor}
-                                </span>
-                              </motion.span>
-                              <motion.div
-                                initial={{ x: -20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ duration: 0.5, delay: 0.5 }}
-                                className="flex items-center gap-3 text-xl mt-3"
-                              >
-                                <p className="font-medium text-gray-800">
-                                  {`${nextClass.day} ${nextClass.time}`}
-                                </p>
-                                <span className="text-gray-400">•</span>
-                                <p className="font-medium text-gray-800">
-                                  {nextClass.duration} min
-                                </p>
-                              </motion.div>
-                            </div>
-
-                            {/* Right side - Price */}
-                            <motion.div
-                              initial={{ x: 20, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ duration: 0.5, delay: 0.3 }}
-                              className="flex flex-col items-end"
-                            >
-                              <div className="flex flex-col items-end">
-                                <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight mb-2">
-                                  S/. {Number(singleClassPass.price).toFixed(2)}
-                                </div>
-                                <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
-                                  <Tag className="w-4 h-4 text-green-600" />
-                                  <span className="text-green-700 font-medium">
-                                    {nextClass?.activity
-                                      .toLowerCase()
-                                      .includes("acro")
-                                      ? language === "en"
-                                        ? "1 Acro MatPass"
-                                        : "1 Acro MatPass"
-                                      : "1 MatPass"}
-                                  </span>
-                                </div>
-                              </div>
-                            </motion.div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action Button con Loader */}
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.6 }}
-                        whileHover={{ scale: isBooking ? 1 : 1.02 }}
-                        whileTap={{ scale: isBooking ? 1 : 0.98 }}
-                      >
-                        <button
-                          onClick={handleClassSelection}
-                          disabled={isBooking}
-                          className="relative w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-6 px-6 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-2xl font-semibold shadow-lg hover:shadow-xl group overflow-hidden"
-                        >
-                          {/* Darkening overlay */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen bg-gradient-to-b from-blue-50 to-white pt-14"
+    >
+      <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-16 md:py-24">
+        <div className="max-w-4xl mx-auto">
+          <div className="space-y-2 sm:space-y-4">
+            {nextClass && singleClassPass && (
+              <div key={nextClass.activity}>
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border border-gray-100 mb-2 sm:mb-4"
+                >
+                  <div className="p-2 sm:p-6 md:p-8">
+                    {/* Header Section with Class Info */}
+                    <div className="flex flex-col gap-1.5 sm:gap-4 pb-2 sm:pb-6 border-b border-gray-100">
+                      <div className="flex flex-row items-start justify-between gap-2 sm:gap-6">
+                        {/* Left side - Class info */}
+                        <div className="flex flex-col flex-1 min-w-0">
+                          <motion.h2
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.3 }}
+                            className="text-base sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight truncate"
+                          >
+                            {nextClass.activity}
+                          </motion.h2>
+                          <motion.span
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.4 }}
+                            className="text-xs sm:text-xl md:text-2xl text-gray-600 font-medium mt-0.5 sm:mt-2"
+                          >
+                            {language === "en" ? "with" : "con"}{" "}
+                            <span className="font-semibold">
+                              {nextClass.instructor}
+                            </span>
+                          </motion.span>
                           <motion.div
-                            className="absolute inset-0 bg-black/0"
-                            initial={{ x: "-100%" }}
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ duration: 0.5, delay: 0.5 }}
+                            className="flex flex-wrap items-center gap-1 sm:gap-3 text-[10px] sm:text-lg md:text-xl mt-1 sm:mt-3"
+                          >
+                            <p className="font-medium text-gray-800">
+                              {`${nextClass.day} ${nextClass.time}`}
+                            </p>
+                            <span className="text-gray-400">•</span>
+                            <p className="font-medium text-gray-800">
+                              {nextClass.duration} min
+                            </p>
+                          </motion.div>
+                        </div>
+
+                        {/* Right side - Price */}
+                        <motion.div
+                          initial={{ x: 20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.3 }}
+                          className="flex flex-col items-end justify-start gap-1 sm:gap-2"
+                        >
+                          <div className="text-base sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent tracking-tight">
+                            S/. {Number(singleClassPass.price).toFixed(2)}
+                          </div>
+                          <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-1.5 sm:px-4 py-0.5 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2">
+                            <Tag className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
+                            <span className="text-green-700 font-medium text-[10px] sm:text-base whitespace-nowrap">
+                              {nextClass?.activity
+                                .toLowerCase()
+                                .includes("acro")
+                                ? language === "en"
+                                  ? "1 Acro MatPass"
+                                  : "1 Acro MatPass"
+                                : "1 MatPass"}
+                            </span>
+                          </div>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                      className="mt-2 sm:mt-6"
+                    >
+                      <button
+                        onClick={handleClassSelection}
+                        disabled={isBooking}
+                        className="relative w-full bg-gradient-to-r from-green-600 to-teal-600 text-white py-2 sm:py-6 px-2 sm:px-6 rounded-lg sm:rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-3 text-sm sm:text-xl md:text-2xl font-semibold shadow-lg hover:shadow-xl group overflow-hidden"
+                      >
+                        {/* Darkening overlay */}
+                        <motion.div
+                          className="absolute inset-0 bg-black/0"
+                          initial={{ x: "-100%" }}
+                          whileHover={{
+                            x: "0%",
+                            backgroundColor: "rgba(0, 0, 0, 0.2)",
+                            transition: { duration: 0.3, ease: "easeOut" },
+                          }}
+                        />
+
+                        <CreditCard className="w-3.5 h-3.5 sm:w-6 sm:h-6 md:w-7 md:h-7 relative transition-transform group-hover:scale-110" />
+
+                        {isBooking ? (
+                          <Loader2 className="w-3.5 h-3.5 sm:w-6 sm:h-6 animate-spin" />
+                        ) : (
+                          <AnimatePresence mode="wait">
+                            <motion.span
+                              key={language}
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: -10, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="relative"
+                            >
+                              {language === "en"
+                                ? "Book Now"
+                                : "Reservar Ahora"}
+                            </motion.span>
+                          </AnimatePresence>
+                        )}
+
+                        {!isBooking && (
+                          <motion.div
+                            className="relative"
+                            initial={{ x: 0, y: 0 }}
                             whileHover={{
-                              x: "0%",
-                              backgroundColor: "rgba(0, 0, 0, 0.2)",
-                              transition: { duration: 0.3, ease: "easeOut" },
+                              x: [0, 10, 10],
+                              y: [0, -5, 5],
+                              transition: {
+                                duration: 1.5,
+                                repeat: Infinity,
+                                repeatType: "reverse",
+                                ease: "easeInOut",
+                              },
                             }}
-                          />
+                          >
+                            <ArrowRight className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                          </motion.div>
+                        )}
+                      </button>
+                    </motion.div>
 
-                          <CreditCard className="w-7 h-7 relative transition-transform group-hover:scale-110" />
-
-                          {isBooking ? (
-                            <Loader2 className="w-6 h-6 animate-spin" />
-                          ) : (
+                    {/* Additional Info */}
+                    <div className="mt-2 pt-2 sm:mt-6 sm:pt-6 border-t border-gray-100">
+                      <div className="flex flex-col sm:grid sm:grid-cols-3 gap-1 sm:gap-0">
+                        <div className="flex items-center gap-1.5 sm:gap-3 justify-start">
+                          <Users className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-500" />
+                          <span className="text-gray-700 text-[10px] sm:text-base md:text-lg">
+                            {(nextClass.timeSlot?.sessionType?.maxConsumers || 12) - nextClass.currentReservations}/
+                            {nextClass.timeSlot?.sessionType?.maxConsumers || 12}{" "}
                             <AnimatePresence mode="wait">
                               <motion.span
                                 key={language}
@@ -658,130 +695,81 @@ export function ClassPassContent() {
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: -10, opacity: 0 }}
                                 transition={{ duration: 0.2 }}
-                                className="relative"
                               >
-                                {language === "en"
-                                  ? "Book Now"
-                                  : "Reservar Ahora"}
+                                {language === "en" ? "mats" : "mats"}
                               </motion.span>
                             </AnimatePresence>
-                          )}
+                          </span>
+                        </div>
 
-                          {/* Solo mostramos la flecha si no está en estado loader */}
-                          {!isBooking && (
-                            <motion.div
-                              className="relative"
-                              initial={{ x: 0, y: 0 }}
-                              whileHover={{
-                                x: [0, 10, 10],
-                                y: [0, -5, 5],
-                                transition: {
-                                  duration: 1.5,
-                                  repeat: Infinity,
-                                  repeatType: "reverse",
-                                  ease: "easeInOut",
-                                },
-                              }}
-                            >
-                              <ArrowRight className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                            </motion.div>
-                          )}
-                        </button>
-                      </motion.div>
+                        <div className="flex items-center gap-1.5 sm:gap-3 justify-start sm:justify-center">
+                          <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-500" />
+                          <CountdownTimer
+                            classTime={nextClass.time}
+                            language={language}
+                          />
+                        </div>
 
-                      {/* Additional Info */}
-                      <div className="mt-4 pt-6 border-t border-gray-100">
-                        <div className="grid grid-cols-3 items-center">
-                          <div className="flex items-center gap-3 justify-start">
-                            <Users className="w-6 h-6 text-green-500" />
-                            <span className="text-gray-700 text-lg">
-                              {(nextClass.timeSlot?.sessionType?.maxConsumers || 12) - nextClass.currentReservations}/
-                              {nextClass.timeSlot?.sessionType?.maxConsumers || 12}{" "}
-                              <AnimatePresence mode="wait">
-                                <motion.span
-                                  key={language}
-                                  initial={{ y: 10, opacity: 0 }}
-                                  animate={{ y: 0, opacity: 1 }}
-                                  exit={{ y: -10, opacity: 0 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  mats
-                                </motion.span>
-                              </AnimatePresence>
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-3 justify-center">
-                            <Clock className="w-6 h-6 text-green-500" />
-                            <CountdownTimer
-                              classTime={nextClass.time}
-                              language={language}
-                            />
-                          </div>
-
-                          <div className="flex items-center gap-3 justify-end">
-                            <Globe2 className="w-6 h-6 text-green-500" />
-                            <span className="text-gray-700 text-lg">
-                              {language === "en"
-                                ? "Bilingual Class"
-                                : "Clase Bilingüe"}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-1.5 sm:gap-3 justify-start sm:justify-end">
+                          <Globe2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-500" />
+                          <span className="text-gray-700 text-[10px] sm:text-base md:text-lg whitespace-nowrap">
+                            {language === "en" ? "Bilingual" : "Bilingüe"}
+                          </span>
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
+                </motion.div>
 
-                  {/* Ver Horarios button outside the card */}
-                  <motion.button
-                    onClick={handleViewSchedule}
-                    disabled={isViewingSchedule}
-                    className={`w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-2 border border-gray-200 font-semibold text-lg shadow-sm hover:shadow-md group ${isViewingSchedule ? 'cursor-not-allowed opacity-80' : ''}`}
-                  >
-                    <AnimatePresence mode="wait">
-                      {isViewingSchedule ? (
-                        <motion.div
-                          key="loading"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center gap-2"
-                        >
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>
-                            {language === "en" ? "Loading..." : "Cargando..."}
-                          </span>
-                        </motion.div>
-                      ) : (
-                        <motion.span
-                          key={language}
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          exit={{ y: -10, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {language === "en" ? "View Schedule" : "Ver Horarios"}
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                    {!isViewingSchedule && (
-                      <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                {/* Ver Horarios button */}
+                <motion.button
+                  onClick={handleViewSchedule}
+                  disabled={isViewingSchedule}
+                  className={`w-full bg-white/90 backdrop-blur-sm text-gray-500 py-2 sm:py-4 px-2.5 sm:px-6 rounded-lg sm:rounded-xl hover:bg-white/95 transition-all duration-300 flex items-center justify-center gap-1.5 sm:gap-2 border border-gray-200 font-semibold text-xs sm:text-lg shadow-sm hover:shadow-md group ${isViewingSchedule ? 'cursor-not-allowed opacity-80' : ''}`}
+                >
+                  <AnimatePresence mode="wait">
+                    {isViewingSchedule ? (
+                      <motion.div
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1.5 sm:gap-2"
+                      >
+                        <Loader2 className="w-3 h-3 sm:w-5 sm:h-5 animate-spin" />
+                        <span>
+                          {language === "en" ? "Loading..." : "Cargando..."}
+                        </span>
+                      </motion.div>
+                    ) : (
+                      <motion.span
+                        key={language}
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -10, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {language === "en" ? "View Schedule" : "Ver Horarios"}
+                      </motion.span>
                     )}
-                  </motion.button>
-                </div>
-              )}
+                  </AnimatePresence>
+                  {!isViewingSchedule && (
+                    <ChevronRight className="w-3 h-3 sm:w-5 sm:h-5 transition-transform group-hover:translate-x-1" />
+                  )}
+                </motion.button>
+              </div>
+            )}
 
-              {!nextClass && (
-                <div className="text-center text-gray-500 py-8">
-                  {language === "en"
-                    ? "No classes available at the moment."
-                    : "No hay clases disponibles en este momento."}
-                </div>
-              )}
-            </div>
+            {!nextClass && (
+              <div className="text-center text-gray-500 py-3 sm:py-8">
+                {language === "en"
+                  ? "No classes available at the moment."
+                  : "No hay clases disponibles en este momento."}
+              </div>
+            )}
           </div>
         </div>
-      </motion.div>
-    </>
+      </div>
+    </motion.div>
   );
 }

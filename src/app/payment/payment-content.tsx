@@ -22,6 +22,7 @@ import {
   GET_ALLOCATION,
   BundleStatus,
   CREATE_RESERVATION,
+  GET_CONSUMER_RESERVATIONS,
 } from "@/lib/graphql/queries";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -29,6 +30,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { SuccessOverlay } from "@/components/ui/success-overlay";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
+
+interface ConsumerReservation {
+  status: string;
+  timeSlot: {
+    allocation: {
+      id: string;
+    };
+  };
+}
 
 type PaymentMethod = "CARD" | "CASH" | "QR";
 
@@ -204,6 +214,11 @@ export function PaymentContent() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showReservationExists, setShowReservationExists] = useState(false);
+  const [existingReservationError, setExistingReservationError] = useState<{
+    message: { en: string; es: string };
+    options: { en: string; es: string }[];
+  } | null>(null);
 
   const consumerId = searchParams.get("consumerId");
   const bundleId = searchParams.get("bundleId");
@@ -234,6 +249,15 @@ export function PaymentContent() {
       skip: !classId,
     }
   );
+
+  const { data: reservationsData } = useQuery(GET_CONSUMER_RESERVATIONS, {
+    variables: { 
+      consumerId,
+      allocationId: classId 
+    },
+    skip: !consumerId || !classId,
+    fetchPolicy: 'network-only'
+  });
 
   const [createBundle] = useMutation(CREATE_BUNDLE);
   const [createReservation] = useMutation(CREATE_RESERVATION);
@@ -292,6 +316,40 @@ export function PaymentContent() {
     if (!consumerId) {
       setError(language === "en" ? "Consumer ID is required." : "Se requiere ID del consumidor.");
       return;
+    }
+
+    // Check for existing reservations first
+    if (classId && reservationsData?.consumer?.reservations) {
+      const existingReservation = reservationsData.consumer.reservations.find(
+        (reservation: ConsumerReservation) => 
+          reservation.timeSlot.allocation.id === classId && 
+          ['PENDING', 'CONFIRMED'].includes(reservation.status)
+      );
+
+      if (existingReservation) {
+        setShowReservationExists(true);
+        setExistingReservationError({
+          message: {
+            en: "You already have a reservation for this class.",
+            es: "Ya tienes una reserva para esta clase."
+          },
+          options: [
+            {
+              en: "View Other Times",
+              es: "Ver Otros Horarios"
+            },
+            {
+              en: "Buy New Package",
+              es: "Comprar Nuevo Paquete"
+            },
+            {
+              en: "Return Home",
+              es: "Volver al Inicio"
+            }
+          ]
+        });
+        return;
+      }
     }
 
     // Validate that we have either bundleId or bundleTypeId, but not both
@@ -457,6 +515,19 @@ export function PaymentContent() {
     }
   };
 
+  // Add navigation handlers
+  const handleViewOtherTimes = () => {
+    router.push('/schedule');
+  };
+
+  const handleBuyNewPackage = () => {
+    router.push('/buy-packages');
+  };
+
+  const handleReturnHome = () => {
+    router.push('/');
+  };
+
   // Verificar si tenemos los datos necesarios
   if (!consumerData?.consumer) {
     return (
@@ -517,6 +588,52 @@ export function PaymentContent() {
         variant="payment"
         duration={2000}
       />
+
+      {/* Add Reservation Exists Modal */}
+      {showReservationExists && existingReservationError && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full mx-4"
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-yellow-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {existingReservationError.message[language]}
+              </h3>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={handleViewOtherTimes}
+                className="w-full px-6 py-3 rounded-xl text-white bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 transition-all duration-200 font-medium"
+              >
+                {existingReservationError.options[0][language]}
+              </button>
+              <button
+                onClick={handleBuyNewPackage}
+                className="w-full px-6 py-3 rounded-xl text-green-700 bg-green-50 hover:bg-green-100 transition-all duration-200 font-medium"
+              >
+                {existingReservationError.options[1][language]}
+              </button>
+              <button
+                onClick={handleReturnHome}
+                className="w-full px-6 py-3 rounded-xl text-gray-600 hover:bg-gray-50 transition-all duration-200 font-medium"
+              >
+                {existingReservationError.options[2][language]}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
       <div className="max-w-4xl mx-auto">
         {/* Información del Usuario y del Paquete */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
