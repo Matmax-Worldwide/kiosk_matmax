@@ -2,21 +2,14 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Users, Tag, Clock, Calendar, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { 
   format, 
   addDays, 
   startOfWeek, 
-  addWeeks, 
-  startOfMonth, 
-  endOfMonth, 
-  endOfWeek, 
-  isSameMonth, 
-  isEqual, 
-  isBefore, 
+  addWeeks,
   startOfDay,
-  addMonths,
   differenceInDays
 } from "date-fns";
 import { enUS, es } from "date-fns/locale";
@@ -30,130 +23,8 @@ import { Allocation, GetPossibleAllocationsQuery } from "@/types/graphql";
 import { Header } from "@/components/header";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface MonthlyCalendarProps {
-  selectedDate: Date;
-  onDateSelect: (date: Date) => void;
-  onClose: () => void;
-  language: string;
-  show: boolean;
-}
-
-const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ selectedDate, onDateSelect, onClose, language, show }) => {
-  const [currentMonth, setCurrentMonth] = useState<Date>(selectedDate);
-
-  if (!show) return null;
-
-  const firstDayOfMonth = startOfMonth(currentMonth);
-  const lastDayOfMonth = endOfMonth(currentMonth);
-  const startDate = startOfWeek(firstDayOfMonth, { weekStartsOn: 1 });
-  const endDate = endOfWeek(lastDayOfMonth, { weekStartsOn: 1 });
-
-  const days = [];
-  let day = startDate;
-  while (day <= endDate) {
-    days.push(day);
-    day = addDays(day, 1);
-  }
-
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => 
-    language === 'es' ? 
-    day.replace('Mon', 'Lun').replace('Tue', 'Mar').replace('Wed', 'Mié').replace('Thu', 'Jue').replace('Fri', 'Vie').replace('Sat', 'Sáb').replace('Sun', 'Dom') : 
-    day
-  );
-
-  const handleMonthChange = (increment: number) => {
-    setCurrentMonth(addMonths(currentMonth, increment));
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
-    >
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden">
-        <div className="bg-gradient-to-r from-green-600 to-teal-600 p-8">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => handleMonthChange(-1)}
-              className="p-3 rounded-full hover:bg-white/10 transition-colors text-white"
-            >
-              <ChevronLeft className="w-8 h-8" />
-            </button>
-            <h2 className="text-4xl font-bold text-white text-center capitalize">
-              {format(currentMonth, 'MMMM yyyy', { locale: language === 'es' ? es : enUS })}
-            </h2>
-            <button
-              onClick={() => handleMonthChange(1)}
-              className="p-3 rounded-full hover:bg-white/10 transition-colors text-white"
-            >
-              <ChevronRight className="w-8 h-8" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-8">
-          <div className="grid grid-cols-7 gap-4 mb-6">
-            {weekDays.map(day => (
-              <div key={day} className="text-center font-semibold text-gray-600 text-lg">
-                {day}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-4">
-            {days.map((day, index) => {
-              const isCurrentMonth = isSameMonth(day, currentMonth);
-              const isToday = isEqual(day, new Date());
-              const isSelected = isEqual(day, selectedDate);
-              const isPast = isBefore(day, startOfDay(new Date()));
-
-              return (
-                <button
-                  key={index}
-                  onClick={() => !isPast && onDateSelect(day)}
-                  disabled={isPast}
-                  className={`
-                    aspect-square flex items-center justify-center text-xl font-medium rounded-2xl
-                    transition-all duration-200 relative
-                    ${isCurrentMonth ? 'hover:bg-green-50 hover:scale-110' : 'text-gray-400'}
-                    ${isToday ? 'ring-2 ring-green-500 ring-offset-2 bg-green-50 text-green-600' : ''}
-                    ${isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg scale-110 hover:scale-105' : ''}
-                    ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer'}
-                  `}
-                >
-                  <span className={`${isSelected ? 'transform scale-110' : ''}`}>
-                    {format(day, 'd')}
-                  </span>
-                  {isToday && !isSelected && (
-                    <div className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-green-500"></div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="p-8 bg-gray-50 flex justify-end gap-4">
-          <button
-            onClick={onClose}
-            className="px-6 py-3 rounded-xl text-lg font-medium hover:bg-gray-100 transition-colors"
-          >
-            {language === 'en' ? 'Cancel' : 'Cancelar'}
-          </button>
-          <button
-            onClick={onClose}
-            className="px-6 py-3 rounded-xl text-lg font-medium bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02] transition-all"
-          >
-            {language === 'en' ? 'Done' : 'Listo'}
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
+import { ClassCard } from "@/components/schedule/ClassCard";
+import { MonthlyCalendar } from "@/components/schedule/MonthlyCalendar";
 
 interface ClassInstance {
   id: string;
@@ -285,7 +156,6 @@ export default function SchedulePage() {
     setSelectedWeek(newWeek);
   };
 
-
   useEffect(() => {
     if (scrollRef.current) {
       const currentDayClasses =
@@ -409,7 +279,6 @@ export default function SchedulePage() {
     fetchSchedule();
   }, [client, selectedDate]);
 
-
   const handleMonthlyDateSelect = (date: Date) => {
     setSelectedDate(date);
     setSelectedWeek(Math.floor(differenceInDays(date, today) / 7));
@@ -423,7 +292,6 @@ export default function SchedulePage() {
 
     const attemptAllocationCreation = async (timeSlotId: string, startDateTime: Date): Promise<string> => {
       try {
-        // First, check if allocation already exists
         console.log('🔍 [Schedule] Checking for existing allocation...', {
           timeSlotId,
           startTime: startDateTime.toISOString(),
@@ -435,7 +303,7 @@ export default function SchedulePage() {
             timeSlotId,
             startTime: startDateTime.toISOString(),
           },
-          fetchPolicy: 'network-only', // Ensure we get fresh data
+          fetchPolicy: 'network-only',
         });
 
         if (existingAllocation?.allocation?.id) {
@@ -443,7 +311,6 @@ export default function SchedulePage() {
           return existingAllocation.allocation.id;
         }
 
-        // Create new allocation
         console.log('🔨 [Schedule] Creating new allocation...', {
           timeSlotId,
           startTime: startDateTime.toISOString(),
@@ -470,7 +337,6 @@ export default function SchedulePage() {
         console.error(`❌ [Schedule] Attempt ${retryCount + 1} failed:`, error);
         
         if (error instanceof Error && error.message.includes('already exists')) {
-          // If allocation already exists, try to fetch it again
           const { data: retryExistingAllocation } = await client.query({
             query: CHECK_EXISTING_ALLOCATION,
             variables: {
@@ -518,7 +384,6 @@ export default function SchedulePage() {
           if (retryCount === MAX_RETRIES) {
             throw error;
           }
-          // Wait before retrying (exponential backoff)
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
         }
       }
@@ -527,7 +392,6 @@ export default function SchedulePage() {
         throw new Error("Could not create or find allocation after multiple attempts");
       }
 
-      // Update the classId in params with the verified/created allocation ID
       params.set('classId', allocationId);
       
       console.log('🎯 [Schedule] Preparing navigation...', {
@@ -546,8 +410,6 @@ export default function SchedulePage() {
     } catch (error) {
       console.error('❌ [Schedule] Navigation error:', error);
       setLoadingAllocation(null);
-      // Here you might want to show an error toast/notification to the user
-      // You could add a toast/notification system
     }
   };
 
@@ -642,7 +504,7 @@ export default function SchedulePage() {
                 <div className="p-4">
                   <div className="grid grid-cols-7 gap-3">
                     {allWeekDays[0].map((day) => {
-                      const isPast = isBefore(day.date, startOfDay(new Date()));
+                      const isPast = day.date < startOfDay(new Date());
                       return (
                         <button
                           key={day.dayNumber}
@@ -732,170 +594,34 @@ export default function SchedulePage() {
                       className="snap-start min-h-full w-full flex flex-col"
                     >
                       <div className="flex flex-col flex-1 space-y-6">
-                        {blockClasses.map((classInfo, index) => (
-                          <motion.div
-                            key={`${classInfo.id}-${index}`}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="flex-1 border border-gray-100 rounded-xl p-4 hover:shadow-lg transition-all duration-300 bg-white"
-                            style={{
-                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-                              borderBottom: "4px solid #f3f4f6",
-                              minHeight: "calc((100vh - 400px) / 3)",
+                        {blockClasses.map((classInfo) => (
+                          <ClassCard
+                            key={classInfo.id}
+                            classInfo={classInfo}
+                            language={language}
+                            loadingAllocation={loadingAllocation}
+                            onBookClass={async () => {
+                              const params = new URLSearchParams();
+                              setLoadingAllocation(classInfo.id);
+                              
+                              try {
+                                const allocationId = classInfo.id;
+                                
+                                if (allocationId) {
+                                  params.append('classId', allocationId);
+                                  params.append('activity', classInfo.schedule.name);
+                                  params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
+                                  params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
+                                  params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
+                                  
+                                  await handleNavigation(params);
+                                }
+                              } catch (error) {
+                                console.error('Error handling allocation:', error);
+                                setLoadingAllocation(null);
+                              }
                             }}
-                          >
-                            <div className="flex flex-col h-full justify-between space-y-6">
-                              <div className="flex items-start justify-between space-x-6">
-                                <div className="flex space-x-4">
-                                  <div className="w-20 h-20 rounded-xl bg-gradient-to-b from-green-50 to-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <Tag className="w-10 h-10 text-green-600" />
-                                  </div>
-                                  
-                                  <div className="flex flex-col space-y-3">
-                                    <div className="flex items-center space-x-3">
-                                      <h3 className="text-[1.6rem] font-bold text-gray-900">
-                                        {classInfo.schedule.name}
-                                      </h3>
-                                      
-                                      <div
-                                        className={`flex items-center px-2 py-1 rounded-lg border ${
-                                          classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                          classInfo.schedule.name.toLowerCase().includes("beats")
-                                            ? "border-purple-200 bg-purple-50"
-                                            : "border-blue-200 bg-blue-50"
-                                        }`}
-                                      >
-                                        <Tag
-                                          className={`w-3 h-3 mr-1 ${
-                                            classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                            classInfo.schedule.name.toLowerCase().includes("beats")
-                                              ? "text-purple-600"
-                                              : "text-blue-600"
-                                          }`}
-                                        />
-                                        <span
-                                          className={`text-xs font-medium ${
-                                            classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                            classInfo.schedule.name.toLowerCase().includes("beats")
-                                              ? "text-purple-600"
-                                              : "text-blue-600"
-                                          }`}
-                                        >
-                                          {classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                          classInfo.schedule.name.toLowerCase().includes("beats")
-                                            ? "Sound Healing"
-                                            : "Yoga"}
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center space-x-2">
-                                      <p className="text-gray-600 text-2xl">
-                                        {language === "en" ? "with " : "con "}
-                                        <span className="font-large">{classInfo.primaryTeacher.user.firstName}</span>
-                                      </p>
-                                      {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description] && (
-                                        <span className="text-sm text-gray-500">
-                                          • {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description]}
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                <div className="text-right flex-shrink-0 space-y-2">
-                                  <p className="text-2xl font-bold text-gray-900">
-                                    {format(new Date(classInfo.startDateTime), "h:mm a")}
-                                  </p>
-                                  
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <p className="text-sm bg-gray-100 text-gray-600 px-4 py-1.5 rounded-full flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-gray-500" />
-                                      {classInfo.schedule.duration} min
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-6">
-                                  <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
-                                    <Tag className="w-4 h-4 text-green-600" />
-                                    <span className="text-green-700 font-medium">
-                                      {classInfo.schedule.name.toLowerCase().includes("acro")
-                                        ? language === "en"
-                                          ? "1 Acro MatPass"
-                                          : "1 Acro MatPass"
-                                        : "1 MatPass"}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex items-center gap-2 bg-gray-50/80 px-4 py-2 rounded-lg">
-                                    <Users className="w-5 h-5 text-gray-500" />
-                                    <span
-                                      className={
-                                        classInfo.enrolled >= classInfo.room.capacity
-                                          ? "text-red-600 font-medium"
-                                          : classInfo.enrolled >= classInfo.room.capacity * 0.8
-                                          ? "text-yellow-600 font-medium"
-                                          : "text-gray-600 font-medium"
-                                      }
-                                    >
-                                      {language === "en"
-                                        ? `${classInfo.room.capacity - classInfo.enrolled} spots left`
-                                        : `${classInfo.room.capacity - classInfo.enrolled} cupos disponibles`}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                <button
-                                  className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
-                                    classInfo.enrolled >= classInfo.room.capacity
-                                      ? "bg-gray-400 text-white cursor-not-allowed"
-                                      : loadingAllocation === classInfo.id
-                                      ? "bg-gradient-to-r from-green-600/80 to-teal-600/80 text-white cursor-wait"
-                                      : "bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]"
-                                  }`}
-                                  disabled={classInfo.enrolled >= classInfo.room.capacity || loadingAllocation === classInfo.id}
-                                  onClick={async () => {
-                                    const params = new URLSearchParams();
-                                    setLoadingAllocation(classInfo.id);
-                                    
-                                    try {
-                                      const allocationId = classInfo.id;
-                                      
-                                      // Agregamos los parámetros a la URL
-                                      if (allocationId) {
-                                        params.append('classId', allocationId);
-                                        params.append('activity', classInfo.schedule.name);
-                                        params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
-                                        params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
-                                        params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
-                                        
-                                        await handleNavigation(params);
-                                      }
-                                    } catch (error) {
-                                      console.error('Error handling allocation:', error);
-                                      setLoadingAllocation(null);
-                                      // Aquí podrías mostrar un mensaje de error al usuario
-                                    }
-                                  }}
-                                >
-                                  {loadingAllocation === classInfo.id ? (
-                                    <div className="flex items-center gap-2">
-                                      <Loader2 className="w-5 h-5 animate-spin" />
-                                      <span>{language === "en" ? "Processing..." : "Procesando..."}</span>
-                                    </div>
-                                  ) : classInfo.enrolled >= classInfo.room.capacity ? (
-                                    language === "en" ? "Full" : "Lleno"
-                                  ) : (
-                                    language === "en" ? "Book Now" : "Reservar"
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                          </motion.div>
+                          />
                         ))}
                       </div>
                     </motion.div>
@@ -927,10 +653,10 @@ export default function SchedulePage() {
           {isScrollable && (
             <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4 pointer-events-none">
               <motion.div
-                initial={{ opacity: 0.5, y: -10 }}
+                initial={{ opacity: 0.5, y: 10 }}
                 animate={{
                   opacity: [0.5, 1, 0.5],
-                  y: [-10, 0, -10],
+                  y: [10, 0, 10],
                 }}
                 transition={{
                   duration: 2,
@@ -942,11 +668,11 @@ export default function SchedulePage() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
                     {language === "en" 
-                      ? "Scroll for more classes"
-                      : "Desliza para ver más clases"}
+                      ? "Scroll up to see more classes"
+                      : "Desliza hacia arriba para ver más clases"}
                   </span>
                   <svg
-                    className="w-6 h-6 text-green-500"
+                    className="w-6 h-6 text-green-500 rotate-180"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
