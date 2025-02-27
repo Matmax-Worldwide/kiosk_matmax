@@ -1,6 +1,5 @@
 "use client";
-
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Users, Tag, Clock, Calendar, Loader2 } from "lucide-react";
@@ -57,33 +56,11 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ selectedDate, onDateS
     day = addDays(day, 1);
   }
 
-  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => ({
-    full: language === 'es' ? 
-      day.replace('Mon', 'Lunes')
-         .replace('Tue', 'Martes')
-         .replace('Wed', 'Miércoles')
-         .replace('Thu', 'Jueves')
-         .replace('Fri', 'Viernes')
-         .replace('Sat', 'Sábado')
-         .replace('Sun', 'Domingo') : 
-      day.replace('Mon', 'Monday')
-         .replace('Tue', 'Tuesday')
-         .replace('Wed', 'Wednesday')
-         .replace('Thu', 'Thursday')
-         .replace('Fri', 'Friday')
-         .replace('Sat', 'Saturday')
-         .replace('Sun', 'Sunday'),
-    short: language === 'es' ? 
-      day.replace('Mon', 'Lun')
-         .replace('Tue', 'Mar')
-         .replace('Wed', 'Mié')
-         .replace('Thu', 'Jue')
-         .replace('Fri', 'Vie')
-         .replace('Sat', 'Sáb')
-         .replace('Sun', 'Dom') : 
-      day,
-    initial: day[0]
-  }));
+  const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => 
+    language === 'es' ? 
+    day.replace('Mon', 'Lun').replace('Tue', 'Mar').replace('Wed', 'Mié').replace('Thu', 'Jue').replace('Fri', 'Vie').replace('Sat', 'Sáb').replace('Sun', 'Dom') : 
+    day
+  );
 
   const handleMonthChange = (increment: number) => {
     setCurrentMonth(addMonths(currentMonth, increment));
@@ -98,36 +75,35 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ selectedDate, onDateS
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden">
-        <div className="bg-gradient-to-r from-green-600 to-teal-600 p-4 sm:p-8">
+        <div className="bg-gradient-to-r from-green-600 to-teal-600 p-8">
           <div className="flex items-center justify-between">
             <button
               onClick={() => handleMonthChange(-1)}
-              className="p-2 sm:p-3 rounded-full hover:bg-white/10 transition-colors text-white"
+              className="p-3 rounded-full hover:bg-white/10 transition-colors text-white"
             >
-              <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
+              <ChevronLeft className="w-8 h-8" />
             </button>
-            <h2 className="text-2xl sm:text-4xl font-bold text-white text-center capitalize">
+            <h2 className="text-4xl font-bold text-white text-center capitalize">
               {format(currentMonth, 'MMMM yyyy', { locale: language === 'es' ? es : enUS })}
             </h2>
             <button
               onClick={() => handleMonthChange(1)}
-              className="p-2 sm:p-3 rounded-full hover:bg-white/10 transition-colors text-white"
+              className="p-3 rounded-full hover:bg-white/10 transition-colors text-white"
             >
-              <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
+              <ChevronRight className="w-8 h-8" />
             </button>
           </div>
         </div>
 
-        <div className="p-4 sm:p-8">
-          <div className="grid grid-cols-7 gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <div className="p-8">
+          <div className="grid grid-cols-7 gap-4 mb-6">
             {weekDays.map(day => (
-              <div key={day.full} className="text-center font-semibold text-gray-600">
-                <span className="hidden sm:inline text-base lg:text-lg">{day.full}</span>
-                <span className="inline sm:hidden text-sm">{day.initial}</span>
+              <div key={day} className="text-center font-semibold text-gray-600 text-lg">
+                {day}
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-2 sm:gap-4">
+          <div className="grid grid-cols-7 gap-4">
             {days.map((day, index) => {
               const isCurrentMonth = isSameMonth(day, currentMonth);
               const isToday = isEqual(day, new Date());
@@ -140,7 +116,7 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ selectedDate, onDateS
                   onClick={() => !isPast && onDateSelect(day)}
                   disabled={isPast}
                   className={`
-                    aspect-square flex items-center justify-center text-base sm:text-xl font-medium rounded-xl
+                    aspect-square flex items-center justify-center text-xl font-medium rounded-2xl
                     transition-all duration-200 relative
                     ${isCurrentMonth ? 'hover:bg-green-50 hover:scale-110' : 'text-gray-400'}
                     ${isToday ? 'ring-2 ring-green-500 ring-offset-2 bg-green-50 text-green-600' : ''}
@@ -152,7 +128,7 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ selectedDate, onDateS
                     {format(day, 'd')}
                   </span>
                   {isToday && !isSelected && (
-                    <div className="absolute bottom-1 sm:bottom-2 w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-green-500"></div>
+                    <div className="absolute bottom-2 w-1.5 h-1.5 rounded-full bg-green-500"></div>
                   )}
                 </button>
               );
@@ -160,16 +136,16 @@ const MonthlyCalendar: React.FC<MonthlyCalendarProps> = ({ selectedDate, onDateS
           </div>
         </div>
 
-        <div className="p-4 sm:p-8 bg-gray-50 flex justify-end gap-4">
+        <div className="p-8 bg-gray-50 flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-base sm:text-lg font-medium hover:bg-gray-100 transition-colors"
+            className="px-6 py-3 rounded-xl text-lg font-medium hover:bg-gray-100 transition-colors"
           >
             {language === 'en' ? 'Cancel' : 'Cancelar'}
           </button>
           <button
             onClick={onClose}
-            className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl text-base sm:text-lg font-medium bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02] transition-all"
+            className="px-6 py-3 rounded-xl text-lg font-medium bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02] transition-all"
           >
             {language === 'en' ? 'Done' : 'Listo'}
           </button>
@@ -274,6 +250,8 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState(0);
+  const [isScrollable, setIsScrollable] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(false);
   const [viewMode, setViewMode] = useState<'week' | 'calendar'>('week');
   const [loadingAllocation, setLoadingAllocation] = useState<string | null>(null);
@@ -306,6 +284,18 @@ export default function SchedulePage() {
     }
     setSelectedWeek(newWeek);
   };
+
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      const currentDayClasses =
+        schedule[format(selectedDate, "yyyy-MM-dd")] || [];
+      setIsScrollable(
+        scrollRef.current.scrollHeight > scrollRef.current.clientHeight &&
+          currentDayClasses.length > 3
+      );
+    }
+  }, [schedule, selectedDate, loading]);
 
   useEffect(() => {
     const fetchSchedule = async () => {
@@ -562,24 +552,24 @@ export default function SchedulePage() {
   };
 
   return (
-    <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen overflow-x-hidden">
+    <div className="bg-gradient-to-b from-blue-50 to-white max-h-screen h-screen overflow-hidden">
       <div className="fixed top-0 left-0 right-0 z-50 bg-white bg-opacity-95 backdrop-blur-sm shadow-sm">
         <Header title={{ en: "Schedule", es: "Horarios" }} />
       </div>
-      <div className="pt-16 pb-6">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="z-40 bg-gradient-to-b from-blue-50 via-blue-50 to-transparent pb-4">
+      <div className="h-full pt-16 overflow-hidden">
+        <div className="max-w-4xl mx-auto px-6 h-full flex flex-col relative">
+          <div className="z-40 bg-gradient-to-b from-blue-50 via-blue-50 to-transparent pb-4 flex-shrink-0">
             <div className="pt-4">
               <div className="bg-white rounded-2xl shadow-lg">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b gap-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <div className="flex items-center gap-4">
                     <span className="text-gray-600 font-bold">
                       {language === "en" ? "Calendar View" : "Vista de Calendario"}
                     </span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setViewMode('week')}
-                        className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                           viewMode === 'week' 
                             ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
                             : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
@@ -592,7 +582,7 @@ export default function SchedulePage() {
                           setShowMonthlyCalendar(true);
                           setViewMode('calendar');
                         }}
-                        className={`px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                           viewMode === 'calendar' 
                             ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
                             : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
@@ -603,7 +593,7 @@ export default function SchedulePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-4 ml-auto">
                     {selectedWeek > 0 && (
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -618,13 +608,13 @@ export default function SchedulePage() {
                       key={selectedWeek}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors bg-gray-50/50 text-sm sm:text-base"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors bg-gray-50/50"
                       onClick={() => setShowMonthlyCalendar(true)}
                     >
                       <Calendar className="w-4 h-4 text-gray-500" />
-                      <span className="font-medium text-gray-900 whitespace-nowrap">
-                        {format(weekStarts[0], "MMM d", { locale: language === "es" ? es : enUS })} - 
-                        {format(addDays(weekStarts[0], 6), "MMM d", { locale: language === "es" ? es : enUS })}
+                      <span className="text-sm font-medium text-gray-900">
+                        {format(weekStarts[0], "MMMM d", { locale: language === "es" ? es : enUS })} - 
+                        {format(addDays(weekStarts[0], 6), "MMMM d", { locale: language === "es" ? es : enUS })}
                       </span>
                     </motion.button>
                     <motion.button
@@ -650,7 +640,7 @@ export default function SchedulePage() {
                 </div>
 
                 <div className="p-4">
-                  <div className="grid grid-cols-7 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-7 gap-3">
                     {allWeekDays[0].map((day) => {
                       const isPast = isBefore(day.date, startOfDay(new Date()));
                       return (
@@ -659,19 +649,18 @@ export default function SchedulePage() {
                           onClick={() => !isPast && handleDateSelect(day.date)}
                           disabled={isPast}
                           className={`
-                            flex flex-col items-center p-2 sm:p-3 rounded-xl transition-all duration-200
+                            flex flex-col items-center p-3 rounded-xl transition-all duration-200
                             ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50/80 cursor-pointer bg-green-50/40'}
                             ${day.isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105' : ''}
                             ${day.isToday ? 'bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2' : ''}
                           `}
                         >
-                          <span className={`text-xs sm:text-sm font-medium capitalize truncate w-full text-center
+                          <span className={`text-sm font-medium capitalize
                             ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
-                            <span className="hidden sm:inline">{day.dayName}</span>
-                            <span className="inline sm:hidden">{day.dayName.slice(0, 3)}</span>
+                            {day.dayName}
                           </span>
-                          <span className={`text-lg sm:text-2xl font-bold mt-1
+                          <span className={`text-2xl font-bold mt-1
                             ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
                             {day.dayNumber}
@@ -685,12 +674,12 @@ export default function SchedulePage() {
             </div>
           </div>
 
-          <div className="mt-6">
+          <div className="flex-1 overflow-hidden">
             {loading ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="space-y-6"
+                className="flex-1"
               >
                 <ScheduleSkeletonLoader />
               </motion.div>
@@ -698,7 +687,7 @@ export default function SchedulePage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl shadow-lg p-6"
+                className="bg-white rounded-2xl shadow-lg p-6 h-full"
               >
                 <Alert variant="destructive">
                   <AlertDescription>
@@ -720,209 +709,259 @@ export default function SchedulePage() {
                   damping: 30,
                   delay: 0.1,
                 }}
-                className="space-y-6"
+                className="rounded-2xl p-6 h-full relative"
               >
-                {chunk(
-                  schedule[format(selectedDate, "yyyy-MM-dd")] || [],
-                  3
-                ).map((blockClasses, blockIndex) => (
-                  <motion.div
-                    key={`block-${blockIndex}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      delay: 0.2 + blockIndex * 0.1,
-                      type: "spring",
-                      stiffness: 100,
-                      damping: 20,
-                    }}
-                    className="space-y-4 sm:space-y-6"
-                  >
-                    {blockClasses.map((classInfo, index) => (
-                      <motion.div
-                        key={`${classInfo.id}-${index}`}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.5, delay: index * 0.1 }}
-                        className="border border-gray-100 rounded-xl p-4 hover:shadow-lg transition-all duration-300 bg-white"
-                        style={{
-                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
-                          borderBottom: "4px solid #f3f4f6",
-                        }}
-                      >
-                        <div className="flex flex-col space-y-6">
-                          <div className="flex flex-col sm:flex-row sm:items-start justify-between space-y-4 sm:space-y-0 sm:space-x-6">
-                            <div className="flex space-x-4">
-                              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl bg-gradient-to-b from-green-50 to-gray-50 flex items-center justify-center flex-shrink-0">
-                                <Tag className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" />
-                              </div>
-                              
-                              <div className="flex flex-col space-y-2 sm:space-y-3">
-                                <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
-                                  <h3 className="text-xl sm:text-[1.6rem] font-bold text-gray-900 leading-tight">
-                                    {classInfo.schedule.name}
-                                  </h3>
+                <div
+                  ref={scrollRef}
+                  className="snap-y snap-mandatory h-full overflow-y-auto scrollbar-hide"
+                >
+                  {chunk(
+                    schedule[format(selectedDate, "yyyy-MM-dd")] || [],
+                    3
+                  ).map((blockClasses, blockIndex) => (
+                    <motion.div
+                      key={`block-${blockIndex}`}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        delay: 0.2 + blockIndex * 0.1,
+                        type: "spring",
+                        stiffness: 100,
+                        damping: 20,
+                      }}
+                      className="snap-start min-h-full w-full flex flex-col"
+                    >
+                      <div className="flex flex-col flex-1 space-y-6">
+                        {blockClasses.map((classInfo, index) => (
+                          <motion.div
+                            key={`${classInfo.id}-${index}`}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 }}
+                            className="flex-1 border border-gray-100 rounded-xl p-4 hover:shadow-lg transition-all duration-300 bg-white"
+                            style={{
+                              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+                              borderBottom: "4px solid #f3f4f6",
+                              minHeight: "calc((100vh - 400px) / 3)",
+                            }}
+                          >
+                            <div className="flex flex-col h-full justify-between space-y-6">
+                              <div className="flex items-start justify-between space-x-6">
+                                <div className="flex space-x-4">
+                                  <div className="w-20 h-20 rounded-xl bg-gradient-to-b from-green-50 to-gray-50 flex items-center justify-center flex-shrink-0">
+                                    <Tag className="w-10 h-10 text-green-600" />
+                                  </div>
                                   
-                                  <div
-                                    className={`inline-flex items-center px-2 py-1 rounded-lg border ${
-                                      classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                      classInfo.schedule.name.toLowerCase().includes("beats")
-                                        ? "border-purple-200 bg-purple-50"
-                                        : "border-blue-200 bg-blue-50"
-                                    }`}
-                                  >
-                                    <Tag
-                                      className={`w-3 h-3 mr-1 ${
-                                        classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                        classInfo.schedule.name.toLowerCase().includes("beats")
-                                          ? "text-purple-600"
-                                          : "text-blue-600"
-                                      }`}
-                                    />
+                                  <div className="flex flex-col space-y-3">
+                                    <div className="flex items-center space-x-3">
+                                      <h3 className="text-[1.6rem] font-bold text-gray-900">
+                                        {classInfo.schedule.name}
+                                      </h3>
+                                      
+                                      <div
+                                        className={`flex items-center px-2 py-1 rounded-lg border ${
+                                          classInfo.schedule.name.toLowerCase().includes("nidra") ||
+                                          classInfo.schedule.name.toLowerCase().includes("beats")
+                                            ? "border-purple-200 bg-purple-50"
+                                            : "border-blue-200 bg-blue-50"
+                                        }`}
+                                      >
+                                        <Tag
+                                          className={`w-3 h-3 mr-1 ${
+                                            classInfo.schedule.name.toLowerCase().includes("nidra") ||
+                                            classInfo.schedule.name.toLowerCase().includes("beats")
+                                              ? "text-purple-600"
+                                              : "text-blue-600"
+                                          }`}
+                                        />
+                                        <span
+                                          className={`text-xs font-medium ${
+                                            classInfo.schedule.name.toLowerCase().includes("nidra") ||
+                                            classInfo.schedule.name.toLowerCase().includes("beats")
+                                              ? "text-purple-600"
+                                              : "text-blue-600"
+                                          }`}
+                                        >
+                                          {classInfo.schedule.name.toLowerCase().includes("nidra") ||
+                                          classInfo.schedule.name.toLowerCase().includes("beats")
+                                            ? "Sound Healing"
+                                            : "Yoga"}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center space-x-2">
+                                      <p className="text-gray-600 text-2xl">
+                                        {language === "en" ? "with " : "con "}
+                                        <span className="font-large">{classInfo.primaryTeacher.user.firstName}</span>
+                                      </p>
+                                      {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description] && (
+                                        <span className="text-sm text-gray-500">
+                                          • {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description]}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="text-right flex-shrink-0 space-y-2">
+                                  <p className="text-2xl font-bold text-gray-900">
+                                    {format(new Date(classInfo.startDateTime), "h:mm a")}
+                                  </p>
+                                  
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <p className="text-sm bg-gray-100 text-gray-600 px-4 py-1.5 rounded-full flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-gray-500" />
+                                      {classInfo.schedule.duration} min
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-6">
+                                  <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
+                                    <Tag className="w-4 h-4 text-green-600" />
+                                    <span className="text-green-700 font-medium">
+                                      {classInfo.schedule.name.toLowerCase().includes("acro")
+                                        ? language === "en"
+                                          ? "1 Acro MatPass"
+                                          : "1 Acro MatPass"
+                                        : "1 MatPass"}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 bg-gray-50/80 px-4 py-2 rounded-lg">
+                                    <Users className="w-5 h-5 text-gray-500" />
                                     <span
-                                      className={`text-xs font-medium ${
-                                        classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                        classInfo.schedule.name.toLowerCase().includes("beats")
-                                          ? "text-purple-600"
-                                          : "text-blue-600"
-                                      }`}
+                                      className={
+                                        classInfo.enrolled >= classInfo.room.capacity
+                                          ? "text-red-600 font-medium"
+                                          : classInfo.enrolled >= classInfo.room.capacity * 0.8
+                                          ? "text-yellow-600 font-medium"
+                                          : "text-gray-600 font-medium"
+                                      }
                                     >
-                                      {classInfo.schedule.name.toLowerCase().includes("nidra") ||
-                                      classInfo.schedule.name.toLowerCase().includes("beats")
-                                        ? "Sound Healing"
-                                        : "Yoga"}
+                                      {language === "en"
+                                        ? `${classInfo.room.capacity - classInfo.enrolled} spots left`
+                                        : `${classInfo.room.capacity - classInfo.enrolled} cupos disponibles`}
                                     </span>
                                   </div>
                                 </div>
 
-                                <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                                  <p className="text-lg sm:text-2xl text-gray-600">
-                                    {language === "en" ? "with " : "con "}
-                                    <span className="font-medium">{classInfo.primaryTeacher.user.firstName}</span>
-                                  </p>
-                                  {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description] && (
-                                    <span className="text-sm text-gray-500 hidden sm:inline">
-                                      • {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description]}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="text-right flex-shrink-0 space-y-2">
-                              <p className="text-xl sm:text-2xl font-bold text-gray-900">
-                                {format(new Date(classInfo.startDateTime), "h:mm a")}
-                              </p>
-                              
-                              <div className="flex items-center gap-2 justify-end">
-                                <p className="text-sm bg-gray-100 text-gray-600 px-3 sm:px-4 py-1.5 rounded-full flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-gray-500" />
-                                  {classInfo.schedule.duration} min
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-4 sm:space-y-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                              <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2">
-                                <Tag className="w-4 h-4 text-green-600" />
-                                <span className="text-green-700 font-medium text-sm sm:text-base">
-                                  {classInfo.schedule.name.toLowerCase().includes("acro")
-                                    ? language === "en"
-                                      ? "1 Acro MatPass"
-                                      : "1 Acro MatPass"
-                                    : "1 MatPass"}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-2 bg-gray-50/80 px-3 sm:px-4 py-2 rounded-lg">
-                                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                                <span
-                                  className={`text-sm sm:text-base ${
+                                <button
+                                  className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
                                     classInfo.enrolled >= classInfo.room.capacity
-                                      ? "text-red-600 font-medium"
-                                      : classInfo.enrolled >= classInfo.room.capacity * 0.8
-                                      ? "text-yellow-600 font-medium"
-                                      : "text-gray-600 font-medium"
+                                      ? "bg-gray-400 text-white cursor-not-allowed"
+                                      : loadingAllocation === classInfo.id
+                                      ? "bg-gradient-to-r from-green-600/80 to-teal-600/80 text-white cursor-wait"
+                                      : "bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]"
                                   }`}
+                                  disabled={classInfo.enrolled >= classInfo.room.capacity || loadingAllocation === classInfo.id}
+                                  onClick={async () => {
+                                    const params = new URLSearchParams();
+                                    setLoadingAllocation(classInfo.id);
+                                    
+                                    try {
+                                      const allocationId = classInfo.id;
+                                      
+                                      // Agregamos los parámetros a la URL
+                                      if (allocationId) {
+                                        params.append('classId', allocationId);
+                                        params.append('activity', classInfo.schedule.name);
+                                        params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
+                                        params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
+                                        params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
+                                        
+                                        await handleNavigation(params);
+                                      }
+                                    } catch (error) {
+                                      console.error('Error handling allocation:', error);
+                                      setLoadingAllocation(null);
+                                      // Aquí podrías mostrar un mensaje de error al usuario
+                                    }
+                                  }}
                                 >
-                                  {language === "en"
-                                    ? `${classInfo.room.capacity - classInfo.enrolled} spots left`
-                                    : `${classInfo.room.capacity - classInfo.enrolled} cupos disponibles`}
-                                </span>
+                                  {loadingAllocation === classInfo.id ? (
+                                    <div className="flex items-center gap-2">
+                                      <Loader2 className="w-5 h-5 animate-spin" />
+                                      <span>{language === "en" ? "Processing..." : "Procesando..."}</span>
+                                    </div>
+                                  ) : classInfo.enrolled >= classInfo.room.capacity ? (
+                                    language === "en" ? "Full" : "Lleno"
+                                  ) : (
+                                    language === "en" ? "Book Now" : "Reservar"
+                                  )}
+                                </button>
                               </div>
                             </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
 
-                            <button
-                              className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl text-base sm:text-lg font-semibold transition-all duration-300 ${
-                                classInfo.enrolled >= classInfo.room.capacity
-                                  ? "bg-gray-400 text-white cursor-not-allowed"
-                                  : loadingAllocation === classInfo.id
-                                  ? "bg-gradient-to-r from-green-600/80 to-teal-600/80 text-white cursor-wait"
-                                  : "bg-gradient-to-r from-green-600 to-teal-600 text-white hover:shadow-lg transform hover:scale-[1.02]"
-                              }`}
-                              disabled={classInfo.enrolled >= classInfo.room.capacity || loadingAllocation === classInfo.id}
-                              onClick={async () => {
-                                const params = new URLSearchParams();
-                                setLoadingAllocation(classInfo.id);
-                                
-                                try {
-                                  const allocationId = classInfo.id;
-                                  
-                                  if (allocationId) {
-                                    params.append('classId', allocationId);
-                                    params.append('activity', classInfo.schedule.name);
-                                    params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
-                                    params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
-                                    params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
-                                    
-                                    await handleNavigation(params);
-                                  }
-                                } catch (error) {
-                                  console.error('Error handling allocation:', error);
-                                  setLoadingAllocation(null);
-                                }
-                              }}
-                            >
-                              {loadingAllocation === classInfo.id ? (
-                                <div className="flex items-center justify-center gap-2">
-                                  <Loader2 className="w-5 h-5 animate-spin" />
-                                  <span>{language === "en" ? "Processing..." : "Procesando..."}</span>
-                                </div>
-                              ) : classInfo.enrolled >= classInfo.room.capacity ? (
-                                language === "en" ? "Full" : "Lleno"
-                              ) : (
-                                language === "en" ? "Book Now" : "Reservar"
-                              )}
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                ))}
-
-                {(!schedule[format(selectedDate, "yyyy-MM-dd")] ||
-                  schedule[format(selectedDate, "yyyy-MM-dd")].length === 0) && (
-                  <div className="flex items-center justify-center min-h-[300px] bg-white rounded-2xl shadow-lg p-6">
-                    <div className="text-center">
-                      <p className="text-lg sm:text-xl text-gray-500">
-                        {language === "en"
-                          ? "No classes available for this day"
-                          : "No hay clases disponibles para este día"}
-                      </p>
-                      <p className="text-sm sm:text-base text-gray-400 mt-2">
-                        {language === "en"
-                          ? "Please select another day to view available classes"
-                          : "Por favor selecciona otro día para ver las clases disponibles"}
-                      </p>
+                  {(!schedule[format(selectedDate, "yyyy-MM-dd")] ||
+                    schedule[format(selectedDate, "yyyy-MM-dd")].length ===
+                      0) && (
+                    <div className="h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <p className="text-gray-500 text-lg">
+                          {language === "en"
+                            ? "No classes available for this day"
+                            : "No hay clases disponibles para este día"}
+                        </p>
+                        <p className="text-gray-400 mt-2">
+                          {language === "en"
+                            ? "Please select another day to view available classes"
+                            : "Por favor selecciona otro día para ver las clases disponibles"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </motion.div>
             )}
           </div>
+
+          {isScrollable && (
+            <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-4 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0.5, y: -10 }}
+                animate={{
+                  opacity: [0.5, 1, 0.5],
+                  y: [-10, 0, -10],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="flex flex-col items-center gap-2"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                    {language === "en" 
+                      ? "Scroll for more classes"
+                      : "Desliza para ver más clases"}
+                  </span>
+                  <svg
+                    className="w-6 h-6 text-green-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                    />
+                  </svg>
+                </div>
+              </motion.div>
+            </div>
+          )}
         </div>
       </div>
       <AnimatePresence>
