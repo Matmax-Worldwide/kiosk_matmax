@@ -99,6 +99,7 @@ export const GET_CONSUMER = gql`
           remainingUses
         }
         allocation {
+          id
           startTime
           timeSlot {
             sessionType {

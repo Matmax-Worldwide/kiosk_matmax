@@ -4,7 +4,7 @@ import { useQuery, useMutation, gql } from "@apollo/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { GET_CONSUMER, GET_CONSUMER_RESERVATIONS, GET_ALLOCATION } from "@/lib/graphql/queries";
+import { GET_CONSUMER, GET_ALLOCATION } from "@/lib/graphql/queries";
 import { Spinner } from "@/components/spinner";
 import { Package2, Clock, ChevronRight } from "lucide-react";
 import { ChangeClassComponent } from "@/components/ui/change-class";
@@ -16,16 +16,7 @@ import { es } from "date-fns/locale";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 import React, { useEffect } from "react";
 import { toast } from 'sonner';
-import { Bundle } from "@/types/graphql";
-
-interface Reservation {
-  status: string;
-  timeSlot: {
-    allocation: {
-      id: string;
-    };
-  };
-}
+import { Bundle, Reservation } from "@/types/graphql";
 
 const UPDATE_BUNDLE_STATUS = gql`
   mutation UpdateBundleStatus($id: ID!, $status: BundleStatus!) {
@@ -49,16 +40,6 @@ export function UserDetailsContent() {
   const checkedBundles = React.useRef(new Set<string>());
 
   const [updateBundleStatus] = useMutation(UPDATE_BUNDLE_STATUS);
-
-  // Verificar primero si existe una reserva
-  const { data: reservationsData, loading: reservationsLoading } = useQuery(GET_CONSUMER_RESERVATIONS, {
-    variables: { 
-      consumerId,
-      allocationId: classId 
-    },
-    skip: !consumerId || !classId,
-    fetchPolicy: 'network-only'
-  });
 
   const { data: consumerData, loading: consumerLoading } = useQuery(GET_CONSUMER, {
     variables: { id: consumerId },
@@ -103,7 +84,7 @@ export function UserDetailsContent() {
     checkAndExpireBundles();
   }, [consumerData?.consumer?.bundles, updateBundleStatus, checkedBundles, language]);
 
-  if (consumerLoading || reservationsLoading || allocationLoading) {
+  if (consumerLoading || allocationLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 mt-16">
         <div className="flex justify-center items-center min-h-[400px]">
@@ -114,10 +95,9 @@ export function UserDetailsContent() {
   }
 
   // Verificar si existe una reserva
-  const existingReservation = reservationsData?.consumer?.reservations?.find(
+  const existingReservation = consumerData?.consumer?.reservations?.find(
     (reservation: Reservation) => 
-      reservation.timeSlot.allocation.id === classId && 
-      ['PENDING', 'CONFIRMED', 'VALIDATED'].includes(reservation.status)
+      reservation.allocation.id === classId
   );
 
   // Si hay una reserva existente, mostrar el componente de cambio de clase
