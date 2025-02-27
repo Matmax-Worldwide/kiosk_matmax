@@ -104,7 +104,6 @@ export default function CheckInDetailsPage() {
   const [isCheckingIn, setIsCheckingIn] = React.useState(false);
   const [showSuccess, setShowSuccess] = React.useState(false);
   const [isBuyingPackage, setIsBuyingPackage] = React.useState(false);
-  const [isBookingClass, setIsBookingClass] = React.useState(false);
 
   // Get consumer details query
   const { data: consumerData, loading, refetch: refetchConsumer } = useQuery(GET_CONSUMER, {
@@ -450,7 +449,7 @@ export default function CheckInDetailsPage() {
                               <Button
                                 onClick={() => {
                                   setIsBuyingPackage(true);
-                                  router.push(`/buy-packages?consumerId=${params.slug}`);
+                                  router.push(`/buy-packages?consumerId=${params.slug}&checkin=true`);
                                 }}
                                 className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
                                 disabled={isBuyingPackage}
@@ -469,43 +468,7 @@ export default function CheckInDetailsPage() {
                                 ) : (
                                   <>
                                     <Package className="w-5 h-5 mr-2" />
-                                    {language === "en" ? "Buy Packages" : "Comprar Paquetes"}
-                                  </>
-                                )}
-                              </Button>
-                              <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                  <div className="w-full border-t border-gray-200"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                  <span className="px-2 bg-white text-gray-500">
-                                    {language === "en" ? "or" : "o"}
-                                  </span>
-                                </div>
-                              </div>
-                              <Button
-                                onClick={() => {
-                                  setIsBookingClass(true);
-                                  router.push(`/class-pass?consumerId=${params.slug}`);
-                                }}
-                                className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98 transition-all duration-200 py-6"
-                                disabled={isBookingClass}
-                              >
-                                {isBookingClass ? (
-                                  <>
-                                    <motion.div
-                                      animate={{ rotate: 360 }}
-                                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                      className="mr-2"
-                                    >
-                                      <Clock className="w-5 h-5" />
-                                    </motion.div>
-                                    {language === "en" ? "Loading..." : "Cargando..."}
-                                  </>
-                                ) : (
-                                  <>
-                                    <CalendarPlus className="w-5 h-5 mr-2" />
-                                    {language === "en" ? "Book Individual Class" : "Reservar Clase Individual"}
+                                    {language === "en" ? "Buy Package & Book Class" : "Comprar Paquete y Reservar Clase"}
                                   </>
                                 )}
                               </Button>
