@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Clock,
   Users,
@@ -218,14 +218,11 @@ function ClassPassSkeletonLoader() {
 
 export function ClassPassContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { language } = useLanguageContext();
   const client = useApolloClient();
   const [fetchedSchedule, setFetchedSchedule] = useState<DaySchedule[]>([]);
   const [isBooking, setIsBooking] = useState(false);
   const [isViewingSchedule, setIsViewingSchedule] = useState(false);
-
-  const consumerId = searchParams.get("consumerId");
 
   const startDate = startOfDay(new Date());
   const endDate = addDays(startDate, 7);
@@ -525,21 +522,9 @@ export function ClassPassContent() {
           packageId: singleClassPass.id,
         });
 
-        const params = new URLSearchParams();
-        params.append("classId", allocationId);
-        params.append("activity", nextClass.activity);
-        params.append("instructor", nextClass.instructor);
-        params.append("time", nextClass.time);
-        params.append("day", nextClass.day);
-        params.append("packageId", singleClassPass.id);
-        params.append("now", "true");
-        if (consumerId) {
-          params.append("consumerId", consumerId);
-          router.push(`/payment?${params.toString()}`);
-        } else {
-          router.push(`/user-selection?${params.toString()}`);
-        }
-
+        router.push(
+          `/user-selection?classId=${allocationId}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}&now=true`
+        );
       } catch (error) {
         console.error("❌ [ClassPass] Error handling allocation:", error);
         setIsBooking(false); // Solo deshabilitamos el botón en caso de error
@@ -550,13 +535,7 @@ export function ClassPassContent() {
   const handleViewSchedule = () => {
     setIsViewingSchedule(true);
     console.log("🚀 [ClassPass] Navigating to schedule...");
-    const params = new URLSearchParams();
-    if (consumerId) {
-      params.append("consumerId", consumerId);
-      router.push(`/schedule?${params.toString()}`);
-    } else {
-      router.push("/schedule");
-    }
+    router.push("/schedule");
   };
 
   if (scheduleLoading) {
