@@ -31,9 +31,9 @@ export default function Home() {
     {
       icon: Package2,
       title: "Comprar Paquetes",
-      titleEn: "Buy Class Packages",
+      titleEn: "Buy Packages",
       description: "Ver y comprar paquetes de clases",
-      descriptionEn: "View and purchase class packages",
+      descriptionEn: "View and purchase packages",
       href: "/buy-packages",
       gradient: "from-green-600 to-teal-600",
       overlayType: "packages" as const,
