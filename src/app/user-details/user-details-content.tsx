@@ -46,8 +46,6 @@ export function UserDetailsContent() {
   const now = searchParams.get('now');
   const [isNavigatingToPayment, setIsNavigatingToPayment] = React.useState(false);
   const [isNavigatingToPackages, setIsNavigatingToPackages] = React.useState(false);
-  const [isNavigatingToSchedule, setIsNavigatingToSchedule] = React.useState(false);
-  const [isNavigatingToHome, setIsNavigatingToHome] = React.useState(false);
   const checkedBundles = React.useRef(new Set<string>());
 
   const [updateBundleStatus] = useMutation(UPDATE_BUNDLE_STATUS);
