@@ -6,12 +6,11 @@ import { Card } from "@/components/ui/card";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { Spinner } from "@/components/spinner";
 import { formatCurrency } from "@/lib/utils";
-import { GET_BUNDLE_TYPES } from "@/lib/graphql/queries";
+import { GET_BUNDLE_TYPES, GET_CONSUMER } from "@/lib/graphql/queries";
 import { useQuery } from "@apollo/client";
 import { ArrowRight, Users, User } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { GetBundleQuery } from "@/types/graphql";
-
 
 const getPackageNumber = (name: string): number => {
   const number = parseInt(name.split(' ')[0] || '1', 10);
@@ -30,12 +29,19 @@ export function PackageSelector() {
   const time = searchParams.get('time');
   const day = searchParams.get('day');
   const now = searchParams.get('now');
+  const checkin = searchParams.get('checkin');
   
-  const { data, loading, error } = useQuery<GetBundleQuery>(GET_BUNDLE_TYPES, { 
+  const { data: bundleData, loading: bundleLoading, error: bundleError } = useQuery<GetBundleQuery>(GET_BUNDLE_TYPES, { 
     variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} 
   });
+
+  const { data: consumerData } = useQuery(GET_CONSUMER, {
+    variables: { id: consumerId },
+    skip: !consumerId
+  });
   
-  const bundleTypes = data?.bundleTypes;
+  const bundleTypes = bundleData?.bundleTypes;
+  const consumer = consumerData?.consumer;
 
   const handlePackageSelection = (bundleTypeId: string) => {
     const params = new URLSearchParams();
@@ -52,6 +58,7 @@ export function PackageSelector() {
         if (day) params.append('day', day);
         if (now) params.append('now', now);
       }
+      if (checkin) params.append('checkin', 'true');
       router.push(`/payment?${params.toString()}`);
       return;
     }
@@ -65,11 +72,12 @@ export function PackageSelector() {
       if (day) params.append('day', day);
       if (now) params.append('now', now);
     }
+    if (checkin) params.append('checkin', 'true');
 
     router.push(`/user-selection?${params.toString()}`);
   };
 
-  if (loading) {
+  if (bundleLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <Spinner size="lg" />
@@ -77,11 +85,11 @@ export function PackageSelector() {
     );
   }
 
-  if (error) {
+  if (bundleError) {
     return (
       <div className="flex-1 p-6">
         <Card className="p-6 text-center">
-          <p className="text-red-600 mb-4">{error.message}</p>
+          <p className="text-red-600 mb-4">{bundleError.message}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -96,6 +104,18 @@ export function PackageSelector() {
   return (
     <div className="flex-1 p-6">
       <div className="max-w-4xl mx-auto">
+        {consumerId && consumer && (
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-3xl font-bold mb-8 text-center bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent"
+          >
+            {language === "en" 
+              ? `Hi ${consumer.firstName}, choose your package:`
+              : `Hola ${consumer.firstName}, elige tu paquete:`}
+          </motion.h1>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bundleTypes
             ?.filter(pkg => 
@@ -165,18 +185,16 @@ export function PackageSelector() {
 
                       <div className="mt-4">
                         <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer shadow-sm hover:shadow-md">
-                          <AnimatePresence mode="wait">
-                            <motion.span
-                              key={language}
-                              initial={{ y: 10, opacity: 0 }}
-                              animate={{ y: 0, opacity: 1 }}
-                              exit={{ y: -10, opacity: 0 }}
-                              transition={{ duration: 0.2 }}
-                              className="font-semibold"
-                            >
-                              {language === "en" ? "Buy Now" : "Comprar Ahora"}
-                            </motion.span>
-                          </AnimatePresence>
+                          <motion.span
+                            key={language}
+                            initial={{ y: 10, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: -10, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="font-semibold"
+                          >
+                            {language === "en" ? "Buy Now" : "Comprar Ahora"}
+                          </motion.span>
                           <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
                         </div>
                       </div>
@@ -291,18 +309,16 @@ export function PackageSelector() {
 
                         <div className="mt-4">
                           <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 group cursor-pointer shadow-sm hover:shadow-md">
-                            <AnimatePresence mode="wait">
-                              <motion.span
-                                key={language}
-                                initial={{ y: 10, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                exit={{ y: -10, opacity: 0 }}
-                                transition={{ duration: 0.2 }}
-                                className="font-semibold"
-                              >
-                                {language === "en" ? "Buy Now" : "Comprar Ahora"}
-                              </motion.span>
-                            </AnimatePresence>
+                            <motion.span
+                              key={language}
+                              initial={{ y: 10, opacity: 0 }}
+                              animate={{ y: 0, opacity: 1 }}
+                              exit={{ y: -10, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="font-semibold"
+                            >
+                              {language === "en" ? "Buy Now" : "Comprar Ahora"}
+                            </motion.span>
                             <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
                           </div>
                         </div>

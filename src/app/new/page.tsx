@@ -24,6 +24,7 @@ function NewUserContent() {
   const time = searchParams.get("time");
   const day = searchParams.get("day");
   const now = searchParams.get("now");
+  const checkin = searchParams.get("checkin");
 
   const [createConsumer] = useMutation(CREATE_CONSUMER);
 
@@ -74,6 +75,7 @@ function NewUserContent() {
         if (time) params.append("time", time);
         if (day) params.append("day", day);
         if (now) params.append("now", now);
+        if (checkin) params.append("checkin", "true");
         
         setTimeout(() => {
           router.push(`/buy-packages?${params.toString()}`);
@@ -81,9 +83,12 @@ function NewUserContent() {
         return;
       }
 
-      // Si no hay parámetros, ir a class-pass
+      // Si no hay parámetros, ir a buy-packages
+      params.append("consumerId", newUserId);
+      if (checkin) params.append("checkin", "true");
+      
       setTimeout(() => {
-        router.push(`/class-pass?consumerId=${newUserId}`);
+        router.push(`/buy-packages?${params.toString()}`);
       }, 1500);
 
     } catch (error) {

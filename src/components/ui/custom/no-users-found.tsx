@@ -16,7 +16,7 @@ export function NoUsersFound({ searchQuery, onTryNewSearch }: NoUsersFoundProps)
 
   const handleCreateAccount = () => {
     setIsCreating(true);
-    router.push('/new');
+    router.push('/new?checkin=true');
   };
 
   return (

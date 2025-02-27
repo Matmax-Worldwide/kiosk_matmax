@@ -225,6 +225,7 @@ export function PaymentContent() {
   const bundleTypeId = searchParams.get("bundleTypeId");
   const classId = searchParams.get("classId");
   const now = searchParams.get("now") === "true";
+  const checkin = searchParams.get("checkin");
 
   const { data: consumerData, loading: consumerLoading, refetch: refetchConsumer } = useQuery(
     GET_CONSUMER,
@@ -465,6 +466,14 @@ export function PaymentContent() {
 
       // Show success message before navigation
       setShowSuccess(true);
+
+      // If checkin=true, redirect to schedule
+      if (checkin === 'true') {
+        setTimeout(() => {
+          router.push(`/schedule?consumerId=${consumerId}`);
+        }, 2000);
+        return;
+      }
 
       // Construct URL parameters based on scenario
       const params = new URLSearchParams({
