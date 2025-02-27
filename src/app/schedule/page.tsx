@@ -557,12 +557,12 @@ export default function SchedulePage() {
         <Header title={{ en: "Schedule", es: "Horarios" }} />
       </div>
       <div className="h-full pt-16 overflow-hidden">
-        <div className="max-w-4xl mx-auto px-6 h-full flex flex-col relative">
+        <div className="max-w-4xl mx-auto px-2 sm:px-6 h-full flex flex-col relative">
           <div className="z-40 bg-gradient-to-b from-blue-50 via-blue-50 to-transparent pb-4 flex-shrink-0">
             <div className="pt-4">
               <div className="bg-white rounded-2xl shadow-lg">
-                <div className="flex items-center justify-between p-4 border-b">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-b gap-4 sm:gap-0">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
                     <span className="text-gray-600 font-bold">
                       {language === "en" ? "Calendar View" : "Vista de Calendario"}
                     </span>
@@ -593,7 +593,7 @@ export default function SchedulePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 ml-auto">
+                  <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                     {selectedWeek > 0 && (
                       <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -613,8 +613,8 @@ export default function SchedulePage() {
                     >
                       <Calendar className="w-4 h-4 text-gray-500" />
                       <span className="text-sm font-medium text-gray-900">
-                        {format(weekStarts[0], "MMMM d", { locale: language === "es" ? es : enUS })} - 
-                        {format(addDays(weekStarts[0], 6), "MMMM d", { locale: language === "es" ? es : enUS })}
+                        {format(weekStarts[0], "MMM d", { locale: language === "es" ? es : enUS })} - 
+                        {format(addDays(weekStarts[0], 6), "MMM d", { locale: language === "es" ? es : enUS })}
                       </span>
                     </motion.button>
                     <motion.button
@@ -639,8 +639,8 @@ export default function SchedulePage() {
                   </div>
                 </div>
 
-                <div className="p-4">
-                  <div className="grid grid-cols-7 gap-3">
+                <div className="p-2 sm:p-4">
+                  <div className="grid grid-cols-7 gap-1 sm:gap-3">
                     {allWeekDays[0].map((day) => {
                       const isPast = isBefore(day.date, startOfDay(new Date()));
                       return (
@@ -649,18 +649,28 @@ export default function SchedulePage() {
                           onClick={() => !isPast && handleDateSelect(day.date)}
                           disabled={isPast}
                           className={`
-                            flex flex-col items-center p-3 rounded-xl transition-all duration-200
+                            flex flex-col items-center p-1 sm:p-3 rounded-xl transition-all duration-200
                             ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50/80 cursor-pointer bg-green-50/40'}
                             ${day.isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105' : ''}
                             ${day.isToday ? 'bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2' : ''}
                           `}
                         >
-                          <span className={`text-sm font-medium capitalize
+                          <span className={`text-[10px] sm:text-sm font-medium capitalize truncate w-full text-center
                             ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
-                            {day.dayName}
+                            {language === "es" ? (
+                              <>
+                                <span className="hidden sm:inline">{day.dayName.slice(0, 3)}</span>
+                                <span className="inline sm:hidden">{day.dayName.charAt(0)}</span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="hidden sm:inline">{day.dayName.slice(0, 3)}</span>
+                                <span className="inline sm:hidden">{day.dayName.charAt(0)}</span>
+                              </>
+                            )}
                           </span>
-                          <span className={`text-2xl font-bold mt-1
+                          <span className={`text-base sm:text-2xl font-bold mt-0 sm:mt-1
                             ${day.isSelected ? 'text-white' : 'text-gray-900'}
                           `}>
                             {day.dayNumber}
@@ -709,7 +719,7 @@ export default function SchedulePage() {
                   damping: 30,
                   delay: 0.1,
                 }}
-                className="rounded-2xl p-6 h-full relative"
+                className="rounded-2xl p-2 sm:p-6 h-full relative"
               >
                 <div
                   ref={scrollRef}
@@ -731,35 +741,35 @@ export default function SchedulePage() {
                       }}
                       className="snap-start min-h-full w-full flex flex-col"
                     >
-                      <div className="flex flex-col flex-1 space-y-6">
+                      <div className="flex flex-col flex-1 space-y-4 sm:space-y-6">
                         {blockClasses.map((classInfo, index) => (
                           <motion.div
                             key={`${classInfo.id}-${index}`}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
-                            className="flex-1 border border-gray-100 rounded-xl p-4 hover:shadow-lg transition-all duration-300 bg-white"
+                            className="flex-1 border border-gray-100 rounded-xl p-2 sm:p-3 md:p-4 hover:shadow-lg transition-all duration-300 bg-white"
                             style={{
                               boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
                               borderBottom: "4px solid #f3f4f6",
                               minHeight: "calc((100vh - 400px) / 3)",
                             }}
                           >
-                            <div className="flex flex-col h-full justify-between space-y-6">
-                              <div className="flex items-start justify-between space-x-6">
-                                <div className="flex space-x-4">
-                                  <div className="w-20 h-20 rounded-xl bg-gradient-to-b from-green-50 to-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <Tag className="w-10 h-10 text-green-600" />
+                            <div className="flex flex-col h-full justify-between space-y-3 sm:space-y-4 md:space-y-6">
+                              <div className="flex flex-col sm:flex-row items-start justify-between space-y-3 sm:space-y-0 sm:space-x-4 md:space-x-6">
+                                <div className="flex space-x-3 sm:space-x-4 w-full sm:w-auto">
+                                  <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl bg-gradient-to-b from-green-50 to-gray-50 flex items-center justify-center flex-shrink-0">
+                                    <Tag className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-green-600" />
                                   </div>
                                   
-                                  <div className="flex flex-col space-y-3">
-                                    <div className="flex items-center space-x-3">
-                                      <h3 className="text-[1.6rem] font-bold text-gray-900">
+                                  <div className="flex flex-col space-y-1.5 sm:space-y-2 md:space-y-3 flex-1">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+                                      <h3 className="text-lg sm:text-xl md:text-[1.6rem] font-bold text-gray-900 leading-tight">
                                         {classInfo.schedule.name}
                                       </h3>
                                       
                                       <div
-                                        className={`flex items-center px-2 py-1 rounded-lg border ${
+                                        className={`flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg border ${
                                           classInfo.schedule.name.toLowerCase().includes("nidra") ||
                                           classInfo.schedule.name.toLowerCase().includes("beats")
                                             ? "border-purple-200 bg-purple-50"
@@ -767,7 +777,7 @@ export default function SchedulePage() {
                                         }`}
                                       >
                                         <Tag
-                                          className={`w-3 h-3 mr-1 ${
+                                          className={`w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 ${
                                             classInfo.schedule.name.toLowerCase().includes("nidra") ||
                                             classInfo.schedule.name.toLowerCase().includes("beats")
                                               ? "text-purple-600"
@@ -775,7 +785,7 @@ export default function SchedulePage() {
                                           }`}
                                         />
                                         <span
-                                          className={`text-xs font-medium ${
+                                          className={`text-[10px] sm:text-xs font-medium ${
                                             classInfo.schedule.name.toLowerCase().includes("nidra") ||
                                             classInfo.schedule.name.toLowerCase().includes("beats")
                                               ? "text-purple-600"
@@ -790,13 +800,13 @@ export default function SchedulePage() {
                                       </div>
                                     </div>
 
-                                    <div className="flex items-center space-x-2">
-                                      <p className="text-gray-600 text-2xl">
+                                    <div className="flex items-start sm:items-center flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
+                                      <p className="text-gray-600 text-base sm:text-lg md:text-2xl">
                                         {language === "en" ? "with " : "con "}
-                                        <span className="font-large">{classInfo.primaryTeacher.user.firstName}</span>
+                                        <span className="font-medium">{classInfo.primaryTeacher.user.firstName}</span>
                                       </p>
                                       {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description] && (
-                                        <span className="text-sm text-gray-500">
+                                        <span className="text-xs sm:text-sm text-gray-500 hidden sm:inline">
                                           • {classInfo.schedule.description[language as keyof typeof classInfo.schedule.description]}
                                         </span>
                                       )}
@@ -804,25 +814,25 @@ export default function SchedulePage() {
                                   </div>
                                 </div>
 
-                                <div className="text-right flex-shrink-0 space-y-2">
-                                  <p className="text-2xl font-bold text-gray-900">
+                                <div className="text-left sm:text-right flex-shrink-0 space-y-1 sm:space-y-2 w-full sm:w-auto">
+                                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
                                     {format(new Date(classInfo.startDateTime), "h:mm a")}
                                   </p>
                                   
-                                  <div className="flex items-center gap-2 mt-2">
-                                    <p className="text-sm bg-gray-100 text-gray-600 px-4 py-1.5 rounded-full flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-gray-500" />
+                                  <div className="flex items-center gap-1.5 sm:gap-2 mt-1 sm:mt-2">
+                                    <p className="text-xs sm:text-sm bg-gray-100 text-gray-600 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-full flex items-center gap-1.5 sm:gap-2">
+                                    <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
                                       {classInfo.schedule.duration} min
                                     </p>
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-6">
-                                  <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-4 py-2 rounded-lg flex items-center gap-2">
-                                    <Tag className="w-4 h-4 text-green-600" />
-                                    <span className="text-green-700 font-medium">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-6 w-full sm:w-auto">
+                                  <div className="bg-gradient-to-r from-green-600/10 to-teal-600/10 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-center sm:justify-start">
+                                    <Tag className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-600" />
+                                    <span className="text-green-700 text-sm sm:text-base font-medium">
                                       {classInfo.schedule.name.toLowerCase().includes("acro")
                                         ? language === "en"
                                           ? "1 Acro MatPass"
@@ -831,16 +841,17 @@ export default function SchedulePage() {
                                     </span>
                                   </div>
 
-                                  <div className="flex items-center gap-2 bg-gray-50/80 px-4 py-2 rounded-lg">
-                                    <Users className="w-5 h-5 text-gray-500" />
+                                  <div className="flex items-center gap-1.5 sm:gap-2 bg-gray-50/80 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg w-full sm:w-auto justify-center sm:justify-start">
+                                    <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
                                     <span
-                                      className={
+                                      className={`text-sm sm:text-base
+                                        ${
                                         classInfo.enrolled >= classInfo.room.capacity
                                           ? "text-red-600 font-medium"
                                           : classInfo.enrolled >= classInfo.room.capacity * 0.8
                                           ? "text-yellow-600 font-medium"
                                           : "text-gray-600 font-medium"
-                                      }
+                                      }`}
                                     >
                                       {language === "en"
                                         ? `${classInfo.room.capacity - classInfo.enrolled} spots left`
@@ -850,7 +861,7 @@ export default function SchedulePage() {
                                 </div>
 
                                 <button
-                                  className={`px-8 py-3 rounded-xl text-lg font-semibold transition-all duration-300 ${
+                                  className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl text-base sm:text-lg font-semibold transition-all duration-300 ${
                                     classInfo.enrolled >= classInfo.room.capacity
                                       ? "bg-gray-400 text-white cursor-not-allowed"
                                       : loadingAllocation === classInfo.id
@@ -865,7 +876,6 @@ export default function SchedulePage() {
                                     try {
                                       const allocationId = classInfo.id;
                                       
-                                      // Agregamos los parámetros a la URL
                                       if (allocationId) {
                                         params.append('classId', allocationId);
                                         params.append('activity', classInfo.schedule.name);
@@ -878,12 +888,11 @@ export default function SchedulePage() {
                                     } catch (error) {
                                       console.error('Error handling allocation:', error);
                                       setLoadingAllocation(null);
-                                      // Aquí podrías mostrar un mensaje de error al usuario
                                     }
                                   }}
                                 >
                                   {loadingAllocation === classInfo.id ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-center gap-2">
                                       <Loader2 className="w-5 h-5 animate-spin" />
                                       <span>{language === "en" ? "Processing..." : "Procesando..."}</span>
                                     </div>
