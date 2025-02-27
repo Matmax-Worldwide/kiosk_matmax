@@ -535,9 +535,11 @@ export function ClassPassContent() {
         params.append("now", "true");
         if (consumerId) {
           params.append("consumerId", consumerId);
+          router.push(`/payment?${params.toString()}`);
+        } else {
+          router.push(`/user-selection?${params.toString()}`);
         }
 
-        router.push(`/user-selection?${params.toString()}`);
       } catch (error) {
         console.error("❌ [ClassPass] Error handling allocation:", error);
         setIsBooking(false); // Solo deshabilitamos el botón en caso de error
