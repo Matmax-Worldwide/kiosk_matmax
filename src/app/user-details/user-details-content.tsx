@@ -117,7 +117,7 @@ export function UserDetailsContent() {
   const existingReservation = reservationsData?.consumer?.reservations?.find(
     (reservation: Reservation) => 
       reservation.timeSlot.allocation.id === classId && 
-      ['PENDING', 'CONFIRMED'].includes(reservation.status)
+      ['PENDING', 'CONFIRMED', 'VALIDATED'].includes(reservation.status)
   );
 
   // Si hay una reserva existente, mostrar el componente de cambio de clase
