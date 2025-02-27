@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { GET_CONSUMER, GET_CONSUMER_RESERVATIONS, GET_ALLOCATION } from "@/lib/graphql/queries";
 import { Spinner } from "@/components/spinner";
-import { Package2, Clock, ChevronRight, Calendar, Home, User } from "lucide-react";
+import { Package2, Clock, ChevronRight } from "lucide-react";
+import { ChangeClassComponent } from "@/components/ui/change-class";
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguageContext } from "@/contexts/LanguageContext";
@@ -119,63 +120,14 @@ export function UserDetailsContent() {
       ['PENDING', 'CONFIRMED'].includes(reservation.status)
   );
 
-  // Si hay una reserva existente, mostrar mensaje y opciones alternativas
+  // Si hay una reserva existente, mostrar el componente de cambio de clase
   if (existingReservation) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 mt-16">
-        <div className="container mx-auto px-4 py-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center max-w-4xl mx-auto mb-12"
-          >
-            <div className="w-24 h-24 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <Calendar className="w-14 h-14 text-white" />
-            </div>
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-              {language === "en" ? "Existing Reservation" : "Reserva Existente"}
-            </h2>
-            <p className="text-xl text-gray-600 mb-8">
-              {language === "en"
-                ? "You already have a reservation for this time slot. What would you like to do?"
-                : "Ya tienes una reserva para este horario. ¿Qué te gustaría hacer?"}
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  onClick={() => router.push('/schedule')}
-                  className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-                >
-                  <Calendar className="w-6 h-6 mr-2" />
-                  {language === "en" ? "View Other Times" : "Ver Otros Horarios"}
-                </Button>
-              </motion.div>
-
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  onClick={() => router.push(`/buy-packages?consumerId=${consumerId}`)}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-                >
-                  <Package2 className="w-6 h-6 mr-2" />
-                  {language === "en" ? "Buy New Package" : "Comprar Nuevo Paquete"}
-                </Button>
-              </motion.div>
-
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  onClick={() => router.push('/')}
-                  variant="outline"
-                  className="w-full sm:w-auto border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group"
-                >
-                  <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
-                  {language === "en" ? "Return to Home" : "Volver al Inicio"}
-                </Button>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      <ChangeClassComponent 
+        consumerId={consumerId as string}
+        classId={classId as string}
+        now={now as string}
+      />
     );
   }
 
@@ -212,8 +164,6 @@ export function UserDetailsContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 mt-16">
       <div className="container mx-auto px-4 py-8">
-
-        
         {/* User Details Card */}
         {consumer && (
           <motion.div
@@ -221,10 +171,7 @@ export function UserDetailsContent() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-purple-600 to-pink-600">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white mb-6">
-                <User className="w-8 h-8" />
-              </div>
+            <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-purple-600 to-pink-600">  
               <h3 className="text-2xl font-bold mb-4">
                 {`${consumer.firstName} ${consumer.lastName}`}
               </h3>
@@ -262,9 +209,6 @@ export function UserDetailsContent() {
             className="mb-8"
           >
             <div className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-2 hover:border-opacity-50 hover:border-gradient-to-r from-amber-500 to-orange-500">
-              <div className="w-16 h-16 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 flex items-center justify-center text-white mb-6">
-                <Calendar className="w-8 h-8" />
-              </div>
               <h3 className="text-2xl font-bold mb-4">
                 {language === "en" ? "Class Information" : "Información de la Clase"}
               </h3>
@@ -311,7 +255,6 @@ export function UserDetailsContent() {
             </div>
           </motion.div>
         )}
-
 
         {/* Active Packages Section */}
         <div className="space-y-6">
