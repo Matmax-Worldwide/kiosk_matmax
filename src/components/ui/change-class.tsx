@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Calendar, Home, Package2 } from "lucide-react";
+import { Calendar, Home } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 import React from "react";
@@ -11,26 +11,17 @@ interface ChangeClassProps {
   now?: string;
 }
 
-export function ChangeClassComponent({ consumerId, classId, now }: ChangeClassProps) {
+export function ChangeClassComponent({ consumerId }: ChangeClassProps) {
   const router = useRouter();
   const { language } = useLanguageContext();
   const [isNavigatingToSchedule, setIsNavigatingToSchedule] = React.useState(false);
-  const [isNavigatingToPackages, setIsNavigatingToPackages] = React.useState(false);
   const [isNavigatingToHome, setIsNavigatingToHome] = React.useState(false);
 
   const handleViewOtherTimes = () => {
     setIsNavigatingToSchedule(true);
-    router.push('/schedule');
+    router.push('/schedule?consumerId=' + consumerId);
   };
 
-  const handleBuyNewPackage = () => {
-    setIsNavigatingToPackages(true);
-    const params = new URLSearchParams();
-    params.append('consumerId', consumerId);
-    if (classId) params.append('classId', classId);
-    if (now) params.append('now', now);
-    router.push(`/buy-packages?${params.toString()}`);
-  };
 
   const handleReturnHome = () => {
     setIsNavigatingToHome(true);
@@ -66,17 +57,6 @@ export function ChangeClassComponent({ consumerId, classId, now }: ChangeClassPr
               >
                 <Calendar className="w-6 h-6 mr-2" />
                 {language === "en" ? "View Other Times" : "Ver Otros Horarios"}
-              </Button>
-            </motion.div>
-
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Button
-                onClick={handleBuyNewPackage}
-                disabled={isNavigatingToPackages}
-                className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-              >
-                <Package2 className="w-6 h-6 mr-2" />
-                {language === "en" ? "Buy New Package" : "Comprar Nuevo Paquete"}
               </Button>
             </motion.div>
 
