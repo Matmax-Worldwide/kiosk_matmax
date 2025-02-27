@@ -31,7 +31,7 @@ export default function Home() {
     {
       icon: Package2,
       title: "Comprar Paquetes",
-      titleEn: "Buy Class Packages",
+      titleEn: "Buy Packages",
       description: "Ver y comprar paquetes de clases",
       descriptionEn: "View and purchase class packages",
       href: "/buy-packages",
@@ -60,7 +60,7 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center max-w-4xl mx-auto mb-16"
+          className="text-center max-w-4xl mx-auto mb-8"
         >
           <p className="text-xl text-gray-600">
             {language === "en"
@@ -84,8 +84,7 @@ export default function Home() {
         {/* Check-in Section */}
         <CheckInButton language={language} />
 
-        {/* Add some bottom padding to prevent content from being cut off */}
-        <div className="h-20" />
+        <div className="h-10" />
 
         <LanguageSelector language={language} setLanguage={setLanguage} />
       </div>

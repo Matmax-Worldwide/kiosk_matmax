@@ -45,6 +45,8 @@ export function UserDetailsContent() {
   const now = searchParams.get('now');
   const [isNavigatingToPayment, setIsNavigatingToPayment] = React.useState(false);
   const [isNavigatingToPackages, setIsNavigatingToPackages] = React.useState(false);
+  const [isNavigatingToSchedule, setIsNavigatingToSchedule] = React.useState(false);
+  const [isNavigatingToHome, setIsNavigatingToHome] = React.useState(false);
   const checkedBundles = React.useRef(new Set<string>());
 
   const [updateBundleStatus] = useMutation(UPDATE_BUNDLE_STATUS);
@@ -116,7 +118,7 @@ export function UserDetailsContent() {
   const existingReservation = reservationsData?.consumer?.reservations?.find(
     (reservation: Reservation) => 
       reservation.timeSlot.allocation.id === classId && 
-      ['PENDING', 'CONFIRMED'].includes(reservation.status)
+      ['PENDING', 'CONFIRMED', 'VALIDATED'].includes(reservation.status)
   );
 
   // Si hay una reserva existente, mostrar mensaje y opciones alternativas
@@ -137,39 +139,101 @@ export function UserDetailsContent() {
             </h2>
             <p className="text-xl text-gray-600 mb-8">
               {language === "en"
-                ? "You already have a reservation for this time slot. What would you like to do?"
-                : "Ya tienes una reserva para este horario. ¿Qué te gustaría hacer?"}
+                ? "You already have a reservation for this time slot."
+                : "Ya tienes una reserva para este horario."}
             </p>
+
+            {/* Detalles de la Clase */}
+            {allocationData?.allocation && (
+              <div className="mb-12 p-8 bg-white rounded-2xl shadow-lg">
+                <div className="grid md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {language === "en" ? "Class Name" : "Nombre de la Clase"}
+                      </p>
+                      <p className="font-semibold text-gray-700">
+                        {allocationData.allocation.timeSlot.sessionType.name}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {language === "en" ? "Professor" : "Profesor"}
+                      </p>
+                      <p className="font-semibold text-gray-700">
+                        {allocationData.allocation.timeSlot.agent.name}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {language === "en" ? "Date & Time" : "Fecha y Hora"}
+                      </p>
+                      <p className="font-semibold text-gray-700">
+                        {format(new Date(allocationData.allocation.startTime), "EEEE d 'de' MMMM, HH:mm", {
+                          locale: language === 'es' ? es : undefined
+                        })}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        {language === "en" ? "Duration" : "Duración"}
+                      </p>
+                      <p className="font-semibold text-gray-700">
+                        {allocationData.allocation.timeSlot.sessionType.defaultDuration} {language === "en" ? "minutes" : "minutos"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
-                  onClick={() => router.push('/schedule')}
-                  className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
+                  onClick={() => {
+                    setIsNavigatingToSchedule(true);
+                    router.push('/schedule');
+                  }}
+                  disabled={isNavigatingToSchedule}
+                  className="w-full sm:w-auto bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <Calendar className="w-6 h-6 mr-2" />
-                  {language === "en" ? "View Other Times" : "Ver Otros Horarios"}
+                  {isNavigatingToSchedule ? (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 animate-spin" />
+                      <span>{language === "en" ? "Loading..." : "Cargando..."}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Calendar className="w-6 h-6 mr-2" />
+                      {language === "en" ? "View Other Times" : "Ver Otros Horarios"}
+                    </>
+                  )}
                 </Button>
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
-                  onClick={() => router.push(`/buy-packages?consumerId=${consumerId}`)}
-                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
-                >
-                  <Package2 className="w-6 h-6 mr-2" />
-                  {language === "en" ? "Buy New Package" : "Comprar Nuevo Paquete"}
-                </Button>
-              </motion.div>
-
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Button
-                  onClick={() => router.push('/')}
+                  onClick={() => {
+                    setIsNavigatingToHome(true);
+                    router.push('/');
+                  }}
+                  disabled={isNavigatingToHome}
                   variant="outline"
-                  className="w-full sm:w-auto border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group"
+                  className="w-full sm:w-auto border-2 border-green-200 hover:bg-green-50 text-green-700 h-14 px-8 rounded-2xl text-lg font-semibold group disabled:opacity-70 disabled:cursor-not-allowed"
                 >
-                  <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
-                  {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                  {isNavigatingToHome ? (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-5 h-5 animate-spin" />
+                      <span>{language === "en" ? "Loading..." : "Cargando..."}</span>
+                    </div>
+                  ) : (
+                    <>
+                      <Home className="w-6 h-6 mr-2 transition-transform group-hover:scale-110" />
+                      {language === "en" ? "Return to Home" : "Volver al Inicio"}
+                    </>
+                  )}
                 </Button>
               </motion.div>
             </div>
