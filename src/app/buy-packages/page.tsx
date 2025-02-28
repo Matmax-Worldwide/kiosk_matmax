@@ -1,29 +1,12 @@
-import React, { Suspense } from "react";
-import { Header } from "@/components/header";
-import { PageTransition } from "@/components/page-transition";
-import { Spinner } from "@/components/spinner";
-import { PackageSelector } from "@/components/buy-packages/package-selector";
+'use client'
 
-export default function BuyBundleTypesPage() {
+import MatPass from '@/components/MatPass'
+import KioskLayout from '@/components/KioskLayout'
+
+export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-white pt-16">
-      <Header title={{ en: "Buy Packages", es: "Comprar Paquetes" }} />
-      <PageTransition key="buy-packages">
-        <Suspense 
-          fallback={
-            <div className="flex-1 flex items-center justify-center">
-              <Spinner size="lg" />
-            </div>
-          }
-        >
-          <PackageSelector />
-        </Suspense>
-      </PageTransition>
-    </div>
-  );
+    <KioskLayout>
+      <MatPass />
+    </KioskLayout>
+  )
 }
-
-// Forzar renderizado dinámico y no cachear
-export const dynamic = "force-dynamic";
-export const fetchCache = "force-no-store";
-export const revalidate = 0; 

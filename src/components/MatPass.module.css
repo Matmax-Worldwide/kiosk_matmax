@@ -1,0 +1,1326 @@
+/* MatPass Module Styles */
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding: 10px 10px 65px;
+  background-color: var(--background);
+  color: var(--text-dark);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Touch mode specifics */
+.touchMode {
+  font-size: 110%;
+  max-width: 100%;
+}
+
+.touchMode .tab,
+.touchMode .btn,
+.touchMode .addToCart {
+  min-height: 55px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.container h1 {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: var(--text-light);
+  margin-bottom: 20px;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.tab {
+  padding: 14px 30px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 16px;
+  border-radius: var(--tab-radius);
+  transition: all 0.3s ease;
+}
+
+.active {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+}
+
+.inactive {
+  background-color: transparent;
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
+.contentArea {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 5px;
+  scrollbar-width: none;
+  padding-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contentArea::-webkit-scrollbar {
+  display: none;
+}
+
+.pricingContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pricingCard {
+  background: white;
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-wrap: wrap;
+  position: relative;
+  transition: transform 0.2s ease;
+  width: 100%;
+  padding: 14px;
+}
+
+.pricingCard:hover {
+  transform: translateY(-2px);
+}
+
+.numberSection {
+  flex: 0 0 80px;
+}
+
+.number {
+  font-size: 38px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1;
+}
+
+.passText {
+  font-size: 12px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 3px;
+}
+
+.priceSection {
+  flex: 1;
+  min-width: 0;
+  padding-right: 10px;
+}
+
+.price {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 5px;
+}
+
+.pricePerClass {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  padding: 4px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--primary-medium);
+}
+
+.actionSection {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 auto;
+}
+
+.featureSection {
+  flex: 0 0 100%;
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+  flex-wrap: wrap;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.checkIcon {
+  color: var(--primary);
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: var(--button-radius);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+/* Added state for Buy Now button */
+.btn.added {
+  background-color: #757575; /* Gray background */
+  width: auto;
+  min-width: 100px; /* Ensure minimum width to prevent shrinking */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn.added svg {
+  margin-right: 5px;
+}
+
+/* Touch-friendly large button */
+.btnLarge {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 16px 36px;
+  border-radius: var(--button-radius);
+  font-weight: 600;
+  font-size: 18px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+  min-width: 170px;
+}
+
+.btnLarge.added {
+  background-color: #2e7d32; /* Darker green to indicate success */
+}
+
+.btn:hover,
+.btnLarge:hover {
+  background-color: #3b8c3f;
+}
+
+.doubleTag {
+  background: var(--primary);
+  color: white;
+  font-size: 14px;
+  padding: 5px 15px;
+  border-radius: 20px;
+  font-weight: 600;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Products styling */
+.productsContainer {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.productCard {
+  background: white;
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+}
+
+.productCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+}
+
+.productImage {
+  height: 140px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  transition: all 0.3s ease;
+}
+
+.pricingCard:hover .productImage {
+  transform: scale(1.03);
+}
+
+.numberSection .productImage {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 0;
+}
+
+.productDetails {
+  padding: 20px;
+}
+
+.productTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.productDescription {
+  font-size: 14px;
+  color: var(--text-light);
+  margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.productPrice {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 15px;
+}
+
+.productActions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.addToCart {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--button-radius);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+/* Touch-friendly large add to cart button */
+.addToCartLarge {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: var(--button-radius);
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addToCartLarge.added {
+  background-color: #2e7d32; /* Darker green to indicate success */
+}
+
+.addToCart:hover,
+.addToCartLarge:hover {
+  background-color: #3b8c3f;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  color: #ffc107;
+  font-size: 14px;
+}
+
+.ratingCount {
+  color: var(--text-light);
+  margin-left: 5px;
+  font-size: 13px;
+}
+
+/* Original Checkout Bar */
+.checkoutBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  padding: 15px 20px;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.checkoutBar.active {
+  transform: translateY(0);
+}
+
+/* Enhanced Checkout Bar for Touch Screens */
+.checkoutBarTouch {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70vh; /* Takes up 70% of the viewport height */
+  background: white;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.checkoutBarTouch.active {
+  transform: translateY(0);
+}
+
+.checkoutBarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.checkoutBarHeader h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+}
+
+.cartItemsContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.emptyCart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-light);
+  gap: 20px;
+}
+
+.emptyCart p {
+  font-size: 18px;
+}
+
+.cartItems {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.cartItemLarge {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 15px;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 12px;
+}
+
+.cartItemImg {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cartItemInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.cartItemName {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cartItemPrice {
+  font-size: 14px;
+  color: var(--text-light);
+}
+
+.quantityControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quantityButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: white;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.quantityButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quantityDisplay {
+  font-size: 16px;
+  font-weight: 600;
+  min-width: 30px;
+  text-align: center;
+}
+
+.itemTotal {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.removeItemButton {
+  background: #ff5252;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cartSummaryTouch {
+  padding: 20px;
+  border-top: 1px solid #eee;
+  background: white;
+}
+
+.cartTotalLarge {
+  display: flex;
+  justify-content: space-between;
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.checkoutBtnLarge {
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.checkoutBtnLarge:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* Original CartItems */
+.cartItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--primary-light);
+  padding: 5px 10px 5px 5px;
+  border-radius: 30px;
+  min-width: fit-content;
+}
+
+.cartItemQuantity {
+  background: var(--primary);
+  color: white;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  margin-left: 8px;
+}
+
+.removeItem {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ff5252;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  cursor: pointer;
+  border: none;
+}
+
+.cartSummary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.cartTotal {
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.checkoutBtn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: var(--button-radius);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.checkoutBtn:hover {
+  background-color: #3b8c3f;
+}
+
+/* Enhanced Cart Indicator for Touch */
+.cartIndicatorLarge {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  z-index: 101;
+}
+
+.cartIndicator {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  z-index: 101;
+}
+
+.cartCountLarge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff5252;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cartCount {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ff5252;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* For iPad in vertical/portrait mode - override the flex-wrap property */
+@media (max-width: 768px) {
+  .pricingCard {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 15px;
+  }
+  
+  .numberSection {
+    flex: 0 0 80px;
+  }
+  
+  .priceSection {
+    flex: 1;
+    padding-right: 10px;
+    min-width: 0;
+  }
+  
+  .actionSection {
+    flex: 0 0 auto;
+    margin-top: 0;
+    padding-left: 0;
+    width: auto;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .featureSection {
+    width: 100%;
+    margin-top: 15px;
+    padding-top: 15px;
+    padding-left: 0;
+    justify-content: flex-start;
+    border-top: 1px solid #eee;
+  }
+  
+  .btn {
+    padding: 10px 15px;
+    width: auto;
+  }
+  
+  .productsContainer {
+    grid-template-columns: 1fr;
+  }
+  
+  .cartItemsContainer {
+    max-width: 100%;
+  }
+  
+  .cartItemLarge {
+    grid-template-columns: 60px 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 10px;
+  }
+  
+  .cartItemImg {
+    grid-row: span 3;
+  }
+  
+  .cartItemInfo {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  
+  .quantityControls {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  
+  .itemTotal {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  
+  .removeItemButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.passCard {
+  background: white;
+  border-radius: var(--card-radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  position: relative;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.passCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+.popularTag {
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  background: var(--primary);
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+}
+
+.passHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.passClasses {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1;
+}
+
+.passLabel {
+  font-size: 14px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+.passPrice {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.priceAmount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 5px;
+  display: block;
+}
+
+.pricePerClass {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--primary);
+  background-color: var(--primary-light);
+  padding: 4px 10px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.passFeaturesGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  flex-grow: 1;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text-light);
+  padding: 0 5px;
+}
+
+.checkIcon {
+  color: var(--primary);
+  margin-right: 8px;
+}
+
+.addButton {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 15px;
+  border-radius: var(--button-radius);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.addButton:hover {
+  background-color: #3b8c3f;
+}
+
+.addButton.added {
+  background-color: #2e7d32;
+}
+
+.sectionTitle {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+}
+
+.compactLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+@media (max-width: 1200px) {
+  .gridContainer {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 992px) {
+  .gridContainer {
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .passCard {
+    padding: 15px;
+  }
+  
+  .passClasses {
+    font-size: 20px;
+  }
+  
+  .priceAmount {
+    font-size: 18px;
+  }
+  
+  .featureItem {
+    font-size: 10px;
+  }
+  
+  .addButton {
+    font-size: 10px;
+    padding: 4px 7px;
+  }
+}
+
+@media (max-width: 480px) {
+  .contentArea {
+    padding-right: 0;
+  }
+  
+  .pricingCard {
+    padding: 12px;
+  }
+  
+  .numberSection {
+    flex: 0 0 60px;
+  }
+  
+  .priceSection {
+    flex: 1;
+    padding-right: 8px;
+  }
+  
+  .actionSection {
+    flex: 0 0 auto;
+  }
+  
+  .featureSection {
+    margin-top: 10px;
+    padding-top: 10px;
+    gap: 8px;
+  }
+  
+  .number {
+    font-size: 36px;
+  }
+  
+  .passText {
+    font-size: 12px;
+  }
+  
+  .price {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  
+  .featureItem {
+    font-size: 13px;
+  }
+  
+  .btn {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  .container {
+    padding: 5px 5px 65px;
+  }
+  
+  .pricingContainer {
+    gap: 8px;
+  }
+  
+  .doubleTag {
+    font-size: 12px;
+    padding: 3px 10px;
+  }
+}
+
+/* Tablet view */
+@media (min-width: 481px) and (max-width: 900px) {
+  .pricingCard {
+    padding: 15px;
+    gap: 10px;
+  }
+  
+  .numberSection {
+    flex: 0 0 70px;
+  }
+  
+  .priceSection {
+    flex: 1;
+    min-width: 0;
+    padding-right: 10px;
+  }
+  
+  .actionSection {
+    flex: 0 0 auto;
+    margin-top: 0;
+  }
+  
+  .featureSection {
+    margin-top: 12px;
+    padding-top: 12px;
+    gap: 10px;
+  }
+  
+  .btn {
+    padding: 10px 15px;
+  }
+  
+  .price {
+    font-size: 24px;
+  }
+  
+  .pricePerClass {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .featureItem {
+    font-size: 14px;
+  }
+}
+
+/* Make sure the product grid styles are preserved */
+@media (max-width: 480px) {
+  .gridContainer {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .productCard {
+    max-width: 100%;
+  }
+  
+  .productDetails {
+    padding: 12px;
+  }
+  
+  .productTitle {
+    font-size: 16px;
+  }
+  
+  .productDescription {
+    font-size: 13px;
+  }
+  
+  .productPrice {
+    font-size: 16px;
+  }
+}
+
+/* Specific iPad Air Portrait styling - more precise dimensions and stronger rules */
+@media screen and (min-width: 800px) and (max-width: 834px) {
+  .pricingCard {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    padding: 15px !important;
+    gap: 15px !important;
+    align-items: flex-start !important;
+  }
+  
+  .numberSection {
+    flex: 0 0 auto !important;
+    width: auto !important;
+  }
+  
+  .priceSection {
+    flex: 1 !important;
+    min-width: 0 !important;
+    padding-right: 10px !important;
+  }
+  
+  .actionSection {
+    flex: 0 0 auto !important;
+    width: auto !important;
+    margin-top: 0 !important;
+    margin-left: auto !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    order: 2 !important;
+  }
+  
+  .featureSection {
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    margin-top: 15px !important;
+    padding-top: 15px !important;
+    border-top: 1px solid #e0e0e0 !important;
+    order: 3 !important;
+  }
+  
+  .btn {
+    padding: 10px 20px !important;
+    white-space: nowrap !important;
+  }
+}
+
+/* New class for more compact mat pass display to fit on screen */
+.compactPricingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 768px) {
+  .compactPricingGrid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+}
+
+/* Ensure no scrolling is needed for the product grid */
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+/* Match product cards to pricing cards style */
+.productCard {
+  background: white;
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.3s ease;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid #f0f0f0;
+}
+
+.productCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.productImage {
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  transition: all 0.3s ease;
+}
+
+.productCard:hover .productImage {
+  transform: scale(1.03);
+}
+
+.productTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+  line-height: 1.2;
+  min-height: 38px;
+}
+
+.productPrice {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+
+/* Use entire width for product grid items */
+.productGrid .pricingCard {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  grid-template-areas: 
+    "image info action"
+    "features features features";
+  gap: 12px;
+  align-items: center;
+}
+
+.productGrid .numberSection {
+  grid-area: image;
+}
+
+.productGrid .priceSection {
+  grid-area: info;
+}
+
+.productGrid .actionSection {
+  grid-area: action;
+}
+
+.productGrid .featureSection {
+  grid-area: features;
+  margin-top: 0;
+}
+
+/* Fix number size for product names */
+.productGrid .number {
+  font-size: 16px !important;
+  line-height: 1.2;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+/* Cart add animation */
+@keyframes cartAddPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 6px 18px rgba(76, 175, 80, 0.3);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+@keyframes btnFlash {
+  0% {
+    background-color: var(--primary);
+  }
+  30% {
+    background-color: #2e7d32;
+  }
+  100% {
+    background-color: var(--primary);
+  }
+}
+
+.addToCartAnimation {
+  animation: cartAddPulse 0.6s ease-in-out;
+}
+
+/* Add animation for btn class when item is added */
+.btn.added {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  animation: btnFlash 0.8s ease-in-out;
+}
+
+/* Cart icon animation in header */
+@keyframes cartIconPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.cartAnimation {
+  animation: cartIconPulse 0.6s ease-in-out;
+} 
