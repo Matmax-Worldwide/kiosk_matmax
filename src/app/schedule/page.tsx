@@ -150,9 +150,6 @@ export default function SchedulePage() {
 
   const handleWeekChange = (direction: number) => {
     const newWeek = selectedWeek + direction;
-    if (newWeek < 0) {
-      return;
-    }
     setSelectedWeek(newWeek);
   };
 
@@ -173,8 +170,8 @@ export default function SchedulePage() {
         setLoading(true);
         setError(null);
 
-        const startDate = selectedDate;
-        const endDate = addDays(startDate, 7);
+        const startDate = addDays(selectedDate, -30);
+        const endDate = addDays(selectedDate, 7);
 
         const res = await client.query<GetPossibleAllocationsQuery>({
           query: GET_POSSIBLE_ALLOCATIONS,
@@ -196,12 +193,9 @@ export default function SchedulePage() {
         }
 
         const groupedSchedule: GroupedClasses = {};
-        const now = new Date();
 
         res.data.possibleAllocations.forEach((allocation: Allocation) => {
           const startTime = new Date(allocation.startTime);
-          if (startTime <= now) return;
-
           const dayKey = format(startTime, "yyyy-MM-dd");
           if (!groupedSchedule[dayKey]) {
             groupedSchedule[dayKey] = [];
@@ -508,11 +502,10 @@ export default function SchedulePage() {
                       return (
                         <button
                           key={day.dayNumber}
-                          onClick={() => !isPast && handleDateSelect(day.date)}
-                          disabled={isPast}
+                          onClick={() => handleDateSelect(day.date)}
                           className={`
                             flex flex-col items-center p-3 rounded-xl transition-all duration-200
-                            ${isPast ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-green-50/80 cursor-pointer bg-green-50/40'}
+                            ${isPast ? 'bg-gray-50/80 hover:bg-gray-100/80' : 'hover:bg-green-50/80 cursor-pointer bg-green-50/40'}
                             ${day.isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105' : ''}
                             ${day.isToday ? 'bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2' : ''}
                           `}
@@ -594,35 +587,59 @@ export default function SchedulePage() {
                       className="snap-start min-h-full w-full flex flex-col"
                     >
                       <div className="flex flex-col flex-1 space-y-6">
-                        {blockClasses.map((classInfo) => (
-                          <ClassCard
-                            key={classInfo.id}
-                            classInfo={classInfo}
-                            language={language}
-                            loadingAllocation={loadingAllocation}
-                            onBookClass={async () => {
-                              const params = new URLSearchParams();
-                              setLoadingAllocation(classInfo.id);
-                              
-                              try {
-                                const allocationId = classInfo.id;
+                        {blockClasses.map((classInfo) => {
+                          const isPastClass = new Date(classInfo.startDateTime) < new Date();
+                          return (
+                            <ClassCard
+                              key={classInfo.id}
+                              classInfo={classInfo}
+                              language={language}
+                              loadingAllocation={loadingAllocation}
+                              isPast={isPastClass}
+                              onBookClass={async () => {
+                                if (isPastClass) return;
                                 
-                                if (allocationId) {
-                                  params.append('classId', allocationId);
-                                  params.append('activity', classInfo.schedule.name);
-                                  params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
-                                  params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
-                                  params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
+                                const params = new URLSearchParams();
+                                setLoadingAllocation(classInfo.id);
+                                
+                                try {
+                                  const allocationId = classInfo.id;
                                   
-                                  await handleNavigation(params);
+                                  if (allocationId) {
+                                    params.append('classId', allocationId);
+                                    params.append('activity', classInfo.schedule.name);
+                                    params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
+                                    params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
+                                    params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
+                                    
+                                    // Determinar si esta es la próxima clase disponible (nextClass)
+                                    const now = new Date();
+                                    const allClasses = Object.values(schedule).flat();
+                                    
+                                    // Filtrar solo clases futuras y ordenarlas por fecha de inicio
+                                    const futureClasses = allClasses
+                                      .filter(c => new Date(c.startDateTime) > now)
+                                      .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
+                                    
+                                    // Si hay clases futuras y esta es la primera (la más próxima), es nextClass
+                                    const isNextClass = futureClasses.length > 0 && futureClasses[0].id === classInfo.id;
+                                    
+                                    // Si es la próxima clase disponible, añadir now=true
+                                    if (isNextClass) {
+                                      console.log('🔍 [Schedule] This is the next available class, adding now=true parameter');
+                                      params.append('now', 'true');
+                                    }
+                                    
+                                    await handleNavigation(params);
+                                  }
+                                } catch (error) {
+                                  console.error('Error handling allocation:', error);
+                                  setLoadingAllocation(null);
                                 }
-                              } catch (error) {
-                                console.error('Error handling allocation:', error);
-                                setLoadingAllocation(null);
-                              }
-                            }}
-                          />
-                        ))}
+                              }}
+                            />
+                          );
+                        })}
                       </div>
                     </motion.div>
                   ))}
