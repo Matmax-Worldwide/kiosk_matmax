@@ -17,7 +17,8 @@ const getPackageNumber = (name: string): number => {
   return isNaN(number) ? 1 : number;
 };
 
-export function PackageSelector() {
+// This component uses useSearchParams and needs to be wrapped in Suspense
+function PackageSelectorWithParams() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { language } = useLanguageContext();
@@ -332,4 +333,11 @@ export function PackageSelector() {
       </div>
     </div>
   );
+}
+
+// Export the main component that will be used in pages
+export function PackageSelector() {
+  // The inner component is already defined above
+  // This wrapper allows the component to be properly wrapped in a Suspense boundary by the parent
+  return <PackageSelectorWithParams />;
 } 
