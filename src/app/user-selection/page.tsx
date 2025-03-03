@@ -16,7 +16,8 @@ function SelectContent() {
 
   // const classId = searchParams.get('classId');
   const bundleTypeId = searchParams.get('bundleTypeId');
-  // const buyPackages = searchParams.get('buyPackages');
+  const buyPackages = searchParams.get('buyPackages');
+  const reservation = searchParams.get('reservation');
 
   // // Use useEffect for navigation when conditions are met
   // React.useEffect(() => {
@@ -44,6 +45,13 @@ function SelectContent() {
         const params = new URLSearchParams(searchParams.toString());
         if (bundleTypeId) {
           params.append('redirectToPayment', 'true');
+        }
+        // Add buyPackages or reservation parameter if they exist
+        if (buyPackages === 'true') {
+          params.append('buyPackages', 'true');
+        }
+        if (reservation === 'true') {
+          params.append('reservation', 'true');
         }
         router.push(`${path}${params.toString() ? `?${params.toString()}` : ''}`);
       }, 1500);

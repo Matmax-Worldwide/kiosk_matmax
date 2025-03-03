@@ -51,6 +51,8 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
   const classId = searchParams.get('classId');
   const bundleTypeId = searchParams.get('bundleTypeId');
   const redirectToPayment = searchParams.get('redirectToPayment');
+  const buyPackages = searchParams.get('buyPackages');
+  const reservation = searchParams.get('reservation');
 
   const [searchConsumers] = useLazyQuery(SEARCH_CONSUMERS, {
     onCompleted: (data) => {
@@ -88,6 +90,10 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
       if (bundleTypeId) params.append('bundleTypeId', bundleTypeId);
       // Solo agregar now=true si ya existe en la URL actual
       if (searchParams.get('now')) params.append('now', 'true');
+      // Agregar buyPackages y reservation si existen en la URL actual
+      if (buyPackages === 'true') params.append('buyPackages', 'true');
+      if (reservation === 'true') params.append('reservation', 'true');
+        
       router.push(`/user-details?${params.toString()}`);
     }, 1500);
   };
@@ -99,6 +105,12 @@ export function UserSearchOptions({ onSelect, onTextChange }: UserSearchOptionsP
     params.append('consumerId', selectedConsumer.id);
     params.append('bundleId', bundleId);
     params.append('classId', classId);
+    // Add now parameter if it exists
+    if (searchParams.get('now')) params.append('now', 'true');
+    // Add buyPackages and reservation parameters if they exist
+    if (buyPackages === 'true') params.append('buyPackages', 'true');
+    if (reservation === 'true') params.append('reservation', 'true');
+    
     router.push(`/payment?${params.toString()}`);
   };
 

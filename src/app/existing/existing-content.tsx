@@ -32,6 +32,7 @@ export function ExistingContent() {
   const classId = searchParams.get('classId');
   const bundleTypeId = searchParams.get('bundleTypeId');
   const buyPackages = searchParams.get('buyPackages');
+  const reservation = searchParams.get('reservation');
 
   const handleUserSearch = (consumer: SearchResult) => {
     handleDirectNavigation(consumer);
@@ -47,6 +48,7 @@ export function ExistingContent() {
       if (bundleTypeId) params.append('bundleTypeId', bundleTypeId);
       if (packageId) params.append('packageId', packageId);
       if (buyPackages === 'true') params.append('buyPackages', 'true');
+      if (reservation === 'true') params.append('reservation', 'true');
       if (searchParams.get('now')) params.append('now', 'true');
 
       router.push(`/user-details?${params.toString()}`);
