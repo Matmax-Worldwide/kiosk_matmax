@@ -193,7 +193,7 @@ export function PackageSelector() {
                             transition={{ duration: 0.2 }}
                             className="font-semibold"
                           >
-                            {language === "en" ? "Buy Now" : "Comprar Ahora"}
+                            {language === "en" ? "Add to cart" : "Agregar al carrito"}
                           </motion.span>
                           <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
                         </div>
@@ -317,7 +317,7 @@ export function PackageSelector() {
                               transition={{ duration: 0.2 }}
                               className="font-semibold"
                             >
-                              {language === "en" ? "Buy Now" : "Comprar Ahora"}
+                              {language === "en" ? "Add to cart" : "Agregar al Carrito"}
                             </motion.span>
                             <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transform translate-x-0 group-hover:translate-x-1 transition-all duration-300" />
                           </div>

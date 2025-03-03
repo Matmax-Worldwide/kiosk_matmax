@@ -14,8 +14,17 @@ function SelectContent() {
   const { language } = useLanguageContext();
   const [activeButton, setActiveButton] = React.useState<"new" | "existing" | null>(null);
 
-  const classId = searchParams.get('classId');
+  // const classId = searchParams.get('classId');
   const bundleTypeId = searchParams.get('bundleTypeId');
+  // const buyPackages = searchParams.get('buyPackages');
+
+  // // Use useEffect for navigation when conditions are met
+  // React.useEffect(() => {
+  //   // Si no hay ni classId ni bundleTypeId, redirigir a buy-packages
+  //   if (!classId && !bundleTypeId && !buyPackages) {
+  //     router.push("/");
+  //   }
+  // }, [classId, bundleTypeId, buyPackages, router]);
 
   const handleNavigation = (path: string, type: 'new' | 'existing') => {
     // Evitar doble click si ya se ha activado alguno
@@ -41,12 +50,6 @@ function SelectContent() {
       return;
     }
   };
-
-  // Si no hay ni classId ni bundleTypeId, redirigir a buy-packages
-  if (!classId && !bundleTypeId) {
-    router.push("/buy-packages");
-    return null;
-  }
 
   return (
     <>

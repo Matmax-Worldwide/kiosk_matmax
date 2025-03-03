@@ -5,18 +5,19 @@ interface AddToCartButtonProps {
   isAdded: boolean
   onClick: () => void
   buttonText?: string
+  language: string
 }
 
-export function AddToCartButton({ isAdded, onClick, buttonText = 'Add to Cart' }: AddToCartButtonProps) {
+export function AddToCartButton({ isAdded, onClick, buttonText = 'Add to Cart', language }: AddToCartButtonProps) {
   return (
     <Button 
       variant="default"
       onClick={onClick}
       className={`w-auto min-w-[100px] flex items-center justify-center transition-all duration-300 rounded-2xl
-        ${isAdded ? 'bg-gray-500 hover:bg-gray-600' : 'bg-[#4ab050] hover:bg-[#37873c]'} text-white`}
+        ${isAdded ? 'bg-gray-500 hover:bg-gray-600' : 'bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 shadow-md hover:shadow-lg transform hover:scale-102 active:scale-98'} text-white`}
     >
       {isAdded ? (
-        <><Check size={14} className="mr-1" /> Added</>
+        <><Check size={14} className="mr-1" />{language === "en" ? "Added" : "Agregado"}</>
       ) : (
         buttonText
       )}

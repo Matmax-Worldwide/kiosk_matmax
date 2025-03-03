@@ -11,7 +11,7 @@ import { GetBundleQuery } from "@/types/graphql";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 
 // Define custom event for cart interaction
-const addToCartEvent = (item: { id: number, name: string, price: number, isPass?: boolean }) => {
+const addToCartEvent = (item: { id: number, name: string, price: number, isPass?: boolean, productType?: string }) => {
   // Create and dispatch a custom event that KioskLayout can listen for
   const event = new CustomEvent('add-to-cart', { 
     detail: { ...item, quantity: 1 },
@@ -30,28 +30,35 @@ const getPackageNumber = (name: string): number => {
 };
 
 export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
-  const [addedToCart, setAddedToCart] = useState<{[key: number]: boolean}>({})
-  const [animatingCards, setAnimatingCards] = useState<{[key: number]: boolean}>({})
+  const [addedToCart, setAddedToCart] = useState<{[key: string]: boolean}>({})
+  const [animatingCards, setAnimatingCards] = useState<{[key: string]: boolean}>({})
   const { language } = useLanguageContext();
   
   const { data: bundleData, loading: bundleLoading, error: bundleError } = useQuery<GetBundleQuery>(GET_BUNDLE_TYPES, { 
     variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} 
   });
 
-  const addToCart = (id: number, name: string, price: number, isPass: boolean = false) => {
+  const addToCart = (id: number, name: string, price: number, isPass: boolean = false, isAcro: boolean = false) => {
+    // Asegurarse de que el ID sea un número válido
+    const validId = isNaN(id) ? (isAcro ? 9999 : isPass ? 7999 : 5999) : id;
+    
+    // Crear un identificador único que combine el ID con el tipo de pase
+    const uniqueId = isAcro ? `acro_${validId}` : isPass ? `regular_${validId}` : `product_${validId}`;
+    const productType = isAcro ? 'acro' : isPass ? 'regular' : 'product';
+    
     // Trigger the custom event
-    addToCartEvent({ id, name, price, isPass });
+    addToCartEvent({ id: validId, name, price, isPass, productType });
     
     // Show visual feedback that item was added
-    setAddedToCart(prev => ({ ...prev, [id]: true }))
-    setAnimatingCards(prev => ({ ...prev, [id]: true }))
+    setAddedToCart(prev => ({ ...prev, [uniqueId]: true }))
+    setAnimatingCards(prev => ({ ...prev, [uniqueId]: true }))
     
     setTimeout(() => {
-      setAddedToCart(prev => ({ ...prev, [id]: false }))
+      setAddedToCart(prev => ({ ...prev, [uniqueId]: false }))
     }, 1500)
     
     setTimeout(() => {
-      setAnimatingCards(prev => ({ ...prev, [id]: false }))
+      setAnimatingCards(prev => ({ ...prev, [uniqueId]: false }))
     }, 600)
   }
 
@@ -90,8 +97,10 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
     .sort((a, b) => a.price - b.price)
     .map(pkg => {
       const packageNumber = getPackageNumber(pkg.name);
+      // Asegurarse de que el ID sea un número válido
+      const validId = parseInt(pkg.id);
       return {
-        id: parseInt(pkg.id),
+        id: isNaN(validId) ? 7000 + packageNumber : validId,
         classes: packageNumber,
         price: pkg.price,
         perClass: pkg.price / packageNumber,
@@ -115,8 +124,10 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
     .map(pkg => {
       const packageNumber = getPackageNumber(pkg.name);
       const isDouble = pkg.price === 160 || pkg.price === 530;
+      // Asegurarse de que el ID sea un número válido
+      const validId = parseInt(pkg.id);
       return {
-        id: parseInt(pkg.id),
+        id: isNaN(validId) ? (isDouble ? 9000 + packageNumber : 8000 + packageNumber) : validId,
         classes: packageNumber,
         price: pkg.price,
         perClass: isDouble ? pkg.price / packageNumber / 2 : pkg.price / packageNumber,
@@ -217,11 +228,14 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
               {regularPasses.map(pass => (
                 <div 
                   key={pass.id} 
-                  className={`${styles.pricingCard} ${animatingCards[pass.id] ? styles.addToCartAnimation : ''}`}
+                  className={`${styles.pricingCard} ${animatingCards[`regular_${pass.id}`] ? styles.addToCartAnimation : ''}`}
                 >
                   <div className={styles.numberSection}>
                     <div className={styles.number}>{pass.classes}</div>
                     <div className={styles.passText}>MatPass</div>
+                    <div className={`${styles.passType} ${styles.regularPass}`}>
+                      {language === "en" ? "Regular Yoga" : "Yoga Regular"}
+                    </div>
                   </div>
                   <div className={styles.priceSection}>
                     <div className={styles.price}>S/ {pass.price.toFixed(2)}</div>
@@ -231,9 +245,10 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   </div>
                   <div className={styles.actionSection}>
                     <AddToCartButton 
-                      isAdded={addedToCart[pass.id]}
-                      onClick={() => addToCart(pass.id, `${language === "en" ? "Regular" : "Regular"} ${pass.classes} ${language === "en" ? "Class Pack" : "Pase de Clases"}`, pass.price, true)}
-                      buttonText={language === "en" ? "Buy Now" : "Comprar Ahora"}
+                      isAdded={addedToCart[`regular_${pass.id}`]}
+                      onClick={() => addToCart(pass.id, `${language === "en" ? "Regular Yoga" : "Yoga Regular"} - ${pass.classes} ${language === "en" ? "Classes" : "Clases"}`, pass.price, true, false)}
+                      buttonText={language === "en" ? "Add to cart" : "Agregar al carrito"}
+                      language={language}
                     />
                   </div>
                   <div className={styles.featureSection}>
@@ -257,11 +272,14 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
               {acroPasses.map(pass => (
                 <div 
                   key={pass.id} 
-                  className={`${styles.pricingCard} ${animatingCards[pass.id] ? styles.addToCartAnimation : ''}`}
+                  className={`${styles.pricingCard} ${animatingCards[`acro_${pass.id}`] ? styles.addToCartAnimation : ''}`}
                 >
                   <div className={styles.numberSection}>
                     <div className={styles.number}>{pass.classes}</div>
-                    <div className={styles.passText}>{pass.isDouble ? (language === "en" ? 'Double Pass' : 'Pase Doble') : 'MatPass'}</div>
+                    <div className={styles.passText}>{pass.isDouble ? (language === "en" ? 'Double Pass' : 'Pase Doble') : 'AcroPass'}</div>
+                    <div className={`${styles.passType} ${styles.acroPass}`}>
+                      {language === "en" ? "Acro Yoga" : "Acro Yoga"}
+                    </div>
                   </div>
                   <div className={styles.priceSection}>
                     <div className={styles.price}>S/ {pass.price.toFixed(2)}</div>
@@ -271,14 +289,16 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   </div>
                   <div className={styles.actionSection}>
                     <AddToCartButton 
-                      isAdded={addedToCart[pass.id]}
+                      isAdded={addedToCart[`acro_${pass.id}`]}
                       onClick={() => addToCart(
                         pass.id, 
-                        `Acro ${pass.classes} ${language === "en" ? "Class" : "Clase"} ${pass.isDouble ? (language === "en" ? "Double Pack" : "Paquete Doble") : (language === "en" ? "Pack" : "Paquete")}`, 
+                        `Acro Yoga - ${pass.classes} ${language === "en" ? "Classes" : "Clases"} ${pass.isDouble ? (language === "en" ? "(Double Pack)" : "(Paquete Doble)") : ""}`, 
                         pass.price, 
+                        true,
                         true
                       )}
-                      buttonText={language === "en" ? "Buy Now" : "Comprar Ahora"}
+                      buttonText={language === "en" ? "Add to cart" : "Agregar al carrito"}
+                      language={language}
                     />
                   </div>
                   <div className={styles.featureSection}>
@@ -302,7 +322,7 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
               {products.map(product => (
                 <div 
                   key={product.id} 
-                  className={`${styles.pricingCard} ${animatingCards[product.id] ? styles.addToCartAnimation : ''}`}
+                  className={`${styles.pricingCard} ${animatingCards[`product_${product.id}`] ? styles.addToCartAnimation : ''}`}
                 >
                   <div className={styles.numberSection}>
                     <Image 
@@ -319,8 +339,9 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   </div>
                   <div className={styles.actionSection}>
                     <AddToCartButton 
-                      isAdded={addedToCart[product.id]}
-                      onClick={() => addToCart(product.id, product.name, product.price)}
+                      isAdded={addedToCart[`product_${product.id}`]}
+                      onClick={() => addToCart(product.id, product.name, product.price, false, false)}
+                      language={language}
                     />
                   </div>
                   <div className={styles.featureSection}>
@@ -344,7 +365,7 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
               {kombuchaProducts.map(product => (
                 <div 
                   key={product.id} 
-                  className={`${styles.pricingCard} ${animatingCards[product.id] ? styles.addToCartAnimation : ''}`}
+                  className={`${styles.pricingCard} ${animatingCards[`product_${product.id}`] ? styles.addToCartAnimation : ''}`}
                 >
                   <div className={styles.numberSection}>
                     <Image 
@@ -361,8 +382,9 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   </div>
                   <div className={styles.actionSection}>
                     <AddToCartButton 
-                      isAdded={addedToCart[product.id]}
-                      onClick={() => addToCart(product.id, product.name, product.price)}
+                      isAdded={addedToCart[`product_${product.id}`]}
+                      onClick={() => addToCart(product.id, product.name, product.price, false, false)}
+                      language={language}
                     />
                   </div>
                   <div className={styles.featureSection}>

@@ -356,6 +356,7 @@ export default function SchedulePage() {
 
       const currentParams = new URLSearchParams(window.location.search);
       const consumerId = currentParams.get('consumerId');
+      const bundleId = currentParams.get('bundleId');
       const classInfo = schedule[format(selectedDate, "yyyy-MM-dd")]?.find(
         c => c.id === params.get('classId')
       );
@@ -394,9 +395,9 @@ export default function SchedulePage() {
         params: Object.fromEntries(params.entries()),
       });
 
-      if (consumerId) {
-        console.log('➡️ [Schedule] Navigating to user details...');
-        router.push(`/user-details?consumerId=${consumerId}&classId=${allocationId}`);
+      if (consumerId && allocationId && bundleId) {
+        console.log('➡️ [Schedule] Navigating to payment...');
+        router.push(`/payment?consumerId=${consumerId}&classId=${allocationId}&bundleId=${bundleId}`);
       } else {
         console.log('➡️ [Schedule] Navigating to user selection...');
         router.push(`/user-selection?${params.toString()}`);

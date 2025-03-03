@@ -124,12 +124,14 @@ export function UserDetailsContent() {
     
     if (classId) {
       queryParams.append('classId', classId);
+      if (now) {
+        queryParams.append('now', now);
+      }
+      router.push(`/payment?${queryParams.toString()}`);
+    } else {
+      // Navigate to schedule page when no classId is present
+      router.push(`/schedule?${queryParams.toString()}`);
     }
-    if (now) {
-      queryParams.append('now', now);
-    }
-    
-    router.push(`/payment?${queryParams.toString()}`);
   };
 
   const handleViewAllPackages = () => {
@@ -238,7 +240,7 @@ export function UserDetailsContent() {
 
         {/* Active Packages Section */}
         <div className="space-y-6">
-          {recentBundles.length > 0 && (
+          {recentBundles.length > 0 ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -301,60 +303,121 @@ export function UserDetailsContent() {
                 ))}
               </div>
             </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-r from-purple-50 to-pink-50 p-8 rounded-2xl shadow-md border border-purple-100"
+            >
+              <div className="text-center space-y-4">
+                <div className="inline-block p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full">
+                  <Package2 className="h-10 w-10 text-purple-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800">
+                  {language === "en" ? "Your Yoga Journey Awaits" : "Tu Camino de Yoga te Espera"}
+                </h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  {language === "en" 
+                    ? "Elevate your practice with our packages. Unlock unlimited potential and find your inner balance." 
+                    : "Eleva tu práctica con nuestros paquetes. Desbloquea un potencial ilimitado y encuentra tu equilibrio interior."}
+                </p>
+                <motion.button
+                  onClick={handleViewAllPackages}
+                  disabled={isNavigatingToPackages}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="mt-6 bg-gradient-to-r from-purple-600 to-pink-600 
+                    hover:from-purple-700 hover:to-pink-700 text-white py-4 px-8 
+                    rounded-xl shadow-lg hover:shadow-xl transition-all duration-300
+                    font-bold text-lg flex items-center justify-center gap-2 mx-auto
+                    disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {isNavigatingToPackages ? (
+                    <>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                      >
+                        <Clock className="w-5 h-5" />
+                      </motion.div>
+                      <span>{language === "en" ? "Loading..." : "Cargando..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Package2 className="w-5 h-5" />
+                      <AnimatePresence mode="wait">
+                        <motion.span
+                          key={language}
+                          initial={{ y: 10, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          exit={{ y: -10, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {language === "en" ? "Explore Packages" : "Explorar Paquetes"}
+                        </motion.span>
+                      </AnimatePresence>
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
           )}
 
-          {/* Buy More Packages Button */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-8"
-          >
-            <motion.button
-              onClick={handleViewAllPackages}
-              disabled={isNavigatingToPackages}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.8 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              aria-busy={isNavigatingToPackages}
-              aria-label={language === "en" ? "View All Packages" : "Ver Todos los Paquetes"}
-              className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 
-                rounded-xl hover:bg-white/95 transition-all duration-300 
-                flex items-center justify-center gap-2 border border-gray-200 
-                font-semibold text-lg shadow-sm hover:shadow-md group
-                disabled:opacity-70 disabled:cursor-not-allowed"
+          {/* Buy More Packages Button - Only show if user has active packages */}
+          {recentBundles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="mt-8"
             >
-              {isNavigatingToPackages ? (
-                <>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                    className="mr-2"
-                  >
-                    <Clock className="w-5 h-5" />
-                  </motion.div>
-                  <span>{language === "en" ? "Loading..." : "Cargando..."}</span>
-                </>
-              ) : (
-                <>
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={language}
-                      initial={{ y: 10, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: -10, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
+              <motion.button
+                onClick={handleViewAllPackages}
+                disabled={isNavigatingToPackages}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                aria-busy={isNavigatingToPackages}
+                aria-label={language === "en" ? "View All Packages" : "Ver Todos los Paquetes"}
+                className="w-full bg-white/90 backdrop-blur-sm text-gray-500 py-3 px-6 
+                  rounded-xl hover:bg-white/95 transition-all duration-300 
+                  flex items-center justify-center gap-2 border border-gray-200 
+                  font-semibold text-lg shadow-sm hover:shadow-md group
+                  disabled:opacity-70 disabled:cursor-not-allowed"
+              >
+                {isNavigatingToPackages ? (
+                  <>
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                      className="mr-2"
                     >
-                      {language === "en" ? "Buy More Packages" : "Comprar Más Paquetes"}
-                    </motion.span>
-                  </AnimatePresence>
-                  <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </>
-              )}
-            </motion.button>
-          </motion.div>
+                      <Clock className="w-5 h-5" />
+                    </motion.div>
+                    <span>{language === "en" ? "Loading..." : "Cargando..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <AnimatePresence mode="wait">
+                      <motion.span
+                        key={language}
+                        initial={{ y: 10, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: -10, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {language === "en" ? "Buy More Packages" : "Comprar Más Paquetes"}
+                      </motion.span>
+                    </AnimatePresence>
+                    <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
+              </motion.button>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>

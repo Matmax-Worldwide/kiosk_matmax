@@ -21,6 +21,7 @@ interface CartItem {
   price: number;
   quantity: number;
   isPass?: boolean;
+  productType?: string;
 }
 
 export default function KioskLayout({ children }: KioskLayoutProps) {
@@ -52,16 +53,20 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   // Listen for add-to-cart events
   useEffect(() => {
     const handleAddToCart = (e: Event) => {
-      const customEvent = e as CustomEvent<{ id: number, name: string, price: number, quantity: number, isPass?: boolean }>;
+      const customEvent = e as CustomEvent<{ id: number, name: string, price: number, quantity: number, isPass?: boolean, productType?: string }>;
       const newItem = customEvent.detail;
       
       setCart(prevCart => {
-        const existingItem = prevCart.find(item => item.id === newItem.id);
+        const existingItem = prevCart.find(item => 
+          item.id === newItem.id && item.productType === newItem.productType
+        );
         
         let updatedCart;
         if (existingItem) {
           updatedCart = prevCart.map(item => 
-            item.id === newItem.id ? { ...item, quantity: item.quantity + 1 } : item
+            (item.id === newItem.id && item.productType === newItem.productType) 
+              ? { ...item, quantity: item.quantity + 1 } 
+              : item
           );
         } else {
           updatedCart = [...prevCart, { ...newItem, quantity: 1 }];
@@ -88,10 +93,10 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   const tax = subtotal - preTax; // 18% tax amount
   const total = subtotal - discount; // Total is now subtotal minus any discount applied
 
-  const decreaseQuantity = (id: number) => {
+  const decreaseQuantity = (id: number, productType?: string) => {
     setCart(prevCart => {
       const updatedCart = prevCart.map(item =>
-        item.id === id && item.quantity > 1
+        item.id === id && item.productType === productType && item.quantity > 1
           ? { ...item, quantity: item.quantity - 1 }
           : item
       );
@@ -100,10 +105,10 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
     });
   };
 
-  const increaseQuantity = (id: number) => {
+  const increaseQuantity = (id: number, productType?: string) => {
     setCart(prevCart => {
       const updatedCart = prevCart.map(item =>
-        item.id === id
+        item.id === id && item.productType === productType
           ? { ...item, quantity: item.quantity + 1 }
           : item
       );
@@ -112,9 +117,11 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
     });
   };
 
-  const removeItem = (id: number) => {
+  const removeItem = (id: number, productType?: string) => {
     setCart(prevCart => {
-      const updatedCart = prevCart.filter(item => item.id !== id);
+      const updatedCart = prevCart.filter(item => 
+        !(item.id === id && item.productType === productType)
+      );
       localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
       return updatedCart;
     });
@@ -171,6 +178,9 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
     setCouponMessage('');
   };
 
+  // This function is currently unused as we're navigating directly to user-selection,
+  // but keeping it for potential future use
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const openPaymentModal = () => {
     setShowPaymentModal(true);
   };
@@ -185,8 +195,13 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   };
 
   const proceedToCheckout = () => {
-    // Open payment modal instead of redirecting
-    openPaymentModal();
+    // Save cart and coupon info to localStorage before proceeding to checkout
+    localStorage.setItem('matpassCart', JSON.stringify(cart));
+    localStorage.setItem('matpassCoupon', appliedCoupon);
+    localStorage.setItem('matpassDiscount', discount.toString());
+    
+    // Navigate to user-selection page
+    router.push('/user-selection');
   };
 
   const processPayment = () => {
@@ -272,44 +287,55 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
           </div>
 
           <div className={styles.cartList}>
-            {cart.length === 0 ? (
-              <div className={styles.emptyCart}>El carrito está vacío</div>
-            ) : (
-              cart.map(item => (
-                <div key={item.id} className={styles.cartItem}>
-                  <div className={styles.cartItemInfo}>
-                    <div className={styles.cartItemName}>
-                      {item.name}
-                      {item.isPass && <span className={styles.passLabel}>Pase</span>}
+            {
+              cart.map(item => {
+                // Asegurarse de que el ID sea un número válido
+                const validId = isNaN(item.id) ? 
+                  (item.productType === 'acro' ? 9999 : 
+                   item.productType === 'regular' ? 7999 : 5999) 
+                  : item.id;
+                
+                return (
+                  <div 
+                    key={`${validId}_${item.productType || 'default'}`} 
+                    className={styles.cartItem}
+                  >
+                    <div className={styles.cartItemInfo}>
+                      <div className={styles.cartItemName}>
+                        {item.name}
+                        {item.isPass && <span className={styles.passLabel}>Pase</span>}
+                      </div>
+                      <div className={styles.cartItemPrice}>
+                        S/ {(item.price * item.quantity).toFixed(2)}
+                      </div>
                     </div>
-                    <div className={styles.cartItemPrice}>S/ {item.price.toFixed(2)}</div>
-                  </div>
-                  <div className={styles.cartItemControls}>
-                    <div className={styles.quantityControls}>
-                      <button 
-                        className={styles.quantityButton}
-                        onClick={() => decreaseQuantity(item.id)}
+                    <div className={styles.cartItemControls}>
+                      <div className={styles.quantityControls}>
+                        <button 
+                          className={styles.quantityButton}
+                          onClick={() => decreaseQuantity(validId, item.productType)}
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className={styles.quantityDisplay}>{item.quantity}</span>
+                        <button 
+                          className={styles.quantityButton}
+                          onClick={() => increaseQuantity(validId, item.productType)}
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+                      <button
+                        className={styles.removeButton}
+                        onClick={() => removeItem(validId, item.productType)}
                       >
-                        <Minus size={12} />
-                      </button>
-                      <span className={styles.quantityDisplay}>{item.quantity}</span>
-                      <button 
-                        className={styles.quantityButton}
-                        onClick={() => increaseQuantity(item.id)}
-                      >
-                        <Plus size={12} />
+                        <Trash2 size={18} color="#e53935" />
                       </button>
                     </div>
-                    <button
-                      className={styles.removeButton}
-                      onClick={() => removeItem(item.id)}
-                    >
-                      <Trash2 size={18} color="#e53935" />
-                    </button>
                   </div>
-                </div>
-              ))
-            )}
+                );
+              })
+            }
           </div>
 
           {cart.length > 0 && (

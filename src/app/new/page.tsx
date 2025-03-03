@@ -25,6 +25,7 @@ function NewUserContent() {
   const day = searchParams.get("day");
   const now = searchParams.get("now");
   const checkin = searchParams.get("checkin");
+  const buyPackages = searchParams.get("buyPackages");
 
   const [createConsumer] = useMutation(CREATE_CONSUMER);
 
@@ -62,6 +63,16 @@ function NewUserContent() {
         
         setTimeout(() => {
           router.push(`/payment?${params.toString()}`);
+        }, 1500);
+        return;
+      }
+
+      // Si hay buyPackages=true, ir a buy-packages con el consumerId
+      if (buyPackages === "true") {
+        params.append("consumerId", newUserId);
+        
+        setTimeout(() => {
+          router.push(`/buy-packages?${params.toString()}`);
         }, 1500);
         return;
       }
