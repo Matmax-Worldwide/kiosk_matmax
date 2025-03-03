@@ -1,12 +1,16 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Trash2, Tag, X, CheckCircle, AlertCircle, CreditCard, DollarSign, Plus, Minus, Bitcoin, QrCode } from 'lucide-react'
+import { Trash2, Tag, X, CheckCircle, AlertCircle, CreditCard, DollarSign, Plus, Minus, Bitcoin, QrCode, Loader2 } from 'lucide-react'
 import styles from './KioskLayout.module.css'
 import { Header } from './header';
 import { Button } from './ui/button';
 import { useLanguageContext } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useMutation } from '@apollo/client';
+import { CREATE_BUNDLE, BundleStatus } from '@/lib/graphql/queries';
+import { Progress } from './ui/progress';
+
 interface KioskLayoutProps {
   children: React.ReactNode;
 }
@@ -22,6 +26,7 @@ interface CartItem {
   quantity: number;
   isPass?: boolean;
   productType?: string;
+  bundleTypeId?: string;
 }
 
 export default function KioskLayout({ children }: KioskLayoutProps) {
@@ -35,8 +40,26 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingError, setProcessingError] = useState<string | null>(null);
+  const [creationProgress, setCreationProgress] = useState(0);
+  const [currentBundleIndex, setCurrentBundleIndex] = useState(0);
+  const [createdBundles, setCreatedBundles] = useState<Array<{id: string, name: string, price: number, quantity: number}>>([]);
   const { language } = useLanguageContext();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const consumerId = searchParams.get('consumerId');
+
+  // GraphQL mutation for creating bundles
+  const [createBundle, { loading: creatingBundle }] = useMutation(CREATE_BUNDLE);
+
+  // Effect to update UI when bundle creation status changes
+  useEffect(() => {
+    if (isProcessing && creatingBundle) {
+      // This will help ensure the UI reflects the loading state
+      console.log('Bundle creation in progress...');
+    }
+  }, [creatingBundle, isProcessing]);
 
   // Load cart from localStorage on initial load
   useEffect(() => {
@@ -53,8 +76,18 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   // Listen for add-to-cart events
   useEffect(() => {
     const handleAddToCart = (e: Event) => {
-      const customEvent = e as CustomEvent<{ id: number, name: string, price: number, quantity: number, isPass?: boolean, productType?: string }>;
+      const customEvent = e as CustomEvent<{ id: number, name: string, price: number, quantity: number, isPass?: boolean, productType?: string, bundleTypeId?: string }>;
       const newItem = customEvent.detail;
+      
+      // Enhanced debug logging
+      console.log('=== ADD TO CART EVENT RECEIVED ===');
+      console.log('Item:', newItem);
+      console.log('Item ID:', newItem.id);
+      console.log('Item Name:', newItem.name);
+      console.log('Is Pass:', newItem.isPass ? 'Yes' : 'No');
+      console.log('Product Type:', newItem.productType || 'Not specified');
+      console.log('Bundle Type ID:', newItem.bundleTypeId || 'undefined');
+      console.log('================================');
       
       setCart(prevCart => {
         const existingItem = prevCart.find(item => 
@@ -178,9 +211,6 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
     setCouponMessage('');
   };
 
-  // This function is currently unused as we're navigating directly to user-selection,
-  // but keeping it for potential future use
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const openPaymentModal = () => {
     setShowPaymentModal(true);
   };
@@ -195,37 +225,162 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   };
 
   const proceedToCheckout = () => {
-    // Save cart and coupon info to localStorage before proceeding to checkout
-    localStorage.setItem('matpassCart', JSON.stringify(cart));
-    localStorage.setItem('matpassCoupon', appliedCoupon);
-    localStorage.setItem('matpassDiscount', discount.toString());
-    
-    // Navigate to user-selection page
-    router.push('/user-selection');
+    // Open payment modal instead of redirecting
+    openPaymentModal();
   };
 
-  const processPayment = () => {
-    // Save cart and coupon info to localStorage before proceeding to checkout
-    localStorage.setItem('matpassCart', JSON.stringify(cart));
-    localStorage.setItem('matpassCoupon', appliedCoupon);
-    localStorage.setItem('matpassDiscount', discount.toString());
-    localStorage.setItem('matpassPaymentMethod', selectedPayment || '');
-    
-    // Create URL params
-    const params = new URLSearchParams();
-    if (selectedPayment) {
-      params.append('method', selectedPayment);
+  const getPaymentMethodText = () => {
+    switch (selectedPayment) {
+      case 'card':
+        return language === 'en' ? 'Credit/Debit Card' : 'Tarjeta de Crédito/Débito';
+      case 'cash':
+        return language === 'en' ? 'Cash' : 'Efectivo';
+      case 'qr':
+        return language === 'en' ? 'QR Plin/Yape' : 'QR Plin/Yape';
+      case 'crypto':
+        return language === 'en' ? 'Cryptocurrency' : 'Criptomoneda';
+      default:
+        return '';
     }
-    if (appliedCoupon) {
-      params.append('coupon', appliedCoupon);
+  };
+
+  const processPayment = async () => {
+    if (!consumerId) {
+      setProcessingError(language === 'en' ? 'Consumer ID is required' : 'Se requiere ID del consumidor');
+      return;
     }
-    if (discount > 0) {
-      params.append('discount', discount.toString());
+
+    if (!selectedPayment) {
+      setProcessingError(language === 'en' ? 'Please select a payment method' : 'Por favor seleccione un método de pago');
+      return;
     }
-    params.append('total', total.toString());
-    
-    // Navigate to payment page with params
-    router.push(`/payment?${params.toString()}`);
+
+    try {
+      setIsProcessing(true);
+      setProcessingError(null);
+      setCreationProgress(0);
+      setCurrentBundleIndex(0);
+      setCreatedBundles([]);
+      
+      // Create bundles for each item in the cart
+      const bundlesToCreate = [...cart];
+      const totalBundles = bundlesToCreate.length;
+      
+      console.log('=== PROCESSING PAYMENT ===');
+      console.log('Total bundles to create:', totalBundles);
+      console.log('Cart items:', bundlesToCreate);
+      console.log('========================');
+      
+      for (let i = 0; i < bundlesToCreate.length; i++) {
+        const item = bundlesToCreate[i];
+        setCurrentBundleIndex(i);
+        
+        // Use the bundleTypeId from the item
+        const bundleTypeId = item.bundleTypeId;
+        
+        console.log(`=== CREATING BUNDLE ${i+1}/${totalBundles} ===`);
+        console.log('Item:', item);
+        console.log('Item Name:', item.name);
+        console.log('Item ID:', item.id);
+        console.log('Product Type:', item.productType || 'Not specified');
+        console.log('Bundle Type ID:', bundleTypeId || 'undefined');
+        
+        const validFrom = new Date();
+        const validTo = new Date();
+        validTo.setDate(validFrom.getDate() + 30); // 30 days validity
+        
+        const note = `${language === 'en' ? 'Payment Method' : 'Método de pago'}: ${getPaymentMethodText()}`;
+        
+        // Ensure we have a valid bundleTypeId
+        if (!bundleTypeId) {
+          console.error('No valid bundleTypeId found for item:', item);
+          throw new Error(language === 'en' 
+            ? 'Could not determine bundle type ID. Please try again.' 
+            : 'No se pudo determinar el ID del tipo de paquete. Por favor intente de nuevo.');
+        }
+        
+        console.log('Creating bundle with parameters:');
+        console.log('- consumerId:', consumerId);
+        console.log('- bundleTypeId:', bundleTypeId);
+        console.log('- validFrom:', validFrom.toISOString());
+        console.log('- validTo:', validTo.toISOString());
+        console.log('- note:', note);
+        console.log('==============================');
+        
+        const { data: newBundleData } = await createBundle({
+          variables: {
+            input: {
+              consumerId,
+              status: BundleStatus.ACTIVE,
+              bundleTypeId,
+              validFrom: validFrom.toISOString(),
+              validTo: validTo.toISOString(),
+              note,
+            },
+          },
+        });
+        
+        if (!newBundleData?.createBundle?.id) {
+          throw new Error(
+            language === 'en'
+              ? 'Failed to create bundle. Please try again.'
+              : 'Error al crear el paquete. Por favor intente de nuevo.'
+          );
+        }
+        
+        setCreatedBundles(prev => [
+          ...prev, 
+          {
+            id: newBundleData.createBundle.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+          }
+        ]);
+        
+        // Update progress
+        setCreationProgress(Math.round(((i + 1) / totalBundles) * 100));
+      }
+      
+      // Clear the cart after successful purchase
+      setCart([]);
+      localStorage.removeItem('matpassCart');
+      
+      // Prepare URL parameters for confirmation page
+      const params = new URLSearchParams({
+        consumerId: consumerId.toString(),
+        paymentMethod: selectedPayment,
+        total: total.toString(),
+        bundleCount: createdBundles.length.toString(),
+      });
+      
+      // Add bundle IDs to params
+      createdBundles.forEach((bundle, index) => {
+        params.append(`bundleId${index}`, bundle.id);
+        params.append(`bundleName${index}`, bundle.name);
+        params.append(`bundlePrice${index}`, bundle.price.toString());
+        params.append(`bundleQuantity${index}`, bundle.quantity.toString());
+      });
+      
+      // Add coupon info if applied
+      if (appliedCoupon) {
+        params.append('coupon', appliedCoupon);
+        params.append('discount', discount.toString());
+      }
+      
+      // Navigate to confirmation page
+      router.push(`/confirmation?${params.toString()}`);
+      
+    } catch (error) {
+      console.error('Payment processing error:', error);
+      setProcessingError(
+        language === 'en'
+          ? 'Failed to process payment. Please try again.'
+          : 'Error al procesar el pago. Por favor intente de nuevo.'
+      );
+      setIsProcessing(false);
+      setCreationProgress(0);
+    }
   };
 
   return (
@@ -505,18 +660,93 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
                   className={`${styles.paymentOption} ${selectedPayment === 'crypto' ? styles.selected : ''}`}
                   onClick={() => selectPaymentMethod('crypto')}
                 >
-                    <Bitcoin size={28} />
+                  <Bitcoin size={28} />
                   <span>Crypto</span>
                 </div>
               </div>
+              
+              {isProcessing && (
+                <div className="mt-6 space-y-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-gray-700">
+                      {language === 'en' 
+                        ? `Creating bundle ${currentBundleIndex + 1} of ${cart.length}` 
+                        : `Creando paquete ${currentBundleIndex + 1} de ${cart.length}`}
+                    </span>
+                    <span className="text-sm font-medium text-gray-700">{creationProgress}%</span>
+                  </div>
+                  <Progress value={creationProgress} className="h-2" />
+                  
+                  <div className="mt-4 space-y-2">
+                    {cart.map((item, idx) => (
+                      <div 
+                        key={`${item.id}_${item.productType || 'default'}`}
+                        className={`flex items-center p-2 rounded-lg ${
+                          idx < currentBundleIndex 
+                            ? 'bg-green-50 border border-green-100' 
+                            : idx === currentBundleIndex 
+                              ? 'bg-blue-50 border border-blue-100' 
+                              : 'bg-gray-50 border border-gray-100'
+                        }`}
+                      >
+                        <div className="mr-3">
+                          {idx < currentBundleIndex ? (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          ) : idx === currentBundleIndex ? (
+                            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
+                          ) : (
+                            <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium ${
+                            idx < currentBundleIndex 
+                              ? 'text-green-800' 
+                              : idx === currentBundleIndex 
+                                ? 'text-blue-800' 
+                                : 'text-gray-800'
+                          }`}>
+                            {item.name}
+                          </p>
+                        </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          S/ {item.price.toFixed(2)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <p className="text-sm text-center text-gray-500 mt-4">
+                    {language === 'en' 
+                      ? 'Please wait while we process your purchase...' 
+                      : 'Por favor espere mientras procesamos su compra...'}
+                  </p>
+                </div>
+              )}
+              
+              {processingError && (
+                <div className={`${styles.couponMessage} ${styles.error} mt-4`}>
+                  <AlertCircle size={16} style={{ marginRight: '8px' }} />
+                  {processingError}
+                </div>
+              )}
               
               <div className={styles.modalFooter}>
                 <button 
                   className={styles.payNowButton}
                   onClick={processPayment}
-                  disabled={!selectedPayment}
+                  disabled={!selectedPayment || isProcessing}
                 >
-                  {!selectedPayment ? 'Seleccione un método' : 'Pagar Ahora'}
+                  {isProcessing ? (
+                    <>
+                      <Loader2 size={16} className="mr-2 animate-spin" />
+                      {language === 'en' ? 'Processing...' : 'Procesando...'}
+                    </>
+                  ) : !selectedPayment ? (
+                    language === 'en' ? 'Select a method' : 'Seleccione un método'
+                  ) : (
+                    language === 'en' ? 'Pay Now' : 'Pagar Ahora'
+                  )}
                 </button>
               </div>
             </div>

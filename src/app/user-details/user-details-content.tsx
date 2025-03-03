@@ -291,7 +291,7 @@ export function UserDetailsContent() {
                           ) : bundle.remainingUses > 0 ? (
                             <>
                               <Package2 className="w-4 h-4 mr-2" />
-                              {language === "en" ? "Use Package" : "Usar Paquete"}
+                              {language === "en" ? "Use Package to Reserve" : "Usar Paquete para Reservar"}
                             </>
                           ) : (
                             language === "en" ? "Empty" : "Vacío"

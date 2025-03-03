@@ -11,7 +11,7 @@ import { GetBundleQuery } from "@/types/graphql";
 import { useLanguageContext } from "@/contexts/LanguageContext";
 
 // Define custom event for cart interaction
-const addToCartEvent = (item: { id: number, name: string, price: number, isPass?: boolean, productType?: string }) => {
+const addToCartEvent = (item: { id: number, name: string, price: number, isPass?: boolean, productType?: string, bundleTypeId?: string }) => {
   // Create and dispatch a custom event that KioskLayout can listen for
   const event = new CustomEvent('add-to-cart', { 
     detail: { ...item, quantity: 1 },
@@ -38,7 +38,7 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
     variables: { contextId: "ec966559-0580-4adb-bc6b-b150c56f935c"} 
   });
 
-  const addToCart = (id: number, name: string, price: number, isPass: boolean = false, isAcro: boolean = false) => {
+  const addToCart = (id: number, name: string, price: number, isPass: boolean = false, isAcro: boolean = false, bundleTypeId?: string) => {
     // Asegurarse de que el ID sea un número válido
     const validId = isNaN(id) ? (isAcro ? 9999 : isPass ? 7999 : 5999) : id;
     
@@ -46,8 +46,32 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
     const uniqueId = isAcro ? `acro_${validId}` : isPass ? `regular_${validId}` : `product_${validId}`;
     const productType = isAcro ? 'acro' : isPass ? 'regular' : 'product';
     
+    // Debug logging
+    console.log('===== AGREGAR AL CARRITO =====');
+    console.log(`Item: ${name}`);
+    console.log(`ID: ${validId}`);
+    console.log(`Product Type: ${productType}`);
+    console.log(`Bundle Type ID: ${bundleTypeId || 'undefined'}`);
+    
+    if (isPass) {
+      // For passes, log the available bundle types to help debug
+      console.log('Available Bundle Types:');
+      bundleTypes.forEach(bt => {
+        console.log(`- ${bt.name} (ID: ${bt.id})`);
+      });
+      
+      // Log the matching bundle type
+      const matchingBundleType = bundleTypes.find(bt => 
+        isAcro 
+          ? (bt.name.includes(`${validId}`) && bt.name.toLowerCase().includes('acro'))
+          : (bt.name.includes(`${validId}`) && !bt.name.toLowerCase().includes('acro'))
+      );
+      console.log('Matching Bundle Type:', matchingBundleType);
+    }
+    console.log('=============================');
+    
     // Trigger the custom event
-    addToCartEvent({ id: validId, name, price, isPass, productType });
+    addToCartEvent({ id: validId, name, price, isPass, productType, bundleTypeId });
     
     // Show visual feedback that item was added
     setAddedToCart(prev => ({ ...prev, [uniqueId]: true }))
@@ -246,7 +270,21 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   <div className={styles.actionSection}>
                     <AddToCartButton 
                       isAdded={addedToCart[`regular_${pass.id}`]}
-                      onClick={() => addToCart(pass.id, `${language === "en" ? "Regular Yoga" : "Yoga Regular"} - ${pass.classes} ${language === "en" ? "Classes" : "Clases"}`, pass.price, true, false)}
+                      onClick={() => {
+                        const selectedBundleTypeId = bundleTypes.find(bt => bt.name.includes(`${pass.classes} `) && !bt.name.toLowerCase().includes('acro'))?.id;
+                        console.log(`Clicking "Agregar al carrito" for Regular MatPass ${pass.classes} classes`);
+                        console.log(`Selected bundleTypeId: ${selectedBundleTypeId || 'undefined'}`);
+                        console.log(`Matching bundle type:`, bundleTypes.find(bt => bt.name.includes(`${pass.classes} `) && !bt.name.toLowerCase().includes('acro')));
+                        
+                        addToCart(
+                          pass.id, 
+                          `${language === "en" ? "Regular Yoga" : "Yoga Regular"} - ${pass.classes} ${language === "en" ? "Classes" : "Clases"}`, 
+                          pass.price, 
+                          true, 
+                          false,
+                          selectedBundleTypeId
+                        );
+                      }}
                       buttonText={language === "en" ? "Add to cart" : "Agregar al carrito"}
                       language={language}
                     />
@@ -290,13 +328,21 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   <div className={styles.actionSection}>
                     <AddToCartButton 
                       isAdded={addedToCart[`acro_${pass.id}`]}
-                      onClick={() => addToCart(
-                        pass.id, 
-                        `Acro Yoga - ${pass.classes} ${language === "en" ? "Classes" : "Clases"} ${pass.isDouble ? (language === "en" ? "(Double Pack)" : "(Paquete Doble)") : ""}`, 
-                        pass.price, 
-                        true,
-                        true
-                      )}
+                      onClick={() => {
+                        const selectedBundleTypeId = bundleTypes.find(bt => bt.name.includes(`${pass.classes} `) && bt.name.toLowerCase().includes('acro'))?.id;
+                        console.log(`Clicking "Agregar al carrito" for Acro MatPass ${pass.classes} classes ${pass.isDouble ? "(Double Pack)" : ""}`);
+                        console.log(`Selected bundleTypeId: ${selectedBundleTypeId || 'undefined'}`);
+                        console.log(`Matching bundle type:`, bundleTypes.find(bt => bt.name.includes(`${pass.classes} `) && bt.name.toLowerCase().includes('acro')));
+                        
+                        addToCart(
+                          pass.id, 
+                          `Acro Yoga - ${pass.classes} ${language === "en" ? "Classes" : "Clases"} ${pass.isDouble ? (language === "en" ? "(Double Pack)" : "(Paquete Doble)") : ""}`, 
+                          pass.price, 
+                          true,
+                          true,
+                          selectedBundleTypeId
+                        );
+                      }}
                       buttonText={language === "en" ? "Add to cart" : "Agregar al carrito"}
                       language={language}
                     />
@@ -340,7 +386,20 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   <div className={styles.actionSection}>
                     <AddToCartButton 
                       isAdded={addedToCart[`product_${product.id}`]}
-                      onClick={() => addToCart(product.id, product.name, product.price, false, false)}
+                      onClick={() => {
+                        const productBundleTypeId = 'ec966559-0580-4adb-bc6b-b150c56f935c'; // Default product bundle type ID
+                        console.log(`Clicking "Agregar al carrito" for Product: ${product.name}`);
+                        console.log(`Using default product bundleTypeId: ${productBundleTypeId}`);
+                        
+                        addToCart(
+                          product.id, 
+                          product.name, 
+                          product.price, 
+                          false, 
+                          false,
+                          productBundleTypeId
+                        );
+                      }}
                       language={language}
                     />
                   </div>
@@ -383,7 +442,20 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                   <div className={styles.actionSection}>
                     <AddToCartButton 
                       isAdded={addedToCart[`product_${product.id}`]}
-                      onClick={() => addToCart(product.id, product.name, product.price, false, false)}
+                      onClick={() => {
+                        const productBundleTypeId = 'ec966559-0580-4adb-bc6b-b150c56f935c'; // Default product bundle type ID
+                        console.log(`Clicking "Agregar al carrito" for Product: ${product.name}`);
+                        console.log(`Using default product bundleTypeId: ${productBundleTypeId}`);
+                        
+                        addToCart(
+                          product.id, 
+                          product.name, 
+                          product.price, 
+                          false, 
+                          false,
+                          productBundleTypeId
+                        );
+                      }}
                       language={language}
                     />
                   </div>

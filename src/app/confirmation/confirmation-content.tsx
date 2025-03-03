@@ -10,6 +10,11 @@ import {
   Home,
   ArrowRight,
   Loader2,
+  Package,
+  CreditCard,
+  DollarSign,
+  QrCode,
+  Bitcoin,
 } from "lucide-react";
 import { motion } from "framer-motion"
 import { maskEmail } from "@/lib/utils/mask-data";
@@ -22,17 +27,47 @@ export function ConfirmationContent() {
   const [isMounted, setIsMounted] = React.useState(false);
   const [isTimerActive, setIsTimerActive] = React.useState(true);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [bundles, setBundles] = React.useState<Array<{id: string, name: string, price: number, quantity: number}>>([]);
 
   // Get all parameters
   const consumerId = searchParams.get("consumerId");
   const email = searchParams.get("email");
   const classId = searchParams.get("classId");
+  const paymentMethod = searchParams.get("paymentMethod");
+  const total = searchParams.get("total");
+  const bundleCount = searchParams.get("bundleCount");
+  const coupon = searchParams.get("coupon");
+  const discount = searchParams.get("discount");
 
-  // Handle client-side mounting
+  // Handle client-side mounting and bundle data extraction
   useEffect(() => {
     setIsMounted(true);
     setCountdown(10);
-  }, []);
+    
+    // Extract bundle information from URL params
+    if (bundleCount) {
+      const count = parseInt(bundleCount);
+      const extractedBundles = [];
+      
+      for (let i = 0; i < count; i++) {
+        const bundleId = searchParams.get(`bundleId${i}`);
+        const bundleName = searchParams.get(`bundleName${i}`);
+        const bundlePrice = searchParams.get(`bundlePrice${i}`);
+        const bundleQuantity = searchParams.get(`bundleQuantity${i}`);
+        
+        if (bundleId && bundleName && bundlePrice && bundleQuantity) {
+          extractedBundles.push({
+            id: bundleId,
+            name: bundleName,
+            price: parseFloat(bundlePrice),
+            quantity: parseInt(bundleQuantity)
+          });
+        }
+      }
+      
+      setBundles(extractedBundles);
+    }
+  }, [searchParams, bundleCount]);
 
   // Handle countdown
   useEffect(() => {
@@ -75,6 +110,36 @@ export function ConfirmationContent() {
       : `Volver al Inicio${countdown !== null ? ` (${countdown}s)` : ''}`;
   };
 
+  const getPaymentMethodIcon = () => {
+    switch (paymentMethod) {
+      case 'card':
+        return <CreditCard className="w-6 h-6 text-blue-500" />;
+      case 'cash':
+        return <DollarSign className="w-6 h-6 text-green-500" />;
+      case 'qr':
+        return <QrCode className="w-6 h-6 text-purple-500" />;
+      case 'crypto':
+        return <Bitcoin className="w-6 h-6 text-orange-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getPaymentMethodText = () => {
+    switch (paymentMethod) {
+      case 'card':
+        return language === 'en' ? 'Credit/Debit Card' : 'Tarjeta de Crédito/Débito';
+      case 'cash':
+        return language === 'en' ? 'Cash' : 'Efectivo';
+      case 'qr':
+        return language === 'en' ? 'QR Plin/Yape' : 'QR Plin/Yape';
+      case 'crypto':
+        return language === 'en' ? 'Cryptocurrency' : 'Criptomoneda';
+      default:
+        return language === 'en' ? 'Not specified' : 'No especificado';
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -109,21 +174,84 @@ export function ConfirmationContent() {
               ? "Your purchase has been confirmed and processed successfully."
               : "Tu compra ha sido confirmada y procesada exitosamente."}
           </p>
-          <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6 max-w-md mx-auto border border-green-100/50 shadow-sm">
-            <p className="text-gray-600 mb-2">
-              {language === "en"
-                ? "We've sent a confirmation email to:"
-                : "Hemos enviado un correo de confirmación a:"}
-            </p>
-            <p className="text-lg font-semibold text-green-700 mb-2">
-              {email ? maskEmail(email) : "-"}
-            </p>
-            <p className="text-sm text-gray-500">
-              {language === "en"
-                ? "Please check your inbox and spam folder"
-                : "Por favor revisa tu bandeja de entrada y carpeta de spam"}
-            </p>
-          </div>
+          
+          {email && (
+            <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6 max-w-md mx-auto border border-green-100/50 shadow-sm mb-6">
+              <p className="text-gray-600 mb-2">
+                {language === "en"
+                  ? "We've sent a confirmation email to:"
+                  : "Hemos enviado un correo de confirmación a:"}
+              </p>
+              <p className="text-lg font-semibold text-green-700 mb-2">
+                {maskEmail(email)}
+              </p>
+              <p className="text-sm text-gray-500">
+                {language === "en"
+                  ? "Please check your inbox and spam folder"
+                  : "Por favor revisa tu bandeja de entrada y carpeta de spam"}
+              </p>
+            </div>
+          )}
+          
+          {/* Purchase Summary */}
+          {bundles.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white rounded-2xl p-6 max-w-2xl mx-auto border border-gray-100 shadow-sm mb-6"
+            >
+              <h3 className="text-xl font-semibold mb-4 flex items-center justify-center">
+                <Package className="w-5 h-5 mr-2 text-green-600" />
+                {language === "en" ? "Purchase Summary" : "Resumen de Compra"}
+              </h3>
+              
+              <div className="divide-y divide-gray-100">
+                {bundles.map((bundle, index) => (
+                  <div key={bundle.id} className="py-3 flex justify-between items-center">
+                    <div className="text-left">
+                      <p className="font-medium text-gray-800">
+                        <span className="inline-flex items-center justify-center w-6 h-6 bg-green-100 text-green-800 rounded-full mr-2 text-xs font-bold">
+                          {index + 1}
+                        </span>
+                        {bundle.name}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {language === "en" ? "Quantity" : "Cantidad"}: {bundle.quantity}
+                      </p>
+                    </div>
+                    <p className="font-semibold text-gray-800">
+                      S/ {(bundle.price * bundle.quantity).toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+                
+                {discount && parseFloat(discount) > 0 && (
+                  <div className="py-3 flex justify-between items-center text-green-600">
+                    <p className="font-medium">
+                      {language === "en" ? "Discount" : "Descuento"}
+                      {coupon && ` (${coupon})`}
+                    </p>
+                    <p className="font-semibold">- S/ {parseFloat(discount).toFixed(2)}</p>
+                  </div>
+                )}
+                
+                <div className="py-3 flex justify-between items-center">
+                  <p className="font-bold text-gray-900">{language === "en" ? "Total" : "Total"}</p>
+                  <p className="font-bold text-gray-900">S/ {total ? parseFloat(total).toFixed(2) : "0.00"}</p>
+                </div>
+              </div>
+              
+              {paymentMethod && (
+                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-center">
+                  <div className="flex items-center bg-gray-50 px-4 py-2 rounded-full">
+                    {getPaymentMethodIcon()}
+                    <span className="ml-2 text-gray-700">{getPaymentMethodText()}</span>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Action Buttons */}
