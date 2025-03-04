@@ -523,7 +523,7 @@ export function ClassPassContent() {
         });
 
         router.push(
-          `/user-selection?classId=${allocationId}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&packageId=${singleClassPass.id}&now=true`
+          `/user-details?classId=${allocationId}&activity=${nextClass.activity}&instructor=${nextClass.instructor}&time=${nextClass.time}&day=${nextClass.day}&now=true`
         );
       } catch (error) {
         console.error("❌ [ClassPass] Error handling allocation:", error);

@@ -4,17 +4,17 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { useLanguageContext } from "@/contexts/LanguageContext";
-import { 
-  format, 
-  addDays, 
-  startOfWeek, 
+import {
+  format,
+  addDays,
+  startOfWeek,
   addWeeks,
   startOfDay,
-  differenceInDays
+  differenceInDays,
 } from "date-fns";
 import { enUS, es } from "date-fns/locale";
 import { useApolloClient } from "@apollo/client";
-import { 
+import {
   GET_POSSIBLE_ALLOCATIONS,
   CHECK_EXISTING_ALLOCATION,
   CREATE_ALLOCATION_FROM_TIMESLOT,
@@ -79,11 +79,11 @@ function ScheduleSkeletonLoader() {
     <div className="bg-white rounded-2xl shadow-lg p-6 h-full">
       <div className="h-full flex flex-col space-y-6">
         {[1, 2, 3].map((block) => (
-          <div 
-            key={block} 
+          <div
+            key={block}
             className="flex-1 border border-gray-100 rounded-xl p-6"
             style={{
-              minHeight: "calc((100vh - 400px) / 3)"
+              minHeight: "calc((100vh - 400px) / 3)",
             }}
           >
             <div className="flex items-center justify-between mb-4">
@@ -124,22 +124,27 @@ export default function SchedulePage() {
   const [isScrollable, setIsScrollable] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showMonthlyCalendar, setShowMonthlyCalendar] = useState(false);
-  const [viewMode, setViewMode] = useState<'week' | 'calendar'>('week');
-  const [loadingAllocation, setLoadingAllocation] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"week" | "calendar">("week");
+  const [loadingAllocation, setLoadingAllocation] = useState<string | null>(
+    null
+  );
 
-  const weekStarts = [0, 1, 2].map(offset => 
+  const weekStarts = [0, 1, 2].map((offset) =>
     startOfWeek(addWeeks(today, selectedWeek + offset), { weekStartsOn: 1 })
   );
 
-  const allWeekDays = weekStarts.map(weekStart => 
+  const allWeekDays = weekStarts.map((weekStart) =>
     Array.from({ length: 7 }).map((_, index) => {
       const date = addDays(weekStart, index);
       return {
         date,
-        dayName: format(date, "EEEE", { locale: language === "es" ? es : enUS }),
+        dayName: format(date, "EEEE", {
+          locale: language === "es" ? es : enUS,
+        }),
         dayNumber: format(date, "d"),
         isToday: format(date, "yyyy-MM-dd") === format(today, "yyyy-MM-dd"),
-        isSelected: format(date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd")
+        isSelected:
+          format(date, "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd"),
       };
     })
   );
@@ -232,8 +237,10 @@ export default function SchedulePage() {
             timeSlot: {
               id: timeSlot?.id || "",
               sessionType: {
-                name: timeSlot?.sessionType?.name || sessionType?.name || "Class",
-                maxConsumers: sessionType?.maxConsumers || timeSlot?.room?.capacity || 12,
+                name:
+                  timeSlot?.sessionType?.name || sessionType?.name || "Class",
+                maxConsumers:
+                  sessionType?.maxConsumers || timeSlot?.room?.capacity || 12,
               },
               agent: timeSlot?.agent,
             },
@@ -277,16 +284,19 @@ export default function SchedulePage() {
     setSelectedDate(date);
     setSelectedWeek(Math.floor(differenceInDays(date, today) / 7));
     setShowMonthlyCalendar(false);
-    setViewMode('week');
+    setViewMode("week");
   };
 
   const handleNavigation = async (params: URLSearchParams) => {
     let retryCount = 0;
     const MAX_RETRIES = 3;
 
-    const attemptAllocationCreation = async (timeSlotId: string, startDateTime: Date): Promise<string> => {
+    const attemptAllocationCreation = async (
+      timeSlotId: string,
+      startDateTime: Date
+    ): Promise<string> => {
       try {
-        console.log('🔍 [Schedule] Checking for existing allocation...', {
+        console.log("🔍 [Schedule] Checking for existing allocation...", {
           timeSlotId,
           startTime: startDateTime.toISOString(),
         });
@@ -297,15 +307,18 @@ export default function SchedulePage() {
             timeSlotId,
             startTime: startDateTime.toISOString(),
           },
-          fetchPolicy: 'network-only',
+          fetchPolicy: "network-only",
         });
 
         if (existingAllocation?.allocation?.id) {
-          console.log('✅ [Schedule] Using existing allocation:', existingAllocation.allocation.id);
+          console.log(
+            "✅ [Schedule] Using existing allocation:",
+            existingAllocation.allocation.id
+          );
           return existingAllocation.allocation.id;
         }
 
-        console.log('🔨 [Schedule] Creating new allocation...', {
+        console.log("🔨 [Schedule] Creating new allocation...", {
           timeSlotId,
           startTime: startDateTime.toISOString(),
         });
@@ -325,19 +338,25 @@ export default function SchedulePage() {
           throw new Error("Failed to create allocation: No ID returned");
         }
 
-        console.log('✅ [Schedule] Created new allocation:', newAllocation.createAllocation.id);
+        console.log(
+          "✅ [Schedule] Created new allocation:",
+          newAllocation.createAllocation.id
+        );
         return newAllocation.createAllocation.id;
       } catch (error) {
         console.error(`❌ [Schedule] Attempt ${retryCount + 1} failed:`, error);
-        
-        if (error instanceof Error && error.message.includes('already exists')) {
+
+        if (
+          error instanceof Error &&
+          error.message.includes("already exists")
+        ) {
           const { data: retryExistingAllocation } = await client.query({
             query: CHECK_EXISTING_ALLOCATION,
             variables: {
               timeSlotId,
               startTime: startDateTime.toISOString(),
             },
-            fetchPolicy: 'network-only',
+            fetchPolicy: "network-only",
           });
 
           if (retryExistingAllocation?.allocation?.id) {
@@ -350,19 +369,19 @@ export default function SchedulePage() {
     };
 
     try {
-      console.log('🚀 [Schedule] Starting navigation process...', {
+      console.log("🚀 [Schedule] Starting navigation process...", {
         params: Object.fromEntries(params.entries()),
       });
 
       const currentParams = new URLSearchParams(window.location.search);
-      const consumerId = currentParams.get('consumerId');
-      const bundleId = currentParams.get('bundleId');
+      const consumerId = currentParams.get("consumerId");
+      const bundleId = currentParams.get("bundleId");
       const classInfo = schedule[format(selectedDate, "yyyy-MM-dd")]?.find(
-        c => c.id === params.get('classId')
+        (c) => c.id === params.get("classId")
       );
 
       if (!classInfo) {
-        console.error('❌ [Schedule] Class information not found');
+        console.error("❌ [Schedule] Class information not found");
         throw new Error("Class information not found");
       }
 
@@ -373,37 +392,61 @@ export default function SchedulePage() {
 
       while (retryCount < MAX_RETRIES && !allocationId) {
         try {
-          allocationId = await attemptAllocationCreation(timeSlotId, startDateTime);
+          allocationId = await attemptAllocationCreation(
+            timeSlotId,
+            startDateTime
+          );
         } catch (error) {
           retryCount++;
           if (retryCount === MAX_RETRIES) {
             throw error;
           }
-          await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+          );
         }
       }
 
       if (!allocationId) {
-        throw new Error("Could not create or find allocation after multiple attempts");
+        throw new Error(
+          "Could not create or find allocation after multiple attempts"
+        );
       }
 
-      params.set('classId', allocationId);
-      
-      console.log('🎯 [Schedule] Preparing navigation...', {
+      params.set("classId", allocationId);
+
+      // Add core parameters when they exist
+      if (consumerId) params.set("consumerId", consumerId);
+      if (allocationId) params.set("allocationId", allocationId);
+      if (bundleId) params.set("bundleId", bundleId);
+
+      console.log("🎯 [Schedule] Preparing navigation...", {
         consumerId,
         allocationId,
+        bundleId,
         params: Object.fromEntries(params.entries()),
       });
 
+      // Check all required parameters for direct payment navigation
       if (consumerId && allocationId && bundleId) {
-        console.log('➡️ [Schedule] Navigating to payment...');
-        router.push(`/payment?consumerId=${consumerId}&classId=${allocationId}&bundleId=${bundleId}`);
-      } else {
-        console.log('➡️ [Schedule] Navigating to user selection...');
-        router.push(`/user-selection?${params.toString()}`);
+        console.log("➡️ [Schedule] Navigating to payment with bundle...");
+        router.push(
+          `/payment?consumerId=${consumerId}&classId=${allocationId}&bundleId=${bundleId}`
+        );
+        return;
       }
+
+      // If we don't have a bundle selected, go to user-details
+      if (consumerId && allocationId) {
+        console.log("➡️ [Schedule] Navigating to user selection for bundle...");
+        router.push(`/user-details?${params.toString()}`);
+        return; // Exit after navigation
+      }
+
+      // If we don't have a consumer, something went wrong
+      console.error("❌ [Schedule] Missing required parameters for navigation");
     } catch (error) {
-      console.error('❌ [Schedule] Navigation error:', error);
+      console.error("❌ [Schedule] Navigation error:", error);
       setLoadingAllocation(null);
     }
   };
@@ -421,15 +464,17 @@ export default function SchedulePage() {
                 <div className="flex items-center justify-between p-4 border-b">
                   <div className="flex items-center gap-4">
                     <span className="text-gray-600 font-bold">
-                      {language === "en" ? "Calendar View" : "Vista de Calendario"}
+                      {language === "en"
+                        ? "Calendar View"
+                        : "Vista de Calendario"}
                     </span>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setViewMode('week')}
+                        onClick={() => setViewMode("week")}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          viewMode === 'week' 
-                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
-                            : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
+                          viewMode === "week"
+                            ? "bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]"
+                            : "bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20"
                         }`}
                       >
                         {language === "en" ? "Week" : "Semana"}
@@ -437,12 +482,12 @@ export default function SchedulePage() {
                       <button
                         onClick={() => {
                           setShowMonthlyCalendar(true);
-                          setViewMode('calendar');
+                          setViewMode("calendar");
                         }}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                          viewMode === 'calendar' 
-                            ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]' 
-                            : 'bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20'
+                          viewMode === "calendar"
+                            ? "bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform hover:scale-[1.02]"
+                            : "bg-gradient-to-r from-green-600/10 to-teal-600/10 text-green-700 hover:from-green-600/20 hover:to-teal-600/20"
                         }`}
                       >
                         {language === "en" ? "Month" : "Mes"}
@@ -470,8 +515,13 @@ export default function SchedulePage() {
                     >
                       <Calendar className="w-4 h-4 text-gray-500" />
                       <span className="text-sm font-medium text-gray-900">
-                        {format(weekStarts[0], "MMMM d", { locale: language === "es" ? es : enUS })} - 
-                        {format(addDays(weekStarts[0], 6), "MMMM d", { locale: language === "es" ? es : enUS })}
+                        {format(weekStarts[0], "MMMM d", {
+                          locale: language === "es" ? es : enUS,
+                        })}{" "}
+                        -
+                        {format(addDays(weekStarts[0], 6), "MMMM d", {
+                          locale: language === "es" ? es : enUS,
+                        })}
                       </span>
                     </motion.button>
                     <motion.button
@@ -506,19 +556,35 @@ export default function SchedulePage() {
                           onClick={() => handleDateSelect(day.date)}
                           className={`
                             flex flex-col items-center p-3 rounded-xl transition-all duration-200
-                            ${isPast ? 'bg-gray-50/80 hover:bg-gray-100/80' : 'hover:bg-green-50/80 cursor-pointer bg-green-50/40'}
-                            ${day.isSelected ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105' : ''}
-                            ${day.isToday ? 'bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2' : ''}
+                            ${
+                              isPast
+                                ? "bg-gray-50/80 hover:bg-gray-100/80"
+                                : "hover:bg-green-50/80 cursor-pointer bg-green-50/40"
+                            }
+                            ${
+                              day.isSelected
+                                ? "bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-lg transform scale-105"
+                                : ""
+                            }
+                            ${
+                              day.isToday
+                                ? "bg-green-50 text-green-600 ring-2 ring-green-300 ring-offset-2"
+                                : ""
+                            }
                           `}
                         >
-                          <span className={`text-sm font-medium capitalize
-                            ${day.isSelected ? 'text-white' : 'text-gray-900'}
-                          `}>
+                          <span
+                            className={`text-sm font-medium capitalize
+                            ${day.isSelected ? "text-white" : "text-gray-900"}
+                          `}
+                          >
                             {day.dayName}
                           </span>
-                          <span className={`text-2xl font-bold mt-1
-                            ${day.isSelected ? 'text-white' : 'text-gray-900'}
-                          `}>
+                          <span
+                            className={`text-2xl font-bold mt-1
+                            ${day.isSelected ? "text-white" : "text-gray-900"}
+                          `}
+                          >
                             {day.dayNumber}
                           </span>
                         </button>
@@ -589,7 +655,8 @@ export default function SchedulePage() {
                     >
                       <div className="flex flex-col flex-1 space-y-6">
                         {blockClasses.map((classInfo) => {
-                          const isPastClass = new Date(classInfo.startDateTime) < new Date();
+                          const isPastClass =
+                            new Date(classInfo.startDateTime) < new Date();
                           return (
                             <ClassCard
                               key={classInfo.id}
@@ -599,42 +666,78 @@ export default function SchedulePage() {
                               isPast={isPastClass}
                               onBookClass={async () => {
                                 if (isPastClass) return;
-                                
+
                                 const params = new URLSearchParams();
                                 setLoadingAllocation(classInfo.id);
-                                
+
                                 try {
                                   const allocationId = classInfo.id;
-                                  
+
                                   if (allocationId) {
-                                    params.append('classId', allocationId);
-                                    params.append('activity', classInfo.schedule.name);
-                                    params.append('instructor', `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`);
-                                    params.append('time', format(new Date(classInfo.startDateTime), "HH:mm"));
-                                    params.append('day', format(new Date(classInfo.startDateTime), "EEEE d 'de' MMMM", { locale: language === 'es' ? es : undefined }));
-                                    
+                                    params.append("classId", allocationId);
+                                    params.append(
+                                      "activity",
+                                      classInfo.schedule.name
+                                    );
+                                    params.append(
+                                      "instructor",
+                                      `${classInfo.primaryTeacher.user.firstName} ${classInfo.primaryTeacher.user.lastName}`
+                                    );
+                                    params.append(
+                                      "time",
+                                      format(
+                                        new Date(classInfo.startDateTime),
+                                        "HH:mm"
+                                      )
+                                    );
+                                    params.append(
+                                      "day",
+                                      format(
+                                        new Date(classInfo.startDateTime),
+                                        "EEEE d 'de' MMMM",
+                                        {
+                                          locale:
+                                            language === "es" ? es : undefined,
+                                        }
+                                      )
+                                    );
+
                                     // Determinar si esta es la próxima clase disponible (nextClass)
                                     const now = new Date();
-                                    const allClasses = Object.values(schedule).flat();
-                                    
+                                    const allClasses =
+                                      Object.values(schedule).flat();
+
                                     // Filtrar solo clases futuras y ordenarlas por fecha de inicio
                                     const futureClasses = allClasses
-                                      .filter(c => new Date(c.startDateTime) > now)
-                                      .sort((a, b) => new Date(a.startDateTime).getTime() - new Date(b.startDateTime).getTime());
-                                    
+                                      .filter(
+                                        (c) => new Date(c.startDateTime) > now
+                                      )
+                                      .sort(
+                                        (a, b) =>
+                                          new Date(a.startDateTime).getTime() -
+                                          new Date(b.startDateTime).getTime()
+                                      );
+
                                     // Si hay clases futuras y esta es la primera (la más próxima), es nextClass
-                                    const isNextClass = futureClasses.length > 0 && futureClasses[0].id === classInfo.id;
-                                    
+                                    const isNextClass =
+                                      futureClasses.length > 0 &&
+                                      futureClasses[0].id === classInfo.id;
+
                                     // Si es la próxima clase disponible, añadir now=true
                                     if (isNextClass) {
-                                      console.log('🔍 [Schedule] This is the next available class, adding now=true parameter');
-                                      params.append('now', 'true');
+                                      console.log(
+                                        "🔍 [Schedule] This is the next available class, adding now=true parameter"
+                                      );
+                                      params.append("now", "true");
                                     }
-                                    
+
                                     await handleNavigation(params);
                                   }
                                 } catch (error) {
-                                  console.error('Error handling allocation:', error);
+                                  console.error(
+                                    "Error handling allocation:",
+                                    error
+                                  );
                                   setLoadingAllocation(null);
                                 }
                               }}
@@ -685,7 +788,7 @@ export default function SchedulePage() {
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium bg-green-100 text-green-600 px-3 py-1 rounded-full">
-                    {language === "en" 
+                    {language === "en"
                       ? "Scroll up to see more classes"
                       : "Desliza hacia arriba para ver más clases"}
                   </span>
