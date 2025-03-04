@@ -477,10 +477,13 @@
   .totalAmount {
     font-size: 1.75rem;
     font-weight: 800;
+    background: #4CAF50;
+    background: -webkit-linear-gradient(left, #4CAF50, #009688);
     background: linear-gradient(to right, #4CAF50, #009688);
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent;
+    -webkit-text-fill-color: transparent;
+    color: #4CAF50; /* Fallback for older browsers */
   }
   
   .checkoutButtonContainer {
@@ -643,14 +646,19 @@
   }
   
   .tabs {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
     display: flex;
     gap: 12px;
     background-color: white;
-    backdrop-filter: blur-lg;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
     padding: 8px;
     border-radius: 16px;
+    -webkit-box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    border: 1px solid #4CAF5033;
+    border: 1px solid rgba(76, 175, 80, 0.2);
   }
   
   .tab {
@@ -659,6 +667,7 @@
     font-weight: 500;
     font-size: 16px;
     cursor: pointer;
+    -webkit-transition: all 0.5s ease;
     transition: all 0.5s ease;
     position: relative;
     text-align: center;
@@ -666,9 +675,13 @@
   }
   
   .active {
+    background: #4CAF50;
+    background: -webkit-linear-gradient(left, #4CAF50, #009688);
     background: linear-gradient(to right, #4CAF50, #009688);
     color: white;
+    -webkit-box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25);
     box-shadow: 0 4px 10px rgba(76, 175, 80, 0.25);
+    -webkit-transform: scale(1);
     transform: scale(1);
   }
   
@@ -881,11 +894,22 @@
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
     display: flex;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
     justify-content: center;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
     align-items: center;
     z-index: 1000;
+    -webkit-animation: fadeIn 0.25s ease-out;
     animation: fadeIn 0.25s ease-out;
+    -webkit-backdrop-filter: blur(3px);
     backdrop-filter: blur(3px);
   }
   

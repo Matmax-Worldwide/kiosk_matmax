@@ -27,6 +27,34 @@ body {
   /* Light mode colors */
   background-color: #ffffff;
   color: #0f172a;
+  --primary: #4CAF50;
+  --primary-light: #e8f5e9;
+  --primary-medium: #a5d6a7;
+  --text-dark: #222;
+  --text-light: #7f8c8d;
+  --shadow: 0 2px 20px rgba(0,0,0,0.07);
+  --card-radius: 16px;
+  --button-radius: 50px;
+  --tab-radius: 30px;
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #0f172a;
+  --radius: 0.5rem;
 }
 
 .dark {
@@ -173,6 +201,58 @@ body {
 .overflow-auto {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
+}
+
+/* Prevent zoom on focus in iOS */
+@media screen and (-webkit-min-device-pixel-ratio:0) { 
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Safari-specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .backdrop-blur {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+
+  .bg-clip-text {
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .text-transparent {
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Fix for sticky positioning */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+
+  /* Fix for flex layouts */
+  .flex {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+  }
+
+  /* Fix for transforms */
+  .transform {
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
+/* Fix for iOS momentum scrolling */
+* {
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent zoom on focus in iOS */
