@@ -23,7 +23,6 @@ import {
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SuccessOverlay } from "@/components/ui/success-overlay";
 import { maskEmail, maskPhoneNumber } from "@/lib/utils/mask-data";
 
 interface ConsumerReservation {
@@ -65,7 +64,6 @@ export function ReservationContent() {
   const { language } = useLanguageContext();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [showReservationExists, setShowReservationExists] = useState(false);
   const [existingReservationError, setExistingReservationError] = useState<{
     message: { en: string; es: string };
@@ -237,9 +235,6 @@ export function ReservationContent() {
         classId && refetchAllocation(),
       ]);
 
-      // Show success message before navigation
-      setShowSuccess(true);
-
       // If checkin=true, redirect to schedule
       if (checkin === 'true') {
         setTimeout(() => {
@@ -339,18 +334,6 @@ export function ReservationContent() {
 
   return (
     <>
-        <SuccessOverlay
-          title={{
-            en: "Reservation Created!",
-            es: "¡Reserva Creada!",
-          }}
-          message={{
-            en: "Your reservation has been successfully created.",
-            es: "Tu reserva ha sido creada exitosamente.",
-          }}
-          show={showSuccess}
-        />
-
       <div className="space-y-8 py-4">
         <div>
           <h1 className="text-2xl font-bold mb-2">
@@ -488,7 +471,7 @@ export function ReservationContent() {
           className="w-full py-6 text-lg"
           disabled={isProcessing}
         >
-          {language === "en" ? "Cancel" : "Cancelar"}
+          {language === "en" ? "Reserve for another time" : "Reservar en otro momento"}
         </Button>
       </div>
     </>
