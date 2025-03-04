@@ -413,11 +413,9 @@ export default function SchedulePage() {
         );
       }
 
+      // Add the common parameters that we know exist
       params.set("classId", allocationId);
-
-      // Add core parameters when they exist
       if (consumerId) params.set("consumerId", consumerId);
-      if (allocationId) params.set("allocationId", allocationId);
       if (bundleId) params.set("bundleId", bundleId);
 
       console.log("🎯 [Schedule] Preparing navigation...", {
@@ -427,20 +425,30 @@ export default function SchedulePage() {
         params: Object.fromEntries(params.entries()),
       });
 
-      // Check all required parameters for direct payment navigation
+      // Check if we have a bundle already
       if (consumerId && allocationId && bundleId) {
-        console.log("➡️ [Schedule] Navigating to payment with bundle...");
+        console.log("➡️ [Schedule] Navigating to payment with existing bundle...");
         router.push(
           `/payment?consumerId=${consumerId}&classId=${allocationId}&bundleId=${bundleId}`
         );
         return;
       }
 
-      // If we don't have a bundle selected, go to user-details
+      // If we have consumerId and classId but no bundle, go to user-details to create/select bundle
       if (consumerId && allocationId) {
         console.log("➡️ [Schedule] Navigating to user selection for bundle...");
+        // Add now parameter if it exists in the current URL
+        const now = currentParams.get("now");
+        if (now) params.set("now", now);
+        
+        // Add checkin/reservation parameters if they exist
+        const checkin = currentParams.get("checkin");
+        const reservation = currentParams.get("reservation");
+        if (checkin) params.set("checkin", checkin);
+        if (reservation) params.set("reservation", reservation);
+        
         router.push(`/user-details?${params.toString()}`);
-        return; // Exit after navigation
+        return;
       }
 
       // If we don't have a consumer, something went wrong

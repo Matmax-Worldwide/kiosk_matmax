@@ -7,8 +7,8 @@ import { Header } from './header';
 import { Button } from './ui/button';
 import { useLanguageContext } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMutation, useQuery } from '@apollo/client';
-import { CREATE_BUNDLE, BundleStatus, GET_CONSUMER } from '@/lib/graphql/queries';
+import { useMutation } from '@apollo/client';
+import { CREATE_BUNDLE, BundleStatus } from '@/lib/graphql/queries';
 import { Progress } from './ui/progress';
 
 interface KioskLayoutProps {
@@ -51,20 +51,7 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   const consumerId = searchParams.get('consumerId');
 
   // GraphQL mutation for creating bundles
-  const [createBundle, { loading: creatingBundle }] = useMutation(CREATE_BUNDLE);
-
-  const { refetch: refetchConsumer } = useQuery(GET_CONSUMER, {
-    variables: { id: consumerId },
-    skip: !consumerId,
-  });
-
-  // Effect to update UI when bundle creation status changes
-  useEffect(() => {
-    if (isProcessing && creatingBundle) {
-      // This will help ensure the UI reflects the loading state
-      console.log('Bundle creation in progress...');
-    }
-  }, [creatingBundle, isProcessing]);
+  const [createBundle] = useMutation(CREATE_BUNDLE);
 
   // Load cart from localStorage on initial load
   useEffect(() => {
@@ -276,6 +263,8 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
       console.log('Cart items:', bundlesToCreate);
       console.log('========================');
       
+      const createdBundleResults = [];
+      
       for (let i = 0; i < bundlesToCreate.length; i++) {
         const item = bundlesToCreate[i];
         setCurrentBundleIndex(i);
@@ -333,51 +322,74 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
           );
         }
         
-        setCreatedBundles(prev => [
-          ...prev, 
-          {
-            id: newBundleData.createBundle.id,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity
-          }
-        ]);
+        createdBundleResults.push({
+          id: newBundleData.createBundle.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        });
         
         // Update progress
         setCreationProgress(Math.round(((i + 1) / totalBundles) * 100));
       }
       
+      // Only update state after all bundles are created successfully
+      setCreatedBundles(createdBundleResults);
+      
       // Clear the cart after successful purchase
       setCart([]);
       localStorage.removeItem('matpassCart');
       
-      // Check if checkin or reservation is true
+      // Check if we need to handle a reservation
+      const classId = searchParams.get('classId');
       const checkin = searchParams.get('checkin');
       const reservation = searchParams.get('reservation');
 
-      if (checkin === 'true' || reservation === 'true') {
-        // Refetch consumer data to get updated bundles
-        await refetchConsumer();
+      // Verify we have at least one bundle created before proceeding
+      if (createdBundleResults.length === 0) {
+        throw new Error(
+          language === 'en'
+            ? 'No bundles were created. Please try again.'
+            : 'No se crearon paquetes. Por favor intente de nuevo.'
+        );
+      }
+
+      if (classId) {
+        // If we have a classId, we need to navigate to payment to confirm the reservation
+        console.log('➡️ [Payment] Navigating to payment for reservation confirmation...');
+        const paymentParams = new URLSearchParams({
+          consumerId: consumerId.toString(),
+          classId: classId,
+          bundleId: createdBundleResults[0].id // Use first bundle ID for the reservation
+        });
         
-        // Navigate to schedule with required params
+        // Add checkin/reservation parameters if they exist
+        if (checkin === 'true') paymentParams.append('checkin', 'true');
+        if (reservation === 'true') paymentParams.append('reservation', 'true');
+        
+        // Navigate to payment page for reservation confirmation
+        router.push(`/payment?${paymentParams.toString()}`);
+      } else if (checkin === 'true' || reservation === 'true') {
+        // If no classId but checkin/reservation is true, navigate to schedule to select a class
+        console.log('➡️ [Payment] Navigating to schedule for class selection...');
         const scheduleParams = new URLSearchParams({
           consumerId: consumerId.toString(),
-          bundleId: createdBundles[0].id // Use first bundle ID
+          bundleId: createdBundleResults[0].id
         });
         if (checkin === 'true') scheduleParams.append('checkin', 'true');
         if (reservation === 'true') scheduleParams.append('reservation', 'true');
         router.push(`/schedule?${scheduleParams.toString()}`);
       } else {
-        // Prepare URL parameters for confirmation page
+        // Regular purchase flow - navigate to confirmation page
         const params = new URLSearchParams({
           consumerId: consumerId.toString(),
           paymentMethod: selectedPayment,
           total: total.toString(),
-          bundleCount: createdBundles.length.toString(),
+          bundleCount: createdBundleResults.length.toString(),
         });
         
         // Add bundle IDs to params
-        createdBundles.forEach((bundle, index) => {
+        createdBundleResults.forEach((bundle, index) => {
           params.append(`bundleId${index}`, bundle.id);
           params.append(`bundleName${index}`, bundle.name);
           params.append(`bundlePrice${index}`, bundle.price.toString());
@@ -405,6 +417,14 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
       setCreationProgress(0);
     }
   };
+
+  // Effect to update UI when bundle creation status changes
+  useEffect(() => {
+    if (isProcessing) {
+      // This will help ensure the UI reflects the loading state
+      console.log('Bundle creation in progress...');
+    }
+  }, [isProcessing]);
 
   return (
     <div className={styles.container}>
