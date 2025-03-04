@@ -35,8 +35,8 @@ export function UserDetailsContent() {
   const consumerId = searchParams.get('consumerId');
   const classId = searchParams.get('classId');
   const now = searchParams.get('now');
-  const buyPackages = searchParams.get('buyPackages');
-  const reservation = searchParams.get('reservation');
+  // const buyPackages = searchParams.get('buyPackages');
+  // const reservation = searchParams.get('reservation');
   const [isNavigatingToPayment, setIsNavigatingToPayment] = React.useState(false);
   const [isNavigatingToPackages, setIsNavigatingToPackages] = React.useState(false);
   const checkedBundles = React.useRef(new Set<string>());
@@ -52,26 +52,6 @@ export function UserDetailsContent() {
     variables: { id: classId },
     skip: !classId,
   });
-
-  // Redirect to appropriate page based on URL parameters
-  useEffect(() => {
-    if (!consumerLoading && consumerData?.consumer) {
-      // If buyPackages is true, redirect to buy-packages
-      if (buyPackages === 'true') {
-        const params = new URLSearchParams();
-        params.append('consumerId', consumerId as string);
-        if (classId) params.append('classId', classId);
-        if (now) params.append('now', now);
-        router.push(`/buy-packages?${params.toString()}`);
-      }
-      // If reservation is true, redirect to schedule
-      else if (reservation === 'true') {
-        const params = new URLSearchParams();
-        params.append('consumerId', consumerId as string);
-        router.push(`/schedule?${params.toString()}`);
-      }
-    }
-  }, [consumerLoading, consumerData, buyPackages, reservation, consumerId, classId, now, router]);
 
   // Efecto para revisar paquetes con 0 usos al cargar la página
   useEffect(() => {

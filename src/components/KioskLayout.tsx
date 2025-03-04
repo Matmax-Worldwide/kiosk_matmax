@@ -426,6 +426,13 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
     }
   }, [isProcessing]);
 
+  // Add this useEffect to monitor createdBundles changes
+  useEffect(() => {
+    if (createdBundles.length > 0) {
+      console.log('Created bundles:', createdBundles);
+    }
+  }, [createdBundles]);
+
   return (
     <div className={styles.container}>
       {/* Header */}

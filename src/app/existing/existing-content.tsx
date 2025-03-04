@@ -52,8 +52,7 @@ export function ExistingContent() {
       if (searchParams.get('now')) params.append('now', 'true');
 
       router.push(`/user-details?${params.toString()}`);
-      
-      
+  
     }, 1500);
   };
 
