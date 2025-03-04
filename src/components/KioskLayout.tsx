@@ -768,8 +768,8 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
                   
                   <p className="text-sm text-center text-gray-500 mt-4">
                     {language === 'en' 
-                      ? 'Please wait while we process your purchase...' 
-                      : 'Por favor espere mientras procesamos su compra...'}
+                      ? 'Take a deep breath while we process your purchase...' 
+                      : 'Respire hondo mientras procesamos su compra...'}
                   </p>
                 </div>
               )}

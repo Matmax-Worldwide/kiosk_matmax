@@ -121,8 +121,8 @@ function NewUserContent() {
             es: "¡Cuenta Creada Exitosamente!"
           }}
           message={{
-            en: "Your account has been created. You will be redirected...",
-            es: "Tu cuenta ha sido creada. Serás redirigido..."
+            en: "Your account has been created. Take a deep breath and choose your package...",
+            es: "Tu cuenta ha sido creada. Respira hondo y elige tu paquete..."
           }}
           variant="new-user"
           duration={1500}

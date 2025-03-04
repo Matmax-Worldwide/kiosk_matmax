@@ -90,11 +90,20 @@ export function ConfirmationContent() {
   const handleScheduleClick = async () => {
     setIsLoading(true);
     setIsTimerActive(false);
+    
+    const url = '/schedule';
+    const params = new URLSearchParams();
+    
     if (consumerId) {
-      router.push(`/schedule?consumerId=${consumerId}`);
-    } else {
-      router.push("/schedule");
+      params.append('consumerId', consumerId);
     }
+    
+    if (bundles.length > 0) {
+      params.append('bundleId', bundles[0].id);
+    }
+    
+    const queryString = params.toString();
+    router.push(`${url}${queryString ? `?${queryString}` : ''}`);
   };
 
   const handleHomeClick = () => {
