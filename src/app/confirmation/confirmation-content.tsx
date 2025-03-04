@@ -309,7 +309,7 @@ export function ConfirmationContent() {
                     className="bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300 h-14 px-8 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl"
                   >
                     <Calendar className="w-6 h-6 mr-2" />
-                    {language === "en" ? "View Schedule" : "Ver Horario"}
+                    {language === "en" ? "Book now" : "Reservar ahora"}
                   </Button>
                 </motion.div>
                 <motion.div

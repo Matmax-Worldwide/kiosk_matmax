@@ -7,8 +7,8 @@ import { Header } from './header';
 import { Button } from './ui/button';
 import { useLanguageContext } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useMutation } from '@apollo/client';
-import { CREATE_BUNDLE, BundleStatus } from '@/lib/graphql/queries';
+import { useMutation, useQuery } from '@apollo/client';
+import { CREATE_BUNDLE, BundleStatus, GET_CONSUMER } from '@/lib/graphql/queries';
 import { Progress } from './ui/progress';
 
 interface KioskLayoutProps {
@@ -52,6 +52,11 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
 
   // GraphQL mutation for creating bundles
   const [createBundle, { loading: creatingBundle }] = useMutation(CREATE_BUNDLE);
+
+  const { refetch: refetchConsumer } = useQuery(GET_CONSUMER, {
+    variables: { id: consumerId },
+    skip: !consumerId,
+  });
 
   // Effect to update UI when bundle creation status changes
   useEffect(() => {
@@ -346,30 +351,48 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
       setCart([]);
       localStorage.removeItem('matpassCart');
       
-      // Prepare URL parameters for confirmation page
-      const params = new URLSearchParams({
-        consumerId: consumerId.toString(),
-        paymentMethod: selectedPayment,
-        total: total.toString(),
-        bundleCount: createdBundles.length.toString(),
-      });
-      
-      // Add bundle IDs to params
-      createdBundles.forEach((bundle, index) => {
-        params.append(`bundleId${index}`, bundle.id);
-        params.append(`bundleName${index}`, bundle.name);
-        params.append(`bundlePrice${index}`, bundle.price.toString());
-        params.append(`bundleQuantity${index}`, bundle.quantity.toString());
-      });
-      
-      // Add coupon info if applied
-      if (appliedCoupon) {
-        params.append('coupon', appliedCoupon);
-        params.append('discount', discount.toString());
+      // Check if checkin or reservation is true
+      const checkin = searchParams.get('checkin');
+      const reservation = searchParams.get('reservation');
+
+      if (checkin === 'true' || reservation === 'true') {
+        // Refetch consumer data to get updated bundles
+        await refetchConsumer();
+        
+        // Navigate to schedule with required params
+        const scheduleParams = new URLSearchParams({
+          consumerId: consumerId.toString(),
+          bundleId: createdBundles[0].id // Use first bundle ID
+        });
+        if (checkin === 'true') scheduleParams.append('checkin', 'true');
+        if (reservation === 'true') scheduleParams.append('reservation', 'true');
+        router.push(`/schedule?${scheduleParams.toString()}`);
+      } else {
+        // Prepare URL parameters for confirmation page
+        const params = new URLSearchParams({
+          consumerId: consumerId.toString(),
+          paymentMethod: selectedPayment,
+          total: total.toString(),
+          bundleCount: createdBundles.length.toString(),
+        });
+        
+        // Add bundle IDs to params
+        createdBundles.forEach((bundle, index) => {
+          params.append(`bundleId${index}`, bundle.id);
+          params.append(`bundleName${index}`, bundle.name);
+          params.append(`bundlePrice${index}`, bundle.price.toString());
+          params.append(`bundleQuantity${index}`, bundle.quantity.toString());
+        });
+        
+        // Add coupon info if applied
+        if (appliedCoupon) {
+          params.append('coupon', appliedCoupon);
+          params.append('discount', discount.toString());
+        }
+        
+        // Navigate to confirmation page
+        router.push(`/confirmation?${params.toString()}`);
       }
-      
-      // Navigate to confirmation page
-      router.push(`/confirmation?${params.toString()}`);
       
     } catch (error) {
       console.error('Payment processing error:', error);
