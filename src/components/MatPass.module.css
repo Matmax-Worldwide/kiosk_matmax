@@ -1,14 +1,16 @@
 /* MatPass Module Styles */
 .container {
+  padding: 20px;
+  width: 100%;
   height: 100%;
+  overflow-y: auto;
+  background-color: white;
+  color: text-gray-800;
   display: flex;
   flex-direction: column;
   max-width: 100%;
-  width: 100%;
   margin: 0 auto;
   padding: 10px 10px 65px;
-  background-color: var(--background);
-  color: var(--text-dark);
   position: relative;
   overflow-x: hidden;
 }
@@ -33,13 +35,13 @@
 .container h1 {
   font-size: 32px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: text-gray-800;
   margin-bottom: 8px;
 }
 
 .subtitle {
   font-size: 16px;
-  color: var(--text-light);
+  color: text-gray-500;
   margin-bottom: 20px;
 }
 
@@ -60,15 +62,15 @@
 }
 
 .active {
-  background-color: var(--primary);
+  background-color: #0ea5e9;
   color: white;
   border: none;
 }
 
 .inactive {
   background-color: transparent;
-  color: var(--primary);
-  border: 1px solid var(--primary);
+  color: #0ea5e9;
+  border: 1px solid #0ea5e9;
 }
 
 .contentArea {
@@ -116,13 +118,13 @@
 .number {
   font-size: 38px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: text-gray-800;
   line-height: 1;
 }
 
 .passText {
   font-size: 12px;
-  color: var(--text-light);
+  color: text-gray-500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-top: 3px;
@@ -158,19 +160,18 @@
 .price {
   font-size: 24px;
   font-weight: 700;
-  color: var(--text-dark);
   margin-bottom: 5px;
+  color: #0ea5e9;
 }
 
 .pricePerClass {
+  font-size: 14px;
+  background-color: #e0f2fe;
+  padding: 3px 8px;
+  border-radius: 4px;
   display: inline-block;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--primary);
-  background-color: var(--primary-light);
-  padding: 4px 8px;
-  border-radius: 10px;
-  border: 1px solid var(--primary-medium);
+  margin-top: 3px;
+  border: 1px solid #7dd3fc;
 }
 
 .actionSection {
@@ -194,28 +195,29 @@
   display: flex;
   align-items: center;
   font-size: 14px;
-  color: var(--text-light);
+  color: text-gray-500;
 }
 
 .checkIcon {
-  color: var(--primary);
+  color: #0ea5e9;
   margin-right: 8px;
   font-size: 16px;
 }
 
 .btn {
-  background: var(--primary);
+  background: #0ea5e9;
   color: white;
-  border: none;
-  padding: 10px 24px;
-  border-radius: var(--button-radius);
+  padding: 10px 20px;
   font-weight: 600;
-  font-size: 15px;
+  border: none;
+  border-radius: 50px;
   cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  display: inline-block;
+  transition: all 0.2s ease-in-out;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 /* Added state for Buy Now button */
@@ -234,19 +236,20 @@
 
 /* Touch-friendly large button */
 .btnLarge {
-  background: var(--primary);
+  background: #0ea5e9;
   color: white;
-  border: none;
-  padding: 16px 36px;
-  border-radius: var(--button-radius);
+  padding: 14px 28px;
   font-weight: 600;
-  font-size: 18px;
+  border: none;
+  border-radius: 50px;
   cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  display: inline-block;
-  min-width: 170px;
+  transition: all 0.2s ease-in-out;
+  font-size: 18px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
 }
 
 .btnLarge.added {
@@ -320,13 +323,13 @@
 .productTitle {
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-dark);
+  color: text-gray-800;
   margin-bottom: 8px;
 }
 
 .productDescription {
   font-size: 14px;
-  color: var(--text-light);
+  color: text-gray-500;
   margin-bottom: 15px;
   line-height: 1.4;
 }
@@ -334,7 +337,7 @@
 .productPrice {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: text-gray-800;
   margin-bottom: 15px;
 }
 
@@ -345,34 +348,36 @@
 }
 
 .addToCart {
-  background: var(--primary);
+  background: #0ea5e9;
   color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: var(--button-radius);
+  padding: 8px 16px;
   font-weight: 600;
-  font-size: 14px;
+  border: none;
+  border-radius: 50px;
   cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease-in-out;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 /* Touch-friendly large add to cart button */
 .addToCartLarge {
-  background: var(--primary);
+  background: #0ea5e9;
   color: white;
-  border: none;
-  padding: 14px 24px;
-  border-radius: var(--button-radius);
+  padding: 12px 24px;
   font-weight: 600;
-  font-size: 16px;
+  border: none;
+  border-radius: 50px;
   cursor: pointer;
-  text-align: center;
-  text-decoration: none;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease-in-out;
+  font-size: 16px;
+  width: 100%;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -393,7 +398,7 @@
 }
 
 .ratingCount {
-  color: var(--text-light);
+  color: text-gray-500;
   margin-left: 5px;
   font-size: 13px;
 }
@@ -465,7 +470,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--text-light);
+  color: text-gray-500;
 }
 
 .cartItemsContainer {
@@ -480,7 +485,7 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: var(--text-light);
+  color: text-gray-500;
   gap: 20px;
 }
 
@@ -524,7 +529,7 @@
 
 .cartItemPrice {
   font-size: 14px;
-  color: var(--text-light);
+  color: text-gray-500;
 }
 
 .quantityControls {
@@ -539,7 +544,7 @@
   border-radius: 50%;
   border: none;
   background: white;
-  color: var(--text-dark);
+  color: text-gray-800;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -658,15 +663,16 @@
 }
 
 .checkoutBtn {
-  background: var(--primary);
+  background: #0ea5e9;
   color: white;
-  border: none;
-  padding: 12px 25px;
-  border-radius: var(--button-radius);
+  padding: 12px 20px;
   font-weight: 600;
-  font-size: 15px;
+  border: none;
+  border-radius: 50px;
   cursor: pointer;
-  white-space: nowrap;
+  width: 100%;
+  transition: all 0.2s ease-in-out;
+  font-size: 16px;
 }
 
 .checkoutBtn:hover {
@@ -867,13 +873,13 @@
 .passClasses {
   font-size: 40px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: text-gray-800;
   line-height: 1;
 }
 
 .passLabel {
   font-size: 14px;
-  color: var(--text-light);
+  color: text-gray-500;
   text-transform: uppercase;
   margin-top: 5px;
 }
@@ -886,19 +892,9 @@
 .priceAmount {
   font-size: 28px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: text-gray-800;
   margin-bottom: 5px;
   display: block;
-}
-
-.pricePerClass {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--primary);
-  background-color: var(--primary-light);
-  padding: 4px 10px;
-  border-radius: 12px;
-  display: inline-block;
 }
 
 .passFeaturesGrid {
@@ -913,13 +909,8 @@
   display: flex;
   align-items: center;
   font-size: 14px;
-  color: var(--text-light);
+  color: text-gray-500;
   padding: 0 5px;
-}
-
-.checkIcon {
-  color: var(--primary);
-  margin-right: 8px;
 }
 
 .addButton {
@@ -951,7 +942,7 @@
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 20px;
-  color: var(--text-dark);
+  color: text-gray-800;
 }
 
 .compactLayout {
@@ -1236,7 +1227,7 @@
 .productTitle {
   font-size: 16px;
   font-weight: 600;
-  color: var(--text-dark);
+  color: text-gray-800;
   margin-bottom: 6px;
   line-height: 1.2;
   min-height: 38px;
@@ -1245,7 +1236,7 @@
 .productPrice {
   font-size: 20px;
   font-weight: 700;
-  color: var(--text-dark);
+  color: text-gray-800;
   margin-bottom: 12px;
 }
 

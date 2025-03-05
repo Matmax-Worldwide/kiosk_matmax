@@ -1,0 +1,10 @@
+[33m4f8ec1c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m Remove _app.tsx and Refactor Browser Compatibility Logic
+[33m5a07e3a[m Remove _app.tsx and Refactor Browser Compatibility Logic
+[33mb894e56[m fix
+[33m7ce126b[m Optimize PWA and Polyfill Configurations for Enhanced Browser Compatibility
+[33mb81412b[m Consolidate Browser Compatibility CSS into Global Stylesheet
+[33ma5b14d2[m Clean up global CSS file
+[33m9d1bf0b[m Optimize Next.js Image Configuration for WebP Support
+[33m01ad94f[m Enhance Browser Compatibility and Performance with Babel and PostCSS Configurations
+[33m9ab4626[m[33m ([m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m Enhance Routing and User Experience with Dynamic Parameter Handling
+[33mb52d131[m Refactor User Details Navigation and Remove Redundant Routing Logic

@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Trash2, Tag, X, CheckCircle, AlertCircle, CreditCard, DollarSign, Plus, Minus, Bitcoin, QrCode, Loader2 } from 'lucide-react'
-import styles from './KioskLayout.module.css'
+// import styles from './KioskLayout.module.css'
 import { Header } from './header';
 import { Button } from './ui/button';
 import { useLanguageContext } from '@/contexts/LanguageContext';
@@ -43,12 +43,14 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingError, setProcessingError] = useState<string | null>(null);
   const [creationProgress, setCreationProgress] = useState(0);
-  const [currentBundleIndex, setCurrentBundleIndex] = useState(0);
   const [createdBundles, setCreatedBundles] = useState<Array<{id: string, name: string, price: number, quantity: number}>>([]);
   const { language } = useLanguageContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const consumerId = searchParams.get('consumerId');
+
+  // Referencia para el panel del carrito en móvil
+  const rightPanelRef = useRef<HTMLDivElement>(null);
 
   // GraphQL mutation for creating bundles
   const [createBundle] = useMutation(CREATE_BUNDLE);
@@ -251,7 +253,6 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
       setIsProcessing(true);
       setProcessingError(null);
       setCreationProgress(0);
-      setCurrentBundleIndex(0);
       setCreatedBundles([]);
       
       // Create bundles for each item in the cart
@@ -267,17 +268,13 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
       
       for (let i = 0; i < bundlesToCreate.length; i++) {
         const item = bundlesToCreate[i];
-        setCurrentBundleIndex(i);
-        
-        // Use the bundleTypeId from the item
-        const bundleTypeId = item.bundleTypeId;
         
         console.log(`=== CREATING BUNDLE ${i+1}/${totalBundles} ===`);
         console.log('Item:', item);
         console.log('Item Name:', item.name);
         console.log('Item ID:', item.id);
         console.log('Product Type:', item.productType || 'Not specified');
-        console.log('Bundle Type ID:', bundleTypeId || 'undefined');
+        console.log('Bundle Type ID:', item.bundleTypeId || 'undefined');
         
         const validFrom = new Date();
         const validTo = new Date();
@@ -286,7 +283,7 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
         const note = `${language === 'en' ? 'Payment Method' : 'Método de pago'}: ${getPaymentMethodText()}`;
         
         // Ensure we have a valid bundleTypeId
-        if (!bundleTypeId) {
+        if (!item.bundleTypeId) {
           console.error('No valid bundleTypeId found for item:', item);
           throw new Error(language === 'en' 
             ? 'Could not determine bundle type ID. Please try again.' 
@@ -295,7 +292,7 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
         
         console.log('Creating bundle with parameters:');
         console.log('- consumerId:', consumerId);
-        console.log('- bundleTypeId:', bundleTypeId);
+        console.log('- bundleTypeId:', item.bundleTypeId);
         console.log('- validFrom:', validFrom.toISOString());
         console.log('- validTo:', validTo.toISOString());
         console.log('- note:', note);
@@ -306,7 +303,7 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
             input: {
               consumerId,
               status: BundleStatus.ACTIVE,
-              bundleTypeId,
+              bundleTypeId: item.bundleTypeId,
               validFrom: validFrom.toISOString(),
               validTo: validTo.toISOString(),
               note,
@@ -434,46 +431,36 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   }, [createdBundles]);
 
   return (
-    <div className={styles.container}>
+    <div className="bg-white min-h-screen max-h-screen overflow-hidden flex flex-col shadow-md rounded-lg">
       {/* Header */}
       <Header title={{ en: "Buy Packages", es: "Comprar Paquetes" }} />
 
       {/* Tab Navigation with Three Tabs */}
-      <div className={`${styles.tabsContainer} mt-16`}>
-        <div className={styles.tabs}>
-          <div 
-            className={`${styles.tab} ${activeTab === 'matpass' ? styles.active : styles.inactive}`} 
+      <div className="flex justify-center mt-16">
+        <div className="flex border-b border-gray-200 w-full max-w-3xl mx-auto">
+          <button 
+            className={`py-3 px-6 font-medium text-base transition-colors relative ${activeTab === 'matpass' 
+              ? 'text-sky-500 border-b-3 border-sky-500 after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-sky-500' 
+              : 'text-sky-500 border border-sky-500 bg-transparent hover:bg-sky-50'}`}
             onClick={() => setActiveTab('matpass')}
           >
             MatPass
-          </div>
-          <div 
-            className={`${styles.tab} ${activeTab === 'acromatpass' ? styles.active : styles.inactive}`} 
+          </button>
+          <button 
+            className={`py-3 px-6 font-medium text-base transition-colors relative ${activeTab === 'acromatpass' 
+              ? 'text-sky-500 border-b-3 border-sky-500 after:content-[""] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-sky-500' 
+              : 'text-sky-500 border border-sky-500 bg-transparent hover:bg-sky-50'}`}
             onClick={() => setActiveTab('acromatpass')}
           >
             Acro MatPass
-          </div>
-          {/* Commented out products and kombucha tabs
-          <div 
-            className={`${styles.tab} ${activeTab === 'products' ? styles.active : styles.inactive}`} 
-            onClick={() => setActiveTab('products')}
-          >
-            Products
-          </div>
-          <div 
-            className={`${styles.tab} ${activeTab === 'kombucha' ? styles.active : styles.inactive}`} 
-            onClick={() => setActiveTab('kombucha')}
-          >
-            Kombucha
-          </div>
-          */}
+          </button>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className={styles.mainContent}>
+      <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Content based on active tab */}
-        <div className={styles.leftPanel}>
+        <div className="flex-1 overflow-y-auto">
           {/* Pass the activeTab to the children component */}
           {React.isValidElement(children) ? 
             React.cloneElement(children as React.ReactElement<ChildProps>, { parentTab: activeTab }) : 
@@ -482,17 +469,42 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
         </div>
 
         {/* Right Panel - Cart */}
-        <div className={styles.rightPanel}>
-          <div className={styles.cartHeader}>
-            <div className={styles.cartTitle}>Carrito de Compra</div>
-            <div className={styles.cartItemCount}>{totalItems} items</div>
-            <div className={styles.closeCartMobile} onClick={() => document.querySelector(`.${styles.rightPanel}`)?.classList.remove(styles.showMobileCart)}>
+        <div 
+          ref={rightPanelRef}
+          className="w-full md:w-96 h-full bg-white border-l border-gray-200 flex flex-col transform transition-transform duration-300 md:translate-x-0 translate-x-full fixed md:relative right-0 top-0 bottom-0 z-50"
+        >
+          <div className="py-4 px-5 bg-white border-b border-gray-100 flex justify-between items-center">
+            <div className="text-lg font-semibold">Carrito de Compra</div>
+            <div className="text-sm text-gray-500">{totalItems} items</div>
+            <button 
+              className="md:hidden text-2xl text-gray-500 hover:text-gray-700" 
+              onClick={() => {
+                rightPanelRef.current?.classList.remove('translate-x-0');
+                rightPanelRef.current?.classList.add('translate-x-full');
+              }}
+            >
               ×
-            </div>
+            </button>
           </div>
 
-          <div className={styles.cartList}>
-            {
+          <div className="flex-1 overflow-y-auto">
+            {cart.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-5 py-8">
+                <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+                  <circle cx="8" cy="21" r="1"></circle>
+                  <circle cx="19" cy="21" r="1"></circle>
+                  <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+                </svg>
+                <p className="text-lg font-medium">
+                  {language === "en" ? "Your cart is empty" : "Tu carrito está vacío"}
+                </p>
+                <p className="text-sm text-center px-8">
+                  {language === "en" 
+                    ? "Browse our products and add items to your cart" 
+                    : "Explora nuestros productos y agrega artículos a tu carrito"}
+                </p>
+              </div>
+            ) : (
               cart.map(item => {
                 // Asegurarse de que el ID sea un número válido
                 const validId = isNaN(item.id) ? 
@@ -503,68 +515,68 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
                 return (
                   <div 
                     key={`${validId}_${item.productType || 'default'}`} 
-                    className={styles.cartItem}
+                    className="flex items-center justify-between p-3 mb-2 border-b border-gray-100"
                   >
-                    <div className={styles.cartItemInfo}>
-                      <div className={styles.cartItemName}>
+                    <div className="flex flex-col flex-grow">
+                      <div className="font-medium text-gray-900">
                         {item.name}
-                        {item.isPass && <span className={styles.passLabel}>Pase</span>}
+                        {item.isPass && <span className="ml-2 text-xs px-2 py-0.5 bg-sky-100 text-sky-700 rounded-full uppercase">Pase</span>}
                       </div>
-                      <div className={styles.cartItemPrice}>
+                      <div className="text-sm text-gray-500">
                         S/ {(item.price * item.quantity).toFixed(2)}
                       </div>
                     </div>
-                    <div className={styles.cartItemControls}>
-                      <div className={styles.quantityControls}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center bg-gray-100 rounded-full px-1">
                         <button 
-                          className={styles.quantityButton}
+                          className="w-6 h-6 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200 transition-colors"
                           onClick={() => decreaseQuantity(validId, item.productType)}
                         >
                           <Minus size={12} />
                         </button>
-                        <span className={styles.quantityDisplay}>{item.quantity}</span>
+                        <span className="w-6 text-center font-medium text-gray-800">{item.quantity}</span>
                         <button 
-                          className={styles.quantityButton}
+                          className="w-6 h-6 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-200 transition-colors"
                           onClick={() => increaseQuantity(validId, item.productType)}
                         >
                           <Plus size={12} />
                         </button>
                       </div>
                       <button
-                        className={styles.removeButton}
+                        className="w-7 h-7 flex items-center justify-center rounded-full text-red-500 hover:bg-red-50 transition-colors"
                         onClick={() => removeItem(validId, item.productType)}
                       >
-                        <Trash2 size={18} color="#e53935" />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </div>
                 );
               })
-            }
+            )}
           </div>
 
           {cart.length > 0 && (
             <>
-              <div className={styles.couponSection}>
+              <div className="px-4 py-3 border-t border-gray-100">
                 {!appliedCoupon ? (
                   <button 
-                    className={styles.couponButton}
+                    className="flex items-center gap-2 text-sm text-sky-600 hover:text-sky-700 px-3 py-2 rounded-lg border border-sky-200 w-full justify-center transition-colors hover:bg-sky-50"
                     onClick={openCouponModal}
                   >
-                    <Tag size={18} className={styles.couponIcon} />
+                    <Tag size={18} className="text-sky-500" />
                     <span>Aplicar código de cupón</span>
                   </button>
                 ) : (
-                  <div className={styles.appliedCoupon}>
-                    <div className={styles.appliedCouponInfo}>
-                      <span className={styles.couponCode}>{appliedCoupon}</span>
-                      <span className={styles.discountAmount}>
-                        <CheckCircle size={14} style={{ marginRight: '6px' }} />
+                  <div className="flex items-center justify-between bg-green-50 p-2 rounded-lg border border-green-100">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-sm font-medium text-green-700">{appliedCoupon}</span>
+                      <span className="text-xs text-green-600 flex items-center">
+                        <CheckCircle size={14} className="mr-1.5" />
                         Descuento: S/ {discount.toFixed(2)}
                       </span>
                     </div>
                     <button
-                      className={styles.removeCouponButton}
+                      className="w-6 h-6 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
                       onClick={removeCoupon}
                       aria-label="Quitar cupón"
                     >
@@ -573,43 +585,43 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
                   </div>
                 )}
                 {couponMessage && !showCouponModal && (
-                  <div className={`${styles.couponMessage} ${styles[couponStatus]}`}>
+                  <div className={`mt-2 text-sm flex items-center p-2 rounded ${couponStatus === 'success' ? 'text-green-600 bg-green-50' : couponStatus === 'error' ? 'text-red-600 bg-red-50' : ''}`}>
                     {couponStatus === 'success' ? (
-                      <CheckCircle size={16} style={{ marginRight: '8px' }} />
+                      <CheckCircle size={16} className="mr-2" />
                     ) : couponStatus === 'error' ? (
-                      <AlertCircle size={16} style={{ marginRight: '8px' }} />
+                      <AlertCircle size={16} className="mr-2" />
                     ) : null}
                     {couponMessage}
                   </div>
                 )}
               </div>
               
-              <div className={styles.cartSummary}>
-                <div className={styles.summaryRow}>
-                  <span className={styles.summaryLabel}>Subtotal (sin IGV)</span>
-                  <span className={styles.summaryValue}>S/ {preTax.toFixed(2)}</span>
+              <div className="p-4 bg-gray-50">
+                <div className="flex justify-between py-1.5 text-sm">
+                  <span className="text-gray-600">Subtotal (sin IGV)</span>
+                  <span className="text-gray-800">S/ {preTax.toFixed(2)}</span>
                 </div>
-                <div className={styles.summaryRow}>
-                  <span className={styles.summaryLabel}>IGV (18%)</span>
-                  <span className={styles.summaryValue}>S/ {tax.toFixed(2)}</span>
+                <div className="flex justify-between py-1.5 text-sm">
+                  <span className="text-gray-600">IGV (18%)</span>
+                  <span className="text-gray-800">S/ {tax.toFixed(2)}</span>
                 </div>
                 {discount > 0 && (
-                  <div className={`${styles.summaryRow} ${styles.discountRow}`}>
-                    <span className={styles.summaryLabel}>Descuento</span>
-                    <span className={styles.summaryValue}>- S/ {discount.toFixed(2)}</span>
+                  <div className="flex justify-between py-1.5 text-sm text-green-600">
+                    <span>Descuento</span>
+                    <span>- S/ {discount.toFixed(2)}</span>
                   </div>
                 )}
-                <div className={styles.totalRow}>
+                <div className="flex justify-between py-3 text-base font-semibold border-t border-gray-200 mt-2">
                   <span>Total</span>
-                  <span className={styles.totalAmount}>S/ {total.toFixed(2)}</span>
+                  <span className="text-lg">S/ {total.toFixed(2)}</span>
                 </div>
               </div>
             </>
           )}
           
-          <div className={styles.checkoutButtonContainer}>
+          <div className="p-4 bg-white border-t border-gray-100">
             <Button 
-              className={`${styles.checkoutButton} w-full py-3 text-lg font-semibold rounded-xl shadow-sm ${cart.length > 0 ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+              className={`w-full py-3 text-lg font-semibold rounded-xl shadow-sm ${cart.length > 0 ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white hover:from-green-700 hover:to-teal-700 transition-all duration-300' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
               onClick={proceedToCheckout}
               disabled={cart.length === 0}
             >
@@ -621,47 +633,47 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
 
       {/* Coupon Modal */}
       {showCouponModal && (
-        <div className={styles.modalOverlay} onClick={closeCouponModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Ingrese código de cupón</h3>
-              <button className={styles.closeModalBtn} onClick={closeCouponModal}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closeCouponModal}>
+          <div className="bg-white rounded-lg w-full max-w-md mx-4 shadow-xl transform transition-all animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-medium">Ingrese código de cupón</h3>
+              <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors" onClick={closeCouponModal}>
                 <X size={22} />
               </button>
             </div>
-            <div className={styles.modalBody}>
-              <div className={styles.couponField}>
-                <div className={styles.couponInput}>
-                  <Tag size={18} className={styles.couponIcon} />
+            <div className="p-6">
+              <div className="mb-4">
+                <div className="flex items-center border rounded-lg px-3 py-2 focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500">
+                  <Tag size={18} className="text-sky-500 mr-2" />
                   <input 
                     type="text" 
                     value={couponCode}
                     onChange={(e) => setCouponCode(e.target.value)}
                     placeholder="Ingrese código de cupón"
-                    className={styles.couponCodeInput}
+                    className="flex-1 outline-none text-gray-700"
                     autoFocus
                   />
                 </div>
               </div>
               {couponMessage && (
-                <div className={`${styles.couponMessage} ${styles[couponStatus]}`}>
+                <div className={`mb-4 text-sm flex items-center p-2 rounded ${couponStatus === 'success' ? 'text-green-600 bg-green-50' : couponStatus === 'error' ? 'text-red-600 bg-red-50' : ''}`}>
                   {couponStatus === 'success' ? (
-                    <CheckCircle size={16} style={{ marginRight: '8px' }} />
+                    <CheckCircle size={16} className="mr-2" />
                   ) : couponStatus === 'error' ? (
-                    <AlertCircle size={16} style={{ marginRight: '8px' }} />
+                    <AlertCircle size={16} className="mr-2" />
                   ) : null}
                   {couponMessage}
                 </div>
               )}
-              <div className={styles.modalFooter}>
+              <div className="flex justify-end gap-3 mt-4">
                 <button 
-                  className={styles.cancelButton}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                   onClick={closeCouponModal}
                 >
                   Cancelar
                 </button>
                 <button 
-                  className={styles.applyButton}
+                  className={`px-4 py-2 bg-sky-500 text-white rounded-lg ${!couponCode.trim() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-sky-600'} transition-colors`}
                   onClick={handleCouponApply}
                   disabled={!couponCode.trim()}
                 >
@@ -675,127 +687,88 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
 
       {/* Payment Method Modal */}
       {showPaymentModal && (
-        <div className={styles.modalOverlay} onClick={closePaymentModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Seleccione método de pago</h3>
-              <button className={styles.closeModalBtn} onClick={closePaymentModal}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={closePaymentModal}>
+          <div className="bg-white rounded-lg w-full max-w-md mx-4 shadow-xl transform transition-all animate-fadeIn" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h3 className="text-lg font-medium">Seleccione método de pago</h3>
+              <button className="w-8 h-8 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors" onClick={closePaymentModal}>
                 <X size={22} />
               </button>
             </div>
-            <div className={styles.modalBody}>
-              <div className={styles.paymentOptions}>
+            <div className="p-6">
+              <div className="grid grid-cols-2 gap-4 mb-6">
                 <div 
-                  className={`${styles.paymentOption} ${selectedPayment === 'card' ? styles.selected : ''}`}
+                  className={`flex flex-col items-center p-4 border rounded-lg gap-2 cursor-pointer relative transition-all ${selectedPayment === 'card' ? 'border-sky-500 bg-sky-50' : 'hover:border-gray-300 hover:bg-gray-50'}`}
                   onClick={() => selectPaymentMethod('card')}
                 >
-                  <CreditCard size={28} />
-                  <span>Tarjeta de Crédito/Débito</span>
+                  <CreditCard size={28} className={selectedPayment === 'card' ? 'text-sky-500' : 'text-gray-600'} />
+                  <span className={selectedPayment === 'card' ? 'font-medium text-sky-700' : 'text-gray-700'}>Tarjeta</span>
                 </div>
                 <div 
-                  className={`${styles.paymentOption} ${selectedPayment === 'cash' ? styles.selected : ''}`}
+                  className={`flex flex-col items-center p-4 border rounded-lg gap-2 cursor-pointer relative transition-all ${selectedPayment === 'cash' ? 'border-sky-500 bg-sky-50' : 'hover:border-gray-300 hover:bg-gray-50'}`}
                   onClick={() => selectPaymentMethod('cash')}
                 >
-                  <DollarSign size={28} />
-                  <span>Efectivo</span>
+                  <DollarSign size={28} className={selectedPayment === 'cash' ? 'text-sky-500' : 'text-gray-600'} />
+                  <span className={selectedPayment === 'cash' ? 'font-medium text-sky-700' : 'text-gray-700'}>Efectivo</span>
                 </div>
                 <div 
-                  className={`${styles.paymentOption} ${selectedPayment === 'qr' ? styles.selected : ''}`}
+                  className={`flex flex-col items-center p-4 border rounded-lg gap-2 cursor-pointer relative transition-all ${selectedPayment === 'qr' ? 'border-sky-500 bg-sky-50' : 'hover:border-gray-300 hover:bg-gray-50'}`}
                   onClick={() => selectPaymentMethod('qr')}
                 >
-                  <QrCode size={28} />
-                  <span>QR Plin/Yape</span>
+                  <QrCode size={28} className={selectedPayment === 'qr' ? 'text-sky-500' : 'text-gray-600'} />
+                  <span className={selectedPayment === 'qr' ? 'font-medium text-sky-700' : 'text-gray-700'}>Yape/Plin</span>
                 </div>
                 <div 
-                  className={`${styles.paymentOption} ${selectedPayment === 'crypto' ? styles.selected : ''}`}
+                  className={`flex flex-col items-center p-4 border rounded-lg gap-2 cursor-pointer relative transition-all ${selectedPayment === 'crypto' ? 'border-sky-500 bg-sky-50' : 'hover:border-gray-300 hover:bg-gray-50'}`}
                   onClick={() => selectPaymentMethod('crypto')}
                 >
-                  <Bitcoin size={28} />
-                  <span>Crypto</span>
+                  <Bitcoin size={28} className={selectedPayment === 'crypto' ? 'text-sky-500' : 'text-gray-600'} />
+                  <span className={selectedPayment === 'crypto' ? 'font-medium text-sky-700' : 'text-gray-700'}>Crypto</span>
                 </div>
               </div>
               
               {isProcessing && (
-                <div className="mt-6 space-y-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-gray-700">
-                      {language === 'en' 
-                        ? `Creating bundle ${currentBundleIndex + 1} of ${cart.length}` 
-                        : `Creando paquete ${currentBundleIndex + 1} de ${cart.length}`}
-                    </span>
-                    <span className="text-sm font-medium text-gray-700">{creationProgress}%</span>
-                  </div>
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600 mb-2">Procesando pago {Math.round(creationProgress)}%</p>
                   <Progress value={creationProgress} className="h-2" />
-                  
-                  <div className="mt-4 space-y-2">
-                    {cart.map((item, idx) => (
-                      <div 
-                        key={`${item.id}_${item.productType || 'default'}`}
-                        className={`flex items-center p-2 rounded-lg ${
-                          idx < currentBundleIndex 
-                            ? 'bg-green-50 border border-green-100' 
-                            : idx === currentBundleIndex 
-                              ? 'bg-blue-50 border border-blue-100' 
-                              : 'bg-gray-50 border border-gray-100'
-                        }`}
-                      >
-                        <div className="mr-3">
-                          {idx < currentBundleIndex ? (
-                            <CheckCircle className="h-5 w-5 text-green-500" />
-                          ) : idx === currentBundleIndex ? (
-                            <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
-                          ) : (
-                            <div className="h-5 w-5 rounded-full border-2 border-gray-300" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${
-                            idx < currentBundleIndex 
-                              ? 'text-green-800' 
-                              : idx === currentBundleIndex 
-                                ? 'text-blue-800' 
-                                : 'text-gray-800'
-                          }`}>
-                            {item.name}
-                          </p>
-                        </div>
-                        <div className="text-sm font-medium text-gray-900">
-                          S/ {item.price.toFixed(2)}
-                        </div>
+                  {createdBundles.length > 0 && (
+                    <div className="mt-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Paquetes creados:</p>
+                      <div className="space-y-2 max-h-40 overflow-y-auto p-2 bg-gray-50 rounded">
+                        {createdBundles.map((bundle, idx) => (
+                          <div key={idx} className="flex justify-between text-sm">
+                            <span>{bundle.name} x{bundle.quantity}</span>
+                            <span>S/ {(bundle.price * bundle.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  
-                  <p className="text-sm text-center text-gray-500 mt-4">
-                    {language === 'en' 
-                      ? 'Please wait while we process your purchase...' 
-                      : 'Por favor espere mientras procesamos su compra...'}
-                  </p>
+                    </div>
+                  )}
                 </div>
               )}
               
               {processingError && (
-                <div className={`${styles.couponMessage} ${styles.error} mt-4`}>
-                  <AlertCircle size={16} style={{ marginRight: '8px' }} />
+                <div className="mb-4 p-3 text-sm flex items-center rounded bg-red-50 text-red-600">
+                  <AlertCircle size={16} className="mr-2" />
                   {processingError}
                 </div>
               )}
               
-              <div className={styles.modalFooter}>
+              <div className="flex justify-end mt-4">
                 <button 
-                  className={styles.payNowButton}
+                  className={`px-6 py-3 rounded-lg font-medium ${!selectedPayment || isProcessing 
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed' 
+                    : 'bg-sky-500 text-white hover:bg-sky-600 active:bg-sky-700'} transition-colors`}
                   onClick={processPayment}
                   disabled={!selectedPayment || isProcessing}
                 >
                   {isProcessing ? (
-                    <>
-                      <Loader2 size={16} className="mr-2 animate-spin" />
-                      {language === 'en' ? 'Processing...' : 'Procesando...'}
-                    </>
-                  ) : !selectedPayment ? (
-                    language === 'en' ? 'Select a method' : 'Seleccione un método'
+                    <span className="flex items-center">
+                      <Loader2 className="animate-spin mr-2" size={18} />
+                      Procesando...
+                    </span>
                   ) : (
-                    language === 'en' ? 'Pay Now' : 'Pagar Ahora'
+                    `Pagar S/ ${total.toFixed(2)}`
                   )}
                 </button>
               </div>

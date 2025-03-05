@@ -1,14 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import styles from './MatPass.module.css'
-import Image from 'next/image';
-import { AddToCartButton } from './AddToCartButton';
+// import styles from './MatPass.module.css'
+// import Image from 'next/image';
+// import { AddToCartButton } from './AddToCartButton';
 import { useQuery } from "@apollo/client";
 import { GET_BUNDLE_TYPES } from "@/lib/graphql/queries";
 import { Spinner } from "@/components/spinner";
 import { GetBundleQuery } from "@/types/graphql";
 import { useLanguageContext } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react";
 
 // Define custom event for cart interaction
 const addToCartEvent = (item: { id: number, name: string, price: number, isPass?: boolean, productType?: string, bundleTypeId?: string }) => {
@@ -242,34 +244,49 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
   ];
 
   return (
-    <div className={styles.container}>
+    <div className="p-5 w-full h-full overflow-y-auto bg-white text-gray-800 flex flex-col max-w-full mx-auto pb-16 relative overflow-x-hidden">
       {/* Content based on parent tab selection */}
-      <div className={styles.contentArea}>
+      <div className="flex-1 overflow-y-auto">
         {/* MatPass Section */}
-        <div className={`${parentTab === 'matpass' ? '' : styles.hidden}`}>
-          <div className={styles.compactLayout}>
-            <div id="regular-passes" className={styles.compactPricingGrid}>
+        <div className={`${parentTab === 'matpass' ? '' : 'hidden'}`}>
+          <div className="w-full">
+            <div id="regular-passes" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {regularPasses.map(pass => (
                 <div 
                   key={pass.id} 
-                  className={`${styles.pricingCard} ${animatingCards[`regular_${pass.id}`] ? styles.addToCartAnimation : ''}`}
+                  className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${animatingCards[`regular_${pass.id}`] ? 'animate-pulse' : ''}`}
                 >
-                  <div className={styles.numberSection}>
-                    <div className={styles.number}>{pass.classes}</div>
-                    <div className={styles.passText}>MatPass</div>
-                    <div className={`${styles.passType} ${styles.regularPass}`}>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-4xl font-bold text-gray-800">{pass.classes}</div>
+                      <div className="px-3 py-1 bg-sky-100 text-sky-800 rounded-full text-xs font-semibold uppercase">
+                        MatPass
+                      </div>
+                    </div>
+                    
+                    <div className="mb-3 text-sm font-medium text-gray-500">
                       {language === "en" ? "Regular Yoga" : "Yoga Regular"}
                     </div>
-                  </div>
-                  <div className={styles.priceSection}>
-                    <div className={styles.price}>S/ {pass.price.toFixed(2)}</div>
-                    <div className={styles.pricePerClass}>
+                    
+                    <div className="flex items-end gap-1 mb-2">
+                      <div className="text-2xl font-bold text-gray-800">S/ {pass.price.toFixed(2)}</div>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500 mb-5">
                       S/ {pass.perClass.toFixed(2)} {language === "en" ? "per class" : "por clase"}
                     </div>
-                  </div>
-                  <div className={styles.actionSection}>
-                    <AddToCartButton 
-                      isAdded={addedToCart[`regular_${pass.id}`]}
+                    
+                    <div className="space-y-2 mb-6">
+                      {pass.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-center text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="text-gray-600">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button 
+                      className={`w-full font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${addedToCart[`regular_${pass.id}`] ? 'bg-green-600 hover:bg-green-700' : 'bg-sky-500 hover:bg-sky-600'} text-white`}
                       onClick={() => {
                         const selectedBundleTypeId = bundleTypes.find(bt => bt.name.includes(`${pass.classes} `) && !bt.name.toLowerCase().includes('acro'))?.id;
                         console.log(`Clicking "Agregar al carrito" for Regular MatPass ${pass.classes} classes`);
@@ -285,17 +302,16 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                           selectedBundleTypeId
                         );
                       }}
-                      buttonText={language === "en" ? "Add to cart" : "Agregar al carrito"}
-                      language={language}
-                    />
-                  </div>
-                  <div className={styles.featureSection}>
-                    {pass.features.map((feature, idx) => (
-                      <div key={idx} className={styles.featureItem}>
-                        <span className={styles.checkIcon}>✓</span>
-                        {feature}
-                      </div>
-                    ))}
+                    >
+                      {addedToCart[`regular_${pass.id}`] ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          {language === 'en' ? 'Added' : 'Agregado'}
+                        </>
+                      ) : (
+                        language === 'en' ? 'Add to Cart' : 'Agregar al Carrito'
+                      )}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -304,30 +320,45 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
         </div>
 
         {/* Acro MatPass Section */}
-        <div className={`${parentTab === 'acromatpass' ? '' : styles.hidden}`}>
-          <div className={styles.compactLayout}>
-            <div id="acro-passes" className={styles.compactPricingGrid}>
+        <div className={`${parentTab === 'acromatpass' ? '' : 'hidden'}`}>
+          <div className="w-full">
+            <div id="acro-passes" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {acroPasses.map(pass => (
                 <div 
                   key={pass.id} 
-                  className={`${styles.pricingCard} ${animatingCards[`acro_${pass.id}`] ? styles.addToCartAnimation : ''}`}
+                  className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${animatingCards[`acro_${pass.id}`] ? 'animate-pulse' : ''}`}
                 >
-                  <div className={styles.numberSection}>
-                    <div className={styles.number}>{pass.classes}</div>
-                    <div className={styles.passText}>{pass.isDouble ? (language === "en" ? 'Double Pass' : 'Pase Doble') : 'AcroPass'}</div>
-                    <div className={`${styles.passType} ${styles.acroPass}`}>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-4xl font-bold text-gray-800">{pass.classes}</div>
+                      <div className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold uppercase">
+                        {pass.isDouble ? (language === "en" ? 'Double Pass' : 'Pase Doble') : 'AcroPass'}
+                      </div>
+                    </div>
+                    
+                    <div className="mb-3 text-sm font-medium text-gray-500">
                       {language === "en" ? "Acro Yoga" : "Acro Yoga"}
                     </div>
-                  </div>
-                  <div className={styles.priceSection}>
-                    <div className={styles.price}>S/ {pass.price.toFixed(2)}</div>
-                    <div className={styles.pricePerClass}>
+                    
+                    <div className="flex items-end gap-1 mb-2">
+                      <div className="text-2xl font-bold text-gray-800">S/ {pass.price.toFixed(2)}</div>
+                    </div>
+                    
+                    <div className="text-xs text-gray-500 mb-5">
                       S/ {pass.perClass.toFixed(2)} {pass.isDouble ? (language === "en" ? 'each person' : 'por persona') : (language === "en" ? 'per class' : 'por clase')}
                     </div>
-                  </div>
-                  <div className={styles.actionSection}>
-                    <AddToCartButton 
-                      isAdded={addedToCart[`acro_${pass.id}`]}
+                    
+                    <div className="space-y-2 mb-6">
+                      {pass.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-center text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="text-gray-600">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button 
+                      className={`w-full font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${addedToCart[`acro_${pass.id}`] ? 'bg-green-600 hover:bg-green-700' : 'bg-purple-500 hover:bg-purple-600'} text-white`}
                       onClick={() => {
                         const selectedBundleTypeId = bundleTypes.find(bt => bt.name.includes(`${pass.classes} `) && bt.name.toLowerCase().includes('acro'))?.id;
                         console.log(`Clicking "Agregar al carrito" for Acro MatPass ${pass.classes} classes ${pass.isDouble ? "(Double Pack)" : ""}`);
@@ -343,17 +374,16 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                           selectedBundleTypeId
                         );
                       }}
-                      buttonText={language === "en" ? "Add to cart" : "Agregar al carrito"}
-                      language={language}
-                    />
-                  </div>
-                  <div className={styles.featureSection}>
-                    {pass.features.map((feature, idx) => (
-                      <div key={idx} className={styles.featureItem}>
-                        <span className={styles.checkIcon}>✓</span>
-                        {feature}
-                      </div>
-                    ))}
+                    >
+                      {addedToCart[`acro_${pass.id}`] ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          {language === 'en' ? 'Added' : 'Agregado'}
+                        </>
+                      ) : (
+                        language === 'en' ? 'Add to Cart' : 'Agregar al Carrito'
+                      )}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -362,30 +392,38 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
         </div>
         
         {/* Products Section */}
-        <div className={`${parentTab === 'products' ? '' : styles.hidden}`}>
-          <div className={styles.compactLayout}>
-            <div id="products" className={styles.productGrid}>
+        <div className={`${parentTab === 'products' ? '' : 'hidden'}`}>
+          <div className="w-full">
+            <div id="products" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {products.map(product => (
                 <div 
                   key={product.id} 
-                  className={`${styles.pricingCard} ${animatingCards[`product_${product.id}`] ? styles.addToCartAnimation : ''}`}
+                  className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${animatingCards[`product_${product.id}`] ? 'animate-pulse' : ''}`}
                 >
-                  <div className={styles.numberSection}>
-                    <Image 
-                      width={product.width}
-                      height={product.length}
-                      src={product.imageUrl} 
-                      alt={product.name} 
-                      className={styles.productImage}
-                    />
-                  </div>
-                  <div className={styles.priceSection}>
-                    <div className={styles.number} style={{fontSize: '20px'}}>{product.name}</div>
-                    <div className={styles.price}>S/ {product.price.toFixed(2)}</div>
-                  </div>
-                  <div className={styles.actionSection}>
-                    <AddToCartButton 
-                      isAdded={addedToCart[`product_${product.id}`]}
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-xl font-bold text-gray-800">{product.name}</div>
+                    </div>
+                    
+                    <div className="flex items-end gap-1 mb-4">
+                      <div className="text-2xl font-bold text-gray-800">S/ {product.price.toFixed(2)}</div>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 mb-6">
+                      {product.description}
+                    </div>
+                    
+                    <div className="space-y-2 mb-6">
+                      {product.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-center text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="text-gray-600">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button 
+                      className={`w-full font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${addedToCart[`product_${product.id}`] ? 'bg-green-600 hover:bg-green-700' : 'bg-sky-500 hover:bg-sky-600'} text-white`}
                       onClick={() => {
                         const productBundleTypeId = 'ec966559-0580-4adb-bc6b-b150c56f935c'; // Default product bundle type ID
                         console.log(`Clicking "Agregar al carrito" for Product: ${product.name}`);
@@ -400,16 +438,16 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                           productBundleTypeId
                         );
                       }}
-                      language={language}
-                    />
-                  </div>
-                  <div className={styles.featureSection}>
-                    {product.features.map((feature, idx) => (
-                      <div key={idx} className={styles.featureItem}>
-                        <span className={styles.checkIcon}>✓</span>
-                        {feature}
-                      </div>
-                    ))}
+                    >
+                      {addedToCart[`product_${product.id}`] ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          {language === 'en' ? 'Added' : 'Agregado'}
+                        </>
+                      ) : (
+                        language === 'en' ? 'Add to Cart' : 'Agregar al Carrito'
+                      )}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -418,30 +456,38 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
         </div>
         
         {/* Kombucha Section */}
-        <div className={`${parentTab === 'kombucha' ? '' : styles.hidden}`}>
-          <div className={styles.compactLayout}>
-            <div id="kombucha" className={styles.productGrid}>
+        <div className={`${parentTab === 'kombucha' ? '' : 'hidden'}`}>
+          <div className="w-full">
+            <div id="kombucha" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
               {kombuchaProducts.map(product => (
                 <div 
                   key={product.id} 
-                  className={`${styles.pricingCard} ${animatingCards[`product_${product.id}`] ? styles.addToCartAnimation : ''}`}
+                  className={`bg-white border rounded-xl shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${animatingCards[`product_${product.id}`] ? 'animate-pulse' : ''}`}
                 >
-                  <div className={styles.numberSection}>
-                    <Image 
-                      width={product.width}
-                      height={product.length}
-                      src={product.imageUrl} 
-                      alt={product.name} 
-                      className={styles.productImage}
-                    />
-                  </div>
-                  <div className={styles.priceSection}>
-                    <div className={styles.number} style={{fontSize: '20px'}}>{product.name}</div>
-                    <div className={styles.price}>S/ {product.price.toFixed(2)}</div>
-                  </div>
-                  <div className={styles.actionSection}>
-                    <AddToCartButton 
-                      isAdded={addedToCart[`product_${product.id}`]}
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="text-xl font-bold text-gray-800">{product.name}</div>
+                    </div>
+                    
+                    <div className="flex items-end gap-1 mb-4">
+                      <div className="text-2xl font-bold text-gray-800">S/ {product.price.toFixed(2)}</div>
+                    </div>
+                    
+                    <div className="text-sm text-gray-600 mb-6">
+                      {product.description}
+                    </div>
+                    
+                    <div className="space-y-2 mb-6">
+                      {product.features.map((feature, idx) => (
+                        <div key={idx} className="flex items-center text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                          <span className="text-gray-600">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button 
+                      className={`w-full font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${addedToCart[`product_${product.id}`] ? 'bg-green-600 hover:bg-green-700' : 'bg-sky-500 hover:bg-sky-600'} text-white`}
                       onClick={() => {
                         const productBundleTypeId = 'ec966559-0580-4adb-bc6b-b150c56f935c'; // Default product bundle type ID
                         console.log(`Clicking "Agregar al carrito" for Product: ${product.name}`);
@@ -456,16 +502,16 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
                           productBundleTypeId
                         );
                       }}
-                      language={language}
-                    />
-                  </div>
-                  <div className={styles.featureSection}>
-                    {product.features.map((feature, idx) => (
-                      <div key={idx} className={styles.featureItem}>
-                        <span className={styles.checkIcon}>✓</span>
-                        {feature}
-                      </div>
-                    ))}
+                    >
+                      {addedToCart[`product_${product.id}`] ? (
+                        <>
+                          <CheckCircle className="w-4 h-4" />
+                          {language === 'en' ? 'Added' : 'Agregado'}
+                        </>
+                      ) : (
+                        language === 'en' ? 'Add to Cart' : 'Agregar al Carrito'
+                      )}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -474,5 +520,5 @@ export default function MatPass({ parentTab = 'matpass' }: MatPassProps) {
         </div>
       </div>
     </div>
-  )
+  );
 } 
