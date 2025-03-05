@@ -70,46 +70,88 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   // Listen for add-to-cart events
   useEffect(() => {
     const handleAddToCart = (e: Event) => {
-      const customEvent = e as CustomEvent<{ id: number, name: string, price: number, quantity: number, isPass?: boolean, productType?: string, bundleTypeId?: string }>;
-      const newItem = customEvent.detail;
-      
-      // Enhanced debug logging
-      console.log('=== ADD TO CART EVENT RECEIVED ===');
-      console.log('Item:', newItem);
-      console.log('Item ID:', newItem.id);
-      console.log('Item Name:', newItem.name);
-      console.log('Is Pass:', newItem.isPass ? 'Yes' : 'No');
-      console.log('Product Type:', newItem.productType || 'Not specified');
-      console.log('Bundle Type ID:', newItem.bundleTypeId || 'undefined');
-      console.log('================================');
-      
-      setCart(prevCart => {
-        const existingItem = prevCart.find(item => 
-          item.id === newItem.id && item.productType === newItem.productType
-        );
-        
-        let updatedCart;
-        if (existingItem) {
-          updatedCart = prevCart.map(item => 
-            (item.id === newItem.id && item.productType === newItem.productType) 
-              ? { ...item, quantity: item.quantity + 1 } 
-              : item
-          );
-        } else {
-          updatedCart = [...prevCart, { ...newItem, quantity: 1 }];
+      try {
+        // Type assertion con verificación para evitar errores en Safari antiguo
+        // Primero verificamos que sea un CustomEvent con una propiedad detail
+        if (!('detail' in e)) {
+          console.error('Evento recibido no es un CustomEvent válido');
+          return;
         }
         
-        // Save updated cart to localStorage
-        localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
-        return updatedCart;
-      });
+        const customEvent = e as CustomEvent<{ 
+          id: number, 
+          name: string, 
+          price: number, 
+          quantity: number, 
+          isPass?: boolean, 
+          productType?: string, 
+          bundleTypeId?: string 
+        }>;
+        
+        // Verificar que customEvent.detail exista antes de usarlo
+        if (!customEvent.detail) {
+          console.error('CustomEvent no contiene detalles válidos');
+          return;
+        }
+        
+        const newItem = customEvent.detail;
+        
+        // Enhanced debug logging
+        console.log('=== ADD TO CART EVENT RECEIVED ===');
+        console.log('Item:', newItem);
+        console.log('Item ID:', newItem.id);
+        console.log('Item Name:', newItem.name);
+        console.log('Is Pass:', newItem.isPass ? 'Yes' : 'No');
+        console.log('Product Type:', newItem.productType || 'Not specified');
+        console.log('Bundle Type ID:', newItem.bundleTypeId || 'undefined');
+        console.log('================================');
+        
+        setCart(prevCart => {
+          // Verificar que prevCart sea un array
+          if (!Array.isArray(prevCart)) {
+            console.error('prevCart no es un array:', prevCart);
+            return [];
+          }
+          
+          const existingItem = prevCart.find(item => 
+            item && item.id === newItem.id && item.productType === newItem.productType
+          );
+          
+          let updatedCart;
+          if (existingItem) {
+            updatedCart = prevCart.map(item => 
+              (item && item.id === newItem.id && item.productType === newItem.productType) 
+                ? { ...item, quantity: item.quantity + 1 } 
+                : item
+            );
+          } else {
+            updatedCart = [...prevCart, { ...newItem, quantity: 1 }];
+          }
+          
+          // Save updated cart to localStorage with error handling
+          try {
+            localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
+          } catch (storageError) {
+            console.error('Error al guardar carrito en localStorage:', storageError);
+          }
+          
+          return updatedCart;
+        });
+      } catch (error) {
+        console.error('Error en el manejador de add-to-cart:', error);
+      }
     };
     
-    document.addEventListener('add-to-cart', handleAddToCart);
+    // Verificar que document exista antes de agregar listener
+    if (typeof document !== 'undefined') {
+      document.addEventListener('add-to-cart', handleAddToCart);
+      
+      return () => {
+        document.removeEventListener('add-to-cart', handleAddToCart);
+      };
+    }
     
-    return () => {
-      document.removeEventListener('add-to-cart', handleAddToCart);
-    };
+    return undefined;
   }, []);
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
