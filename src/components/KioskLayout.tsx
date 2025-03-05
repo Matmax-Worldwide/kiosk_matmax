@@ -57,13 +57,30 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
 
   // Load cart from localStorage on initial load
   useEffect(() => {
-    const savedCart = localStorage.getItem('matpassCart');
-    if (savedCart) {
-      try {
-        setCart(JSON.parse(savedCart));
-      } catch (e) {
-        console.error('Failed to parse cart from localStorage:', e);
+    try {
+      if (typeof localStorage === 'undefined') return;
+      
+      const savedCart = localStorage.getItem('matpassCart');
+      if (savedCart) {
+        try {
+          const parsedCart = JSON.parse(savedCart);
+          // Verificar que el resultado sea un array
+          if (Array.isArray(parsedCart)) {
+            setCart(parsedCart);
+          } else {
+            console.error('Carrito guardado no es un array válido');
+            setCart([]);
+          }
+        } catch (e) {
+          console.error('Failed to parse cart from localStorage:', e);
+          // Si hay un error al parsear, inicializamos con un carrito vacío
+          setCart([]);
+        }
       }
+    } catch (error) {
+      console.error('Error al acceder a localStorage:', error);
+      // Si hay un error con localStorage, inicializamos con un carrito vacío
+      setCart([]);
     }
   }, []);
 
@@ -162,38 +179,75 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
   const tax = subtotal - preTax; // 18% tax amount
   const total = subtotal - discount; // Total is now subtotal minus any discount applied
 
+  // Encierra las funciones de modificación del carrito en try-catch
   const decreaseQuantity = (id: number, productType?: string) => {
-    setCart(prevCart => {
-      const updatedCart = prevCart.map(item =>
-        item.id === id && item.productType === productType && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      );
-      localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
-      return updatedCart;
-    });
+    try {
+      setCart(prevCart => {
+        if (!Array.isArray(prevCart)) return [];
+        
+        const updatedCart = prevCart.map(item =>
+          item && item.id === id && item.productType === productType && item.quantity > 1
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        );
+        
+        try {
+          localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
+        } catch (error) {
+          console.error('Error saving cart to localStorage:', error);
+        }
+        
+        return updatedCart;
+      });
+    } catch (error) {
+      console.error('Error in decreaseQuantity:', error);
+    }
   };
 
   const increaseQuantity = (id: number, productType?: string) => {
-    setCart(prevCart => {
-      const updatedCart = prevCart.map(item =>
-        item.id === id && item.productType === productType
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      );
-      localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
-      return updatedCart;
-    });
+    try {
+      setCart(prevCart => {
+        if (!Array.isArray(prevCart)) return [];
+        
+        const updatedCart = prevCart.map(item =>
+          item && item.id === id && item.productType === productType
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+        
+        try {
+          localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
+        } catch (error) {
+          console.error('Error saving cart to localStorage:', error);
+        }
+        
+        return updatedCart;
+      });
+    } catch (error) {
+      console.error('Error in increaseQuantity:', error);
+    }
   };
 
   const removeItem = (id: number, productType?: string) => {
-    setCart(prevCart => {
-      const updatedCart = prevCart.filter(item => 
-        !(item.id === id && item.productType === productType)
-      );
-      localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
-      return updatedCart;
-    });
+    try {
+      setCart(prevCart => {
+        if (!Array.isArray(prevCart)) return [];
+        
+        const updatedCart = prevCart.filter(item => 
+          !(item && item.id === id && item.productType === productType)
+        );
+        
+        try {
+          localStorage.setItem('matpassCart', JSON.stringify(updatedCart));
+        } catch (error) {
+          console.error('Error saving cart to localStorage:', error);
+        }
+        
+        return updatedCart;
+      });
+    } catch (error) {
+      console.error('Error in removeItem:', error);
+    }
   };
 
   const handleCouponApply = () => {
@@ -503,11 +557,70 @@ export default function KioskLayout({ children }: KioskLayoutProps) {
       <div className="flex flex-1 overflow-hidden">
         {/* Left Panel - Content based on active tab */}
         <div className="flex-1 overflow-y-auto">
-          {/* Pass the activeTab to the children component */}
-          {React.isValidElement(children) ? 
-            React.cloneElement(children as React.ReactElement<ChildProps>, { parentTab: activeTab }) : 
-            children
-          }
+          {/* Envolvemos el contenido principal en un ErrorBoundary básico */}
+          {(() => {
+            try {
+              // Renderizar contenido principal de forma segura
+              return (
+                <>
+                  <div className="flex justify-center py-2">
+                    <div className="inline-flex bg-white rounded-lg p-1 shadow-sm">
+                      <button
+                        className={`px-4 py-2 text-sm font-medium ${activeTab === 'matpass' ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'} rounded-md transition-colors`}
+                        onClick={() => setActiveTab('matpass')}
+                      >
+                        {language === 'en' ? 'Regular MatPass' : 'MatPass Regular'}
+                      </button>
+                      <button
+                        className={`px-4 py-2 text-sm font-medium ${activeTab === 'acromatpass' ? 'bg-purple-100 text-purple-700' : 'text-gray-600 hover:bg-gray-100'} rounded-md transition-colors`}
+                        onClick={() => setActiveTab('acromatpass')}
+                      >
+                        {language === 'en' ? 'Acro MatPass' : 'Acro MatPass'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-1 overflow-auto">
+                    {/* Enviar activeTab como prop al componente hijo */}
+                    {React.Children.map(children, (child) => {
+                      if (React.isValidElement(child)) {
+                        // Añadir la prop parentTab al componente hijo
+                        return React.cloneElement(child as React.ReactElement<ChildProps>, {
+                          parentTab: activeTab,
+                        });
+                      }
+                      return child;
+                    })}
+                  </div>
+                </>
+              );
+            } catch (error) {
+              console.error('Error fatal en renderizado del contenido principal:', error);
+              return (
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="p-6 text-center max-w-md">
+                    <div className="mb-4 text-red-500">
+                      <AlertCircle className="h-12 w-12 mx-auto" />
+                    </div>
+                    <h2 className="text-xl font-bold mb-2">
+                      {language === 'en' ? 'Unexpected Error' : 'Error Inesperado'}
+                    </h2>
+                    <p className="text-gray-600 mb-4">
+                      {language === 'en' 
+                        ? 'We encountered a problem while loading this page. Please try refreshing.' 
+                        : 'Encontramos un problema al cargar esta página. Por favor, intente refrescarla.'}
+                    </p>
+                    <Button
+                      onClick={() => window.location.reload()}
+                      className="bg-blue-500 hover:bg-blue-600 text-white"
+                    >
+                      {language === 'en' ? 'Refresh Page' : 'Refrescar Página'}
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+          })()}
         </div>
 
         {/* Right Panel - Cart */}
